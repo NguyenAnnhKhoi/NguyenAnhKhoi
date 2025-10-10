@@ -2,7 +2,15 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
-import '../services/auth_service.dart'; // THÊM IMPORT NÀY
+import '../services/auth_service.dart';
+import 'profile/profile_info_screen.dart';
+import 'profile/favorite_services_screen.dart';
+import 'profile/transaction_history_screen.dart';
+import 'profile/notifications_screen.dart';
+import 'profile/settings_screen.dart';
+import 'profile/help_support_screen.dart';
+import 'profile/about_us_screen.dart';
+import 'profile/terms_policy_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -13,7 +21,7 @@ class AccountScreen extends StatefulWidget {
 
 class AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
   String username = "Guest";
-  final _authService = AuthService(); // Khởi tạo AuthService
+  final _authService = AuthService();
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
@@ -49,7 +57,6 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     });
   }
 
-  // SỬA LẠI HOÀN TOÀN HÀM NÀY
   Future<void> _logout() async {
     bool? confirm = await showDialog<bool>(
       context: context,
@@ -82,10 +89,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     );
 
     if (confirm == true) {
-      // Gọi hàm signOut từ AuthService
       await _authService.signOut();
-
-      // Điều hướng an toàn, xóa hết các màn hình cũ
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -94,11 +98,14 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
       }
     }
   }
+  
+  // Hàm helper để điều hướng
+  void _navigateTo(Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Toàn bộ phần build UI của bạn đã rất đẹp và không cần thay đổi.
-    // Tôi giữ nguyên phần này.
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -122,29 +129,26 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 40),
-                    Hero(
-                      tag: 'profile_avatar',
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: const CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Color(0xFF1E3A8A),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
                           ),
+                        ],
+                      ),
+                      child: const CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Color(0xFF1E3A8A),
                         ),
                       ),
                     ),
@@ -199,22 +203,25 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                       ],
                     ),
                     const SizedBox(height: 24),
+                    
+                    // --- CÁC MỤC ĐÃ ĐƯỢC CẬP NHẬT ---
                     _buildMenuSection([
-                      _MenuItem(icon: Icons.person_outline, title: 'Thông tin cá nhân', subtitle: 'Cập nhật thông tin của bạn', onTap: () {}),
-                      _MenuItem(icon: Icons.favorite_outline, title: 'Dịch vụ yêu thích', subtitle: 'Quản lý dịch vụ yêu thích', onTap: () {}),
-                      _MenuItem(icon: Icons.history, title: 'Lịch sử giao dịch', subtitle: 'Xem lịch sử thanh toán', onTap: () {}),
+                      _MenuItem(icon: Icons.person_outline, title: 'Thông tin cá nhân', subtitle: 'Cập nhật thông tin của bạn', onTap: () => _navigateTo(const ProfileInfoScreen())),
+                      _MenuItem(icon: Icons.favorite_outline, title: 'Dịch vụ yêu thích', subtitle: 'Quản lý dịch vụ yêu thích', onTap: () => _navigateTo(const FavoriteServicesScreen())),
+                      _MenuItem(icon: Icons.history, title: 'Lịch sử giao dịch', subtitle: 'Xem lịch sử thanh toán', onTap: () => _navigateTo(const TransactionHistoryScreen())),
                     ]),
                     const SizedBox(height: 16),
                     _buildMenuSection([
-                      _MenuItem(icon: Icons.notifications_none, title: 'Thông báo', subtitle: 'Cài đặt thông báo', onTap: () {}),
-                      _MenuItem(icon: Icons.settings_outlined, title: 'Cài đặt', subtitle: 'Tùy chỉnh ứng dụng', onTap: () {}),
-                      _MenuItem(icon: Icons.help_outline, title: 'Trợ giúp & Hỗ trợ', subtitle: 'Câu hỏi thường gặp', onTap: () {}),
+                      _MenuItem(icon: Icons.notifications_none, title: 'Thông báo', subtitle: 'Cài đặt thông báo', onTap: () => _navigateTo(const NotificationsScreen())),
+                      _MenuItem(icon: Icons.settings_outlined, title: 'Cài đặt', subtitle: 'Tùy chỉnh ứng dụng', onTap: () => _navigateTo(const SettingsScreen())),
                     ]),
                     const SizedBox(height: 16),
                     _buildMenuSection([
-                      _MenuItem(icon: Icons.info_outline, title: 'Về chúng tôi', subtitle: 'Phiên bản 1.0.0', onTap: () {}),
-                      _MenuItem(icon: Icons.privacy_tip_outlined, title: 'Chính sách & Điều khoản', subtitle: 'Điều khoản sử dụng', onTap: () {}),
+                       _MenuItem(icon: Icons.help_outline, title: 'Trợ giúp & Hỗ trợ', subtitle: 'Câu hỏi thường gặp', onTap: () => _navigateTo(const HelpSupportScreen())),
+                      _MenuItem(icon: Icons.info_outline, title: 'Về chúng tôi', subtitle: 'Phiên bản 1.0.0', onTap: () => _navigateTo(const AboutUsScreen())),
+                      _MenuItem(icon: Icons.privacy_tip_outlined, title: 'Chính sách & Điều khoản', subtitle: 'Điều khoản sử dụng', onTap: () => _navigateTo(const TermsPolicyScreen())),
                     ]),
+                    
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,

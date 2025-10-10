@@ -2,7 +2,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
@@ -35,28 +34,7 @@ class AuthService {
     }
   }
 
-  /// Đăng nhập bằng Facebook
-  Future<UserCredential?> signInWithFacebook() async {
-    try {
-      final LoginResult result = await FacebookAuth.instance.login();
-      if (result.status == LoginStatus.success) {
-        final OAuthCredential credential = FacebookAuthProvider.credential(result.accessToken!.tokenString);
-        
-        final userCredential = await _auth.signInWithCredential(credential);
-        final userData = await FacebookAuth.instance.getUserData(fields: "name,email");
-        await _saveUserSession(
-          username: userData['name'] ?? 'Facebook User',
-          email: userData['email'] ?? '',
-        );
-        return userCredential;
-      }
-      return null; // User cancelled
-    } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
-    } catch (e) {
-      throw 'Lỗi đăng nhập Facebook: ${e.toString()}';
-    }
-  }
+  
 
   /// Đăng nhập bằng Email & Password
   Future<UserCredential> signInWithEmail({required String email, required String password}) async {
@@ -109,7 +87,6 @@ class AuthService {
     try {
       if (!kIsWeb) {
         await _googleSignIn.signOut();
-        await FacebookAuth.instance.logOut();
       }
       await _auth.signOut();
 

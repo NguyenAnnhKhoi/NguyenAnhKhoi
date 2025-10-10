@@ -13,9 +13,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _authService = AuthService();
-  
+
   bool _isLoadingGoogle = false;
-  bool _isLoadingFacebook = false;
   bool _isLoadingEmail = false;
 
   @override
@@ -25,9 +24,37 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn(Future<void> Function() signInMethod) async {
+  // --- HÀM MỚI CHO ĐĂNG NHẬP GOOGLE ---
+  Future<void> _handleGoogleSignIn() async {
+    if (_isLoadingGoogle) return;
+    setState(() => _isLoadingGoogle = true);
+
     try {
-      await signInMethod();
+      final userCredential = await _authService.signInWithGoogle();
+      // CHỈ ĐIỀU HƯỚNG NẾU ĐĂNG NHẬP THÀNH CÔNG (KHÔNG BỊ HUỶ)
+      if (userCredential != null && mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+      // Nếu userCredential là null (người dùng huỷ), không làm gì cả, ở lại màn hình login.
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingGoogle = false);
+    }
+  }
+
+  // --- HÀM MỚI CHO ĐĂNG NHẬP EMAIL ---
+  Future<void> _handleEmailSignIn() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoadingEmail = true);
+
+    try {
+      await _authService.signInWithEmail(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+      );
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
       }
@@ -35,8 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
+    } finally {
+      if (mounted) setState(() => _isLoadingEmail = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -83,15 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         height: 48,
                         child: FilledButton(
-                          onPressed: _isLoadingEmail ? null : () {
-                            if (_formKey.currentState!.validate()) {
-                              setState(() => _isLoadingEmail = true);
-                              _signIn(() => _authService.signInWithEmail(email: _emailCtrl.text.trim(), password: _passCtrl.text))
-                                .whenComplete(() {
-                                  if (mounted) setState(() => _isLoadingEmail = false);
-                                });
-                            }
-                          },
+                          onPressed: _isLoadingEmail ? null : _handleEmailSignIn,
                           child: _isLoadingEmail
                               ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.white))
                               : const Text('Đăng nhập'),
@@ -109,33 +131,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton.icon(
-                    onPressed: _isLoadingGoogle ? null : () {
-                      setState(() => _isLoadingGoogle = true);
-                      _signIn(_authService.signInWithGoogle).whenComplete(() {
-                        if (mounted) setState(() => _isLoadingGoogle = false);
-                      });
-                    },
-                    icon: _isLoadingGoogle ? const CircularProgressIndicator() : const Icon(Icons.g_mobiledata),
+                    // Gọi hàm mới
+                    onPressed: _isLoadingGoogle ? null : _handleGoogleSignIn,
+                    icon: _isLoadingGoogle 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+                        : const Icon(Icons.g_mobiledata),
                     label: const Text('Đăng nhập với Google'),
                   ),
                 ),
                 spacing,
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: _isLoadingFacebook ? null : () {
-                      setState(() => _isLoadingFacebook = true);
-                      _signIn(_authService.signInWithFacebook).whenComplete(() {
-                        if (mounted) setState(() => _isLoadingFacebook = false);
-                      });
-                    },
-                    icon: _isLoadingFacebook ? const CircularProgressIndicator() : const Icon(Icons.facebook),
-                    label: const Text('Đăng nhập với Facebook'),
-                    style: OutlinedButton.styleFrom(foregroundColor: Colors.blue.shade800),
-                  ),
-                ),
-                spacing,
+                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
