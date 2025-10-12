@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Stylist {
-  final int id;
+  final String id;
   final String name;
   final String image;
   final double rating;
@@ -12,4 +14,15 @@ class Stylist {
     required this.rating,
     required this.experience,
   });
+
+  factory Stylist.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
+    return Stylist(
+      id: doc.id,
+      name: data['name'] ?? '',
+      image: data['image'] ?? '',
+      rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
+      experience: data['experience'] ?? '',
+    );
+  }
 }

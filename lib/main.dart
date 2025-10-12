@@ -1,8 +1,8 @@
 // lib/main.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'firebase_options.dart'; // THÊM IMPORT NÀY
+import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/my_bookings_screen.dart';
@@ -14,7 +14,6 @@ import 'screens/forgot_password_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // THÊM `options` ĐỂ KHỞI TẠO ĐÚNG CÁCH
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -72,8 +71,9 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (_) => const ForgotPasswordScreen(),
         '/login': (_) => const LoginScreen(),
       },
-      home: FutureBuilder<bool>(
-        future: _checkLoginStatus(),
+      // Sử dụng StreamBuilder để lắng nghe trạng thái đăng nhập
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
@@ -84,17 +84,17 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          return snapshot.data == true ? const MainScreen() : const LoginScreen();
+          // Nếu có người dùng đăng nhập -> MainScreen, ngược lại -> LoginScreen
+          if (snapshot.hasData) {
+            return const MainScreen();
+          }
+          return const LoginScreen();
         },
       ),
     );
   }
-
-  Future<bool> _checkLoginStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool("isLoggedIn") ?? false;
-  }
 }
+
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

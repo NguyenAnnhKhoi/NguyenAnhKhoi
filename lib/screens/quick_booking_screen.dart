@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
 import '../models/service.dart';
 import '../models/stylist.dart';
+import '../services/firestore_service.dart';
+import '../models/booking.dart';
 
 class QuickBookingScreen extends StatefulWidget {
   const QuickBookingScreen({super.key});
@@ -11,10 +12,49 @@ class QuickBookingScreen extends StatefulWidget {
 }
 
 class _QuickBookingScreenState extends State<QuickBookingScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
   Stylist? selectedStylist;
   Service? selectedService;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  bool _isLoading = false;
+  
+  Future<void> _confirmQuickBooking() async {
+    if (selectedStylist == null || selectedService == null || selectedDate == null || selectedTime == null) return;
+    
+    setState(() => _isLoading = true);
+
+    final newBooking = Booking(
+      id: '',
+      service: selectedService!,
+      stylist: selectedStylist!,
+      dateTime: DateTime(
+        selectedDate!.year,
+        selectedDate!.month,
+        selectedDate!.day,
+        selectedTime!.hour,
+        selectedTime!.minute,
+      ),
+      status: 'Chờ xác nhận',
+    );
+    
+    try {
+      await _firestoreService.addBooking(newBooking);
+      if(mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đặt lịch thành công!'), backgroundColor: Colors.green),
+        );
+      }
+    } catch(e) {
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red,));
+      }
+    } finally {
+      if(mounted) setState(() => _isLoading = false);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -30,26 +70,19 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          
-          _stepDot(primary, 1, 'Chọn salon', _buildSelectSalon(context, primary)),
+          _stepDot(primary, 1, 'Chọn dịch vụ', _buildSelectService(context, primary)),
           const SizedBox(height: 12),
-          _stepDot(primary, 2, 'Chọn dịch vụ', _buildSelectService(context, primary)),
-          const SizedBox(height: 12),
-          _stepDot(primary, 3, 'Chọn ngày, giờ & stylist', _buildSelectDateTime(context, primary)),
+          _stepDot(primary, 2, 'Chọn ngày, giờ & stylist', _buildSelectDateTime(context, primary)),
           const SizedBox(height: 24),
           SizedBox(
             height: 56,
             child: ElevatedButton(
-              onPressed: (selectedService != null && selectedDate != null && selectedTime != null)
-                  ? () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đặt lịch tạm thời thành công. Chúng tôi sẽ liên hệ xác nhận.')),
-                      );
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(backgroundColor: primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-              child: const Text('CHỐT GIỜ CẮT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+              onPressed: (_isLoading || selectedService == null || selectedDate == null || selectedTime == null || selectedStylist == null)
+                  ? null
+                  : _confirmQuickBooking,
+              child: _isLoading 
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('CHỐT GIỜ CẮT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
             ),
           ),
         ],
@@ -57,6 +90,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
+  // ... các hàm build UI khác ...
   Widget _stepDot(Color primary, int step, String title, Widget content) {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [
@@ -77,50 +111,27 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
-  Widget _buildSelectSalon(BuildContext context, Color primary) {
-    return _rowButton(
-      leading: const Icon(Icons.store_mall_directory_outlined, color: Colors.black54),
-      text: 'Xem tất cả salon',
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () {},
-    );
-  }
-
   Widget _buildSelectService(BuildContext context, Color primary) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _rowButton(
-        leading: const Icon(Icons.content_cut, color: Colors.black54),
-        text: selectedService?.name ?? 'Xem tất cả dịch vụ hấp dẫn',
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () async {
-          final Service? picked = await showModalBottomSheet<Service>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.white,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-            builder: (context) => _ServicePicker(initial: selectedService),
-          );
-          if (picked != null) setState(() => selectedService = picked);
-        },
-      ),
-    ]);
+    return _rowButton(
+      leading: const Icon(Icons.content_cut, color: Colors.black54),
+      text: selectedService?.name ?? 'Chọn dịch vụ',
+      onTap: () async {
+        final Service? picked = await showModalBottomSheet<Service>(
+          context: context,
+          builder: (context) => _ServicePicker(initial: selectedService, firestoreService: _firestoreService),
+        );
+        if (picked != null) setState(() => selectedService = picked);
+      },
+    );
   }
 
   Widget _buildSelectDateTime(BuildContext context, Color primary) {
     return Column(children: [
       _rowButton(
         leading: const Icon(Icons.event_outlined, color: Colors.black54),
-        text: selectedDate == null
-            ? 'Hôm nay'
-            : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
-        trailing: const Icon(Icons.chevron_right),
+        text: selectedDate == null ? 'Chọn ngày' : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
         onTap: () async {
-          final DateTime? picked = await showDatePicker(
-            context: context,
-            initialDate: selectedDate ?? DateTime.now(),
-            firstDate: DateTime.now(),
-            lastDate: DateTime.now().add(const Duration(days: 30)),
-          );
+          final DateTime? picked = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 30)));
           if (picked != null) setState(() => selectedDate = picked);
         },
       ),
@@ -128,9 +139,8 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       _rowButton(
         leading: const Icon(Icons.access_time, color: Colors.black54),
         text: selectedTime == null ? 'Chọn giờ' : '${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}',
-        trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          final TimeOfDay? picked = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
+          final TimeOfDay? picked = await showTimePicker(context: context, initialTime: TimeOfDay.now());
           if (picked != null) setState(() => selectedTime = picked);
         },
       ),
@@ -138,14 +148,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       _rowButton(
         leading: const Icon(Icons.person_outline, color: Colors.black54),
         text: selectedStylist?.name ?? 'Chọn stylist',
-        trailing: const Icon(Icons.chevron_right),
         onTap: () async {
           final Stylist? picked = await showModalBottomSheet<Stylist>(
             context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.white,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-            builder: (context) => _StylistPicker(initial: selectedStylist),
+            builder: (context) => _StylistPicker(initial: selectedStylist, firestoreService: _firestoreService),
           );
           if (picked != null) setState(() => selectedStylist = picked);
         },
@@ -153,7 +159,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     ]);
   }
 
-  Widget _rowButton({required Widget leading, required String text, required Widget trailing, required VoidCallback onTap}) {
+  Widget _rowButton({required Widget leading, required String text, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -167,7 +173,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           leading,
           const SizedBox(width: 12),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 16))),
-          trailing,
+          const Icon(Icons.chevron_right),
         ]),
       ),
     );
@@ -176,36 +182,36 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
 
 class _ServicePicker extends StatelessWidget {
   final Service? initial;
-  const _ServicePicker({this.initial});
+  final FirestoreService firestoreService;
+  const _ServicePicker({this.initial, required this.firestoreService});
 
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      minChildSize: 0.4,
-      maxChildSize: 0.95,
-      expand: false,
       builder: (context, controller) => Column(
         children: [
-          const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4))),
           const SizedBox(height: 12),
           const Text('Chọn dịch vụ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 12),
           Expanded(
-            child: ListView.builder(
-              controller: controller,
-              itemCount: MockData.services.length,
-              itemBuilder: (context, index) {
-                final s = MockData.services[index];
-                return ListTile(
-                  leading: CircleAvatar(backgroundImage: NetworkImage(s.image)),
-                  title: Text(s.name),
-                  subtitle: Text(s.duration),
-                  trailing: Text('${s.price.toStringAsFixed(0)}đ', style: const TextStyle(fontWeight: FontWeight.w700)),
-                  selected: initial?.id == s.id,
-                  onTap: () => Navigator.pop(context, s),
-                );
+            child: StreamBuilder<List<Service>>(
+              stream: firestoreService.getServices(),
+              builder: (context, snapshot) {
+                 if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                 final services = snapshot.data!;
+                 return ListView.builder(
+                    controller: controller,
+                    itemCount: services.length,
+                    itemBuilder: (context, index) {
+                      final s = services[index];
+                      return ListTile(
+                        leading: CircleAvatar(backgroundImage: NetworkImage(s.image)),
+                        title: Text(s.name),
+                        trailing: Text('${s.price.toStringAsFixed(0)}đ'),
+                        onTap: () => Navigator.pop(context, s),
+                      );
+                    },
+                  );
               },
             ),
           ),
@@ -217,36 +223,37 @@ class _ServicePicker extends StatelessWidget {
 
 class _StylistPicker extends StatelessWidget {
   final Stylist? initial;
-  const _StylistPicker({this.initial});
+  final FirestoreService firestoreService;
+  const _StylistPicker({this.initial, required this.firestoreService});
 
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.95,
-      expand: false,
       builder: (context, controller) => Column(
         children: [
-          const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4))),
           const SizedBox(height: 12),
           const Text('Chọn stylist', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 12),
           Expanded(
-            child: ListView.builder(
-              controller: controller,
-              itemCount: MockData.stylists.length,
-              itemBuilder: (context, index) {
-                final st = MockData.stylists[index];
-                return ListTile(
-                  leading: CircleAvatar(backgroundImage: NetworkImage(st.image)),
-                  title: Text(st.name),
-                  subtitle: Text('⭐ ${st.rating} · ${st.experience}'),
-                  selected: initial?.id == st.id,
-                  onTap: () => Navigator.pop(context, st),
+            child: StreamBuilder<List<Stylist>>(
+              stream: firestoreService.getStylists(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                final stylists = snapshot.data!;
+                return ListView.builder(
+                  controller: controller,
+                  itemCount: stylists.length,
+                  itemBuilder: (context, index) {
+                    final st = stylists[index];
+                    return ListTile(
+                      leading: CircleAvatar(backgroundImage: NetworkImage(st.image)),
+                      title: Text(st.name),
+                      subtitle: Text('⭐ ${st.rating}'),
+                      onTap: () => Navigator.pop(context, st),
+                    );
+                  },
                 );
-              },
+              }
             ),
           ),
         ],
@@ -254,5 +261,3 @@ class _StylistPicker extends StatelessWidget {
     );
   }
 }
-
-

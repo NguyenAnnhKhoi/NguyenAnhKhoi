@@ -2,7 +2,7 @@ import 'service.dart';
 import 'stylist.dart';
 
 class Booking {
-  final int id;
+  final String id;
   final Service service;
   final Stylist stylist;
   final DateTime dateTime;
