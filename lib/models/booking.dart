@@ -17,4 +17,14 @@ class Booking {
     required this.status,
     this.note = "",
   });
+  Booking copyWith({String? id}) {
+    return Booking(
+      id: id ?? this.id,
+      service: service,
+      stylist: stylist,
+      dateTime: dateTime,
+      status: status,
+      note: note,
+    );
+  }
 }

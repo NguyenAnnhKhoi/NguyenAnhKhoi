@@ -12,8 +12,15 @@ import 'screens/quick_booking_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
 
+// --- THÊM IMPORT NÀY ---
+import 'services/notification_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // --- THÊM 2 DÒNG NÀY ĐỂ KHỞI TẠO THÔNG BÁO ---
+  await NotificationService().init();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -71,7 +78,6 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (_) => const ForgotPasswordScreen(),
         '/login': (_) => const LoginScreen(),
       },
-      // Sử dụng StreamBuilder để lắng nghe trạng thái đăng nhập
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -84,7 +90,6 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          // Nếu có người dùng đăng nhập -> MainScreen, ngược lại -> LoginScreen
           if (snapshot.hasData) {
             return const MainScreen();
           }
@@ -127,9 +132,6 @@ class MainScreenState extends State<MainScreen> {
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),

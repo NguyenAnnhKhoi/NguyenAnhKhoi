@@ -1,8 +1,11 @@
+// lib/screens/quick_booking_screen.dart
 import 'package:flutter/material.dart';
 import '../models/service.dart';
 import '../models/stylist.dart';
 import '../services/firestore_service.dart';
 import '../models/booking.dart';
+// --- THÊM IMPORT NÀY ---
+import '../services/notification_service.dart';
 
 class QuickBookingScreen extends StatefulWidget {
   const QuickBookingScreen({super.key});
@@ -13,6 +16,8 @@ class QuickBookingScreen extends StatefulWidget {
 
 class _QuickBookingScreenState extends State<QuickBookingScreen> {
   final FirestoreService _firestoreService = FirestoreService();
+  // --- THÊM SERVICE NÀY ---
+  final NotificationService _notificationService = NotificationService();
   Stylist? selectedStylist;
   Service? selectedService;
   DateTime? selectedDate;
@@ -24,7 +29,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     
     setState(() => _isLoading = true);
 
-    final newBooking = Booking(
+    Booking newBooking = Booking(
       id: '',
       service: selectedService!,
       stylist: selectedStylist!,
@@ -39,11 +44,17 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
     
     try {
-      await _firestoreService.addBooking(newBooking);
+      // --- CẬP NHẬT LOGIC NÀY ---
+      // 1. Thêm booking vào Firestore và nhận lại DocumentReference
+      final docRef = await _firestoreService.addBooking(newBooking);
+      // 2. Cập nhật ID cho đối tượng booking và đặt lịch thông báo
+      newBooking = newBooking.copyWith(id: docRef.id);
+      await _notificationService.scheduleBookingNotification(newBooking);
+
       if(mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đặt lịch thành công!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Đặt lịch thành công! Chúng tôi sẽ nhắc bạn trước 1 giờ.'), backgroundColor: Colors.green),
         );
       }
     } catch(e) {
@@ -58,6 +69,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ... Phần build UI giữ nguyên ...
     final Color primary = const Color(0xFF1E3A8A);
 
     return Scaffold(
@@ -90,7 +102,6 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
-  // ... các hàm build UI khác ...
   Widget _stepDot(Color primary, int step, String title, Widget content) {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [

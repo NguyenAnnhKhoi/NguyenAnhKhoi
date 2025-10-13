@@ -2,17 +2,19 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
+  /// Lắng nghe sự thay đổi trạng thái đăng nhập
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
   /// Đăng nhập bằng Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // User cancelled
+      if (googleUser == null) return null; // Người dùng đã hủy
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
@@ -20,13 +22,7 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _auth.signInWithCredential(credential);
-      final user = userCredential.user;
-      await _saveUserSession(
-        username: user?.displayName ?? 'Google User',
-        email: user?.email ?? '',
-      );
-      return userCredential;
+      return await _auth.signInWithCredential(credential);
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
@@ -34,21 +30,13 @@ class AuthService {
     }
   }
 
-  
-
   /// Đăng nhập bằng Email & Password
   Future<UserCredential> signInWithEmail({required String email, required String password}) async {
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
+      return await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      final user = userCredential.user;
-      await _saveUserSession(
-        username: user?.displayName ?? email.split('@')[0],
-        email: email,
-      );
-      return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
@@ -89,22 +77,10 @@ class AuthService {
         await _googleSignIn.signOut();
       }
       await _auth.signOut();
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', false);
-      await prefs.remove('username');
-      await prefs.remove('email');
     } catch (e) {
-      // Bỏ qua lỗi
+      // Bỏ qua lỗi nếu có
+      print("Lỗi khi đăng xuất: $e");
     }
-  }
-
-  // Hàm private để lưu session
-  Future<void> _saveUserSession({required String username, required String email}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('username', username);
-    await prefs.setString('email', email);
   }
 
   // Hàm private để xử lý lỗi

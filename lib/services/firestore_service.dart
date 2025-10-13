@@ -76,7 +76,7 @@ class FirestoreService {
 
   // --- GHI DỮ LIỆU ---
 
-  Future<void> addBooking(Booking booking) {
+  Future<DocumentReference> addBooking(Booking booking) {
     final user = _auth.currentUser;
     if (user == null) throw Exception("Bạn cần đăng nhập để đặt lịch");
 
