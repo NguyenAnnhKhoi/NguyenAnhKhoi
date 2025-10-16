@@ -1,8 +1,10 @@
+// lib/screens/home_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/service.dart';
 import '../services/firestore_service.dart';
 import 'booking_screen.dart';
+import '../widgets/service_card_shimmer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -118,7 +120,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    // ... Các widget khác giữ nguyên ...
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
@@ -143,14 +144,26 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Service Cards Grid from Firestore
                     SizedBox(
                       height: 280,
                       child: StreamBuilder<List<Service>>(
                         stream: _firestoreService.getServices(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                            // Hiển thị shimmer loading
+                            return GridView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 1,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 1.2,
+                              ),
+                              itemCount: 3, // Số lượng shimmer placeholders
+                              itemBuilder: (context, index) {
+                                return const ServiceCardShimmer();
+                              },
+                            );
                           }
                           if (!snapshot.hasData || snapshot.data!.isEmpty) {
                             return const Center(child: Text('Không có dịch vụ nào.'));

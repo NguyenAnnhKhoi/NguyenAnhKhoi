@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/service.dart';
 import '../models/stylist.dart';
 import '../models/booking.dart';
+import '../models/branch.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -20,42 +21,51 @@ class FirestoreService {
         snapshot.docs.map((doc) => Stylist.fromFirestore(doc)).toList());
   }
 
-  Stream<List<Booking>> getUserBookings() {
-    final user = _auth.currentUser;
-    if (user == null) return Stream.value([]);
-
-    return _db
-        .collection('bookings')
-        .where('userId', isEqualTo: user.uid)
-        .orderBy('dateTime', descending: true)
-        .snapshots()
-        .asyncMap((snapshot) async {
-      final List<Booking> bookings = [];
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        try {
-          final serviceDoc =
-              await _db.collection('services').doc(data['serviceId']).get();
-          final stylistDoc =
-              await _db.collection('stylists').doc(data['stylistId']).get();
-
-          if (serviceDoc.exists && stylistDoc.exists) {
-            bookings.add(Booking(
-              id: doc.id,
-              service: Service.fromFirestore(serviceDoc),
-              stylist: Stylist.fromFirestore(stylistDoc),
-              dateTime: (data['dateTime'] as Timestamp).toDate(),
-              status: data['status'],
-              note: data['note'] ?? "",
-            ));
-          }
-        } catch (e) {
-          print('Error fetching booking details: $e');
-        }
-      }
-      return bookings;
-    });
+  Stream<List<Branch>> getBranches() {
+    return _db.collection('branches').snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => Branch.fromFirestore(doc)).toList());
   }
+
+  Stream<List<Booking>> getUserBookings() {
+  final user = _auth.currentUser;
+  if (user == null) return Stream.value([]);
+
+  return _db
+      .collection('bookings')
+      .where('userId', isEqualTo: user.uid)
+      .orderBy('dateTime', descending: true)
+      .snapshots()
+      .asyncMap((snapshot) async {
+    final List<Booking> bookings = [];
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      try {
+        final serviceDoc =
+            await _db.collection('services').doc(data['serviceId']).get();
+        final stylistDoc =
+            await _db.collection('stylists').doc(data['stylistId']).get();
+
+        if (serviceDoc.exists && stylistDoc.exists) {
+          bookings.add(Booking(
+            id: doc.id,
+            service: Service.fromFirestore(serviceDoc),
+            stylist: Stylist.fromFirestore(stylistDoc),
+            dateTime: (data['dateTime'] as Timestamp).toDate(),
+            status: data['status'],
+            note: data['note'] ?? "",
+            // --- SỬA LỖI: Thêm các tham số bắt buộc ---
+            customerName: data['customerName'] ?? 'Không rõ',
+            customerPhone: data['customerPhone'] ?? 'Không rõ',
+            branchName: data['branchName'] ?? 'Không rõ',
+          ));
+        }
+      } catch (e) {
+        print('Error fetching booking details: $e');
+      }
+    }
+    return bookings;
+  });
+}
 
   Stream<List<Service>> getFavoriteServices() {
     final user = _auth.currentUser;
@@ -87,6 +97,11 @@ class FirestoreService {
       'dateTime': Timestamp.fromDate(booking.dateTime),
       'status': booking.status,
       'note': booking.note,
+      // --- THÊM CÁC TRƯỜNG MỚI ---
+      'customerName': booking.customerName,
+      'customerPhone': booking.customerPhone,
+      'branchName': booking.branchName,
+      'createdAt': FieldValue.serverTimestamp(), // Thêm thời gian tạo để dễ sắp xếp
     });
   }
 
