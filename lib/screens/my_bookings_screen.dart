@@ -1,9 +1,8 @@
-// lib/screens/my_bookings_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/booking.dart';
 import '../services/firestore_service.dart';
-// --- THÊM IMPORT NÀY ---
 import '../services/notification_service.dart';
 
 class MyBookingsScreen extends StatefulWidget {
@@ -16,7 +15,6 @@ class MyBookingsScreen extends StatefulWidget {
 class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final FirestoreService _firestoreService = FirestoreService();
-  // --- THÊM SERVICE NÀY ---
   final NotificationService _notificationService = NotificationService();
 
   @override
@@ -33,34 +31,37 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
 
   @override
   Widget build(BuildContext context) {
-    // ... Phần build UI giữ nguyên ...
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 120,
+              expandedHeight: 160,
               floating: true,
               pinned: true,
-              backgroundColor: const Color(0xFF1E3A8A),
+              backgroundColor: Color(0xFF0891B2),
               flexibleSpace: FlexibleSpaceBar(
-                title: const Text(
+                title: Text(
                   'Lịch hẹn của tôi',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 background: Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF1E3A8A), Color(0xFF1E3A8A)],
+                      colors: [
+                        Color(0xFF0891B2),
+                        Color(0xFF06B6D4),
+                        Color(0xFF22D3EE),
+                      ],
                     ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
-                      Icons.calendar_month,
+                      Icons.event_note_rounded,
                       size: 60,
-                      color: Colors.white30,
+                      color: Colors.white.withOpacity(0.3),
                     ),
                   ),
                 ),
@@ -68,45 +69,59 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
               bottom: TabBar(
                 controller: _tabController,
                 indicatorColor: Colors.white,
-                tabs: const [
-                  Tab(icon: Icon(Icons.upcoming), text: 'Sắp tới'),
-                  Tab(icon: Icon(Icons.history), text: 'Lịch sử'),
+                indicatorWeight: 3,
+                tabs: [
+                  Tab(
+                    icon: Icon(Icons.upcoming_rounded),
+                    text: 'Sắp tới',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.history_rounded),
+                    text: 'Lịch sử',
+                  ),
                 ],
               ),
             ),
           ];
         },
-        body: StreamBuilder<List<Booking>>(
-          stream: _firestoreService.getUserBookings(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text("Lỗi: ${snapshot.error}"));
-            }
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        body: Container(
+          color: Colors.grey[50],
+          child: StreamBuilder<List<Booking>>(
+            stream: _firestoreService.getUserBookings(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text("Lỗi: ${snapshot.error}"));
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildEmptyState(true),
+                    _buildEmptyState(false),
+                  ],
+                );
+              }
+              
+              final bookings = snapshot.data!;
+              List<Booking> upcomingBookings = bookings
+                  .where((b) => b.dateTime.isAfter(DateTime.now()))
+                  .toList();
+              List<Booking> pastBookings = bookings
+                  .where((b) => b.dateTime.isBefore(DateTime.now()))
+                  .toList();
+
               return TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildEmptyState(true),
-                  _buildEmptyState(false),
+                  _buildBookingList(upcomingBookings, isUpcoming: true),
+                  _buildBookingList(pastBookings, isUpcoming: false),
                 ],
               );
-            }
-            
-            final bookings = snapshot.data!;
-            List<Booking> upcomingBookings = bookings.where((b) => b.dateTime.isAfter(DateTime.now())).toList();
-            List<Booking> pastBookings = bookings.where((b) => b.dateTime.isBefore(DateTime.now())).toList();
-
-            return TabBarView(
-              controller: _tabController,
-              children: [
-                _buildBookingList(upcomingBookings, isUpcoming: true),
-                _buildBookingList(pastBookings, isUpcoming: false),
-              ],
-            );
-          },
+            },
+          ),
         ),
       ),
     );
@@ -117,9 +132,12 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
       return _buildEmptyState(isUpcoming);
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
       itemCount: bookings.length,
-      itemBuilder: (ctx, i) => _buildBookingCard(bookings[i], isUpcoming: isUpcoming),
+      itemBuilder: (ctx, i) => Padding(
+        padding: EdgeInsets.only(bottom: 16),
+        child: _buildBookingCard(bookings[i], isUpcoming: isUpcoming),
+      ),
     );
   }
 
@@ -128,19 +146,37 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            isUpcoming ? Icons.event_busy : Icons.history,
-            size: 80,
-            color: Colors.grey[300],
+          Container(
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isUpcoming ? Icons.event_busy_rounded : Icons.history_rounded,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 20),
           Text(
             isUpcoming ? 'Chưa có lịch hẹn sắp tới' : 'Chưa có lịch sử',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            isUpcoming 
+                ? 'Hãy đặt lịch dịch vụ ngay!' 
+                : 'Các lịch hẹn đã hoàn thành sẽ hiện ở đây',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade500,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -148,95 +184,169 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
   }
 
   Widget _buildBookingCard(Booking booking, {required bool isUpcoming}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundImage: NetworkImage(booking.service.image),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.network(
+                    booking.service.image,
+                    width: 70,
+                    height: 70,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         booking.service.name,
-                        style: const TextStyle(
-                          fontSize: 18,
+                        style: TextStyle(
+                          fontSize: 17,
                           fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Stylist: ${booking.stylist.name}',
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 14,
-                        ),
+                      SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.person_outline, size: 16, color: Colors.grey.shade600),
+                          SizedBox(width: 6),
+                          Text(
+                            booking.stylist.name,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.business_outlined, size: 16, color: Colors.grey.shade600),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              booking.branchName,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                     Text(DateFormat('dd/MM/yyyy, HH:mm').format(booking.dateTime)),
-                  ],
-                ),
-                Text(
-                  NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(booking.service.price),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFF1E3A8A),
-                  ),
-                ),
-              ],
+          ),
+          
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
             ),
-            if (isUpcoming) ...[
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _showCancelDialog(booking),
-                      icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('Hủy lịch'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF0891B2)),
+                        SizedBox(width: 8),
+                        Text(
+                          DateFormat('dd/MM/yyyy, HH:mm').format(booking.dateTime),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      NumberFormat.currency(locale: 'vi_VN', symbol: 'đ')
+                          .format(booking.service.price),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF0891B2),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {}, // TODO: Chức năng đổi lịch
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Đổi lịch'),
-                    ),
+                  ],
+                ),
+                
+                if (isUpcoming) ...[
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showCancelDialog(booking),
+                          icon: Icon(Icons.cancel_outlined, size: 18),
+                          label: Text('Hủy lịch'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red.shade400,
+                            side: BorderSide(color: Colors.red.shade300),
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {},
+                          icon: Icon(Icons.edit_calendar_rounded, size: 18),
+                          label: Text('Đổi lịch'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF0891B2),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-          ],
-        ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -244,42 +354,121 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
   void _showCancelDialog(Booking booking) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hủy lịch hẹn?'),
-        content: const Text('Bạn có chắc chắn muốn hủy lịch hẹn này không?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Không'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Container(
+          padding: EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.cancel_outlined, color: Colors.red.shade400, size: 48),
+              ),
+              SizedBox(height: 20),
+              Text(
+                'Hủy lịch hẹn?',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Bạn có chắc chắn muốn hủy lịch hẹn này không?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Không',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          await _notificationService.cancelNotification(booking.id);
+                          await _firestoreService.cancelBooking(booking.id);
+                          if (mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Đã hủy lịch hẹn'),
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Lỗi: $e'),
+                                backgroundColor: Colors.red,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.red.shade400,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Hủy lịch',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                // --- CẬP NHẬT LOGIC NÀY ---
-                // 1. Hủy thông báo đã đặt trước
-                await _notificationService.cancelNotification(booking.id);
-                // 2. Xóa booking khỏi Firestore
-                await _firestoreService.cancelBooking(booking.id);
-
-                if(mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã hủy lịch hẹn'), backgroundColor: Colors.green),
-                  );
-                }
-              } catch (e) {
-                 if(mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hủy lịch'),
-          ),
-        ],
+        ),
       ),
     );
   }

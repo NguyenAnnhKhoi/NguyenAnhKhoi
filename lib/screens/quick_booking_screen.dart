@@ -32,7 +32,6 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   @override
   void initState() {
     super.initState();
-    // Tự động điền thông tin người dùng nếu đã đăng nhập
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       _nameController.text = user.displayName ?? '';
@@ -54,12 +53,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       selectedDate = null;
       selectedTime = null;
       selectedBranch = null;
-      // Không xóa tên và sđt vì người dùng có thể muốn đặt lại
     });
   }
 
   Future<void> _confirmQuickBooking() async {
-    // Validate form
     if (selectedStylist == null ||
         selectedService == null ||
         selectedDate == null ||
@@ -74,7 +71,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     await EasyLoading.show(status: 'Đang xử lý...');
 
     Booking newBooking = Booking(
-      id: '', // Sẽ được cập nhật sau
+      id: '',
       service: selectedService!,
       stylist: selectedStylist!,
       dateTime: DateTime(
@@ -108,45 +105,107 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final Color primary = const Color(0xFF1A1A2E);
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        title: Text('Đặt lịch nhanh',
-            style:
-                TextStyle(color: primary, fontWeight: FontWeight.w700)),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _stepDot(primary, 1, 'Thông tin của bạn',
-              _buildCustomerInfo(context, primary)),
-          const SizedBox(height: 12),
-          _stepDot(primary, 2, 'Chọn chi nhánh',
-              _buildSelectBranch(context, primary)),
-          const SizedBox(height: 12),
-          _stepDot(primary, 3, 'Chọn dịch vụ',
-              _buildSelectService(context, primary)),
-          const SizedBox(height: 12),
-          _stepDot(primary, 4, 'Chọn thời gian & stylist',
-              _buildSelectDateTime(context, primary)),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 56,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+      backgroundColor: Colors.grey[50],
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 160,
+            floating: false,
+            pinned: true,
+            backgroundColor: Color(0xFF0891B2),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                'Đặt lịch nhanh',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              onPressed: _confirmQuickBooking,
-              child: const Text('XÁC NHẬN ĐẶT LỊCH',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.white)),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF0891B2),
+                      Color(0xFF06B6D4),
+                      Color(0xFF22D3EE),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.flash_on_rounded,
+                    size: 60,
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  _buildStepCard(
+                    step: 1,
+                    title: 'Thông tin của bạn',
+                    icon: Icons.person_outline,
+                    child: _buildCustomerInfo(),
+                  ),
+                  SizedBox(height: 16),
+                  _buildStepCard(
+                    step: 2,
+                    title: 'Chọn chi nhánh',
+                    icon: Icons.business_rounded,
+                    child: _buildSelectBranch(context),
+                  ),
+                  SizedBox(height: 16),
+                  _buildStepCard(
+                    step: 3,
+                    title: 'Chọn dịch vụ',
+                    icon: Icons.content_cut_rounded,
+                    child: _buildSelectService(context),
+                  ),
+                  SizedBox(height: 16),
+                  _buildStepCard(
+                    step: 4,
+                    title: 'Chọn thời gian & stylist',
+                    icon: Icons.access_time_rounded,
+                    child: _buildSelectDateTime(context),
+                  ),
+                  SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 58,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF0891B2),
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: _confirmQuickBooking,
+                      icon: Icon(Icons.check_circle_outline, size: 24),
+                      label: Text(
+                        'XÁC NHẬN ĐẶT LỊCH',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ],
@@ -154,69 +213,129 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
-  Widget _stepDot(Color primary, int step, String title, Widget content) {
+  Widget _buildStepCard({
+    required int step,
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
     return Container(
       decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4)),
-          ]),
-      padding: const EdgeInsets.all(16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration:
-                BoxDecoration(shape: BoxShape.circle, color: primary),
-            child: Text('$step', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
-          const SizedBox(width: 12),
-          Text(title,
-              style: TextStyle(
-                  color: primary, fontSize: 18, fontWeight: FontWeight.w700)),
-        ]),
-        const SizedBox(height: 12),
-        content,
-      ]),
+        ],
+      ),
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '$step',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12),
+              Icon(icon, color: Color(0xFF0891B2), size: 24),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.grey.shade800,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          child,
+        ],
+      ),
     );
   }
 
-  Widget _buildCustomerInfo(BuildContext context, Color primary) {
+  Widget _buildCustomerInfo() {
     return Column(
       children: [
         TextField(
           controller: _nameController,
+          style: TextStyle(fontSize: 16),
           decoration: InputDecoration(
             labelText: 'Họ và tên',
-            prefixIcon: Icon(Icons.person_outline, color: primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: Icon(Icons.person_outline, color: Color(0xFF0891B2)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
+          style: TextStyle(fontSize: 16),
           decoration: InputDecoration(
             labelText: 'Số điện thoại',
-            prefixIcon: Icon(Icons.phone_outlined, color: primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: Icon(Icons.phone_outlined, color: Color(0xFF0891B2)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSelectBranch(BuildContext context, Color primary) {
-    return _rowButton(
-      leading: const Icon(Icons.business_rounded, color: Colors.black54),
+  Widget _buildSelectBranch(BuildContext context) {
+    return _selectButton(
+      icon: Icons.business_rounded,
       text: selectedBranch?.name ?? 'Chọn chi nhánh',
+      isSelected: selectedBranch != null,
       onTap: () async {
         final Branch? picked = await showModalBottomSheet<Branch>(
           context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
           builder: (context) => _BranchPicker(firestoreService: _firestoreService),
         );
         if (picked != null) setState(() => selectedBranch = picked);
@@ -224,84 +343,152 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
-  Widget _buildSelectService(BuildContext context, Color primary) {
-    return _rowButton(
-      leading: const Icon(Icons.content_cut, color: Colors.black54),
+  Widget _buildSelectService(BuildContext context) {
+    return _selectButton(
+      icon: Icons.content_cut_rounded,
       text: selectedService?.name ?? 'Chọn dịch vụ',
+      isSelected: selectedService != null,
       onTap: () async {
         final Service? picked = await showModalBottomSheet<Service>(
           context: context,
-          builder: (context) =>
-              _ServicePicker(firestoreService: _firestoreService),
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (context) => _ServicePicker(firestoreService: _firestoreService),
         );
         if (picked != null) setState(() => selectedService = picked);
       },
     );
   }
 
-  Widget _buildSelectDateTime(BuildContext context, Color primary) {
-    return Column(children: [
-      _rowButton(
-        leading: const Icon(Icons.event_outlined, color: Colors.black54),
-        text: selectedDate == null
-            ? 'Chọn ngày'
-            : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
-        onTap: () async {
-          final DateTime? picked = await showDatePicker(
+  Widget _buildSelectDateTime(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _selectButton(
+                icon: Icons.event_outlined,
+                text: selectedDate == null
+                    ? 'Chọn ngày'
+                    : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                isSelected: selectedDate != null,
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(Duration(days: 30)),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: Color(0xFF0891B2),
+                            onPrimary: Colors.white,
+                            onSurface: Colors.black,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (picked != null) setState(() => selectedDate = picked);
+                },
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: _selectButton(
+                icon: Icons.access_time,
+                text: selectedTime == null
+                    ? 'Chọn giờ'
+                    : '${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}',
+                isSelected: selectedTime != null,
+                onTap: () async {
+                  final TimeOfDay? picked = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: Color(0xFF0891B2),
+                            onPrimary: Colors.white,
+                            onSurface: Colors.black,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (picked != null) setState(() => selectedTime = picked);
+                },
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
+        _selectButton(
+          icon: Icons.person_outline,
+          text: selectedStylist?.name ?? 'Chọn stylist',
+          isSelected: selectedStylist != null,
+          onTap: () async {
+            final Stylist? picked = await showModalBottomSheet<Stylist>(
               context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(const Duration(days: 30)));
-          if (picked != null) setState(() => selectedDate = picked);
-        },
-      ),
-      const SizedBox(height: 8),
-      _rowButton(
-        leading: const Icon(Icons.access_time, color: Colors.black54),
-        text: selectedTime == null
-            ? 'Chọn giờ'
-            : '${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}',
-        onTap: () async {
-          final TimeOfDay? picked =
-              await showTimePicker(context: context, initialTime: TimeOfDay.now());
-          if (picked != null) setState(() => selectedTime = picked);
-        },
-      ),
-      const SizedBox(height: 8),
-      _rowButton(
-        leading: const Icon(Icons.person_outline, color: Colors.black54),
-        text: selectedStylist?.name ?? 'Chọn stylist',
-        onTap: () async {
-          final Stylist? picked = await showModalBottomSheet<Stylist>(
-            context: context,
-            builder: (context) =>
-                _StylistPicker(firestoreService: _firestoreService),
-          );
-          if (picked != null) setState(() => selectedStylist = picked);
-        },
-      ),
-    ]);
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (context) => _StylistPicker(firestoreService: _firestoreService),
+            );
+            if (picked != null) setState(() => selectedStylist = picked);
+          },
+        ),
+      ],
+    );
   }
 
-  Widget _rowButton(
-      {required Widget leading,
-      required String text,
-      required VoidCallback onTap}) {
+  Widget _selectButton({
+    required IconData icon,
+    required String text,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!),
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? Color(0xFF0891B2) : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
         ),
-        child: Row(children: [
-          leading,
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 16))),
-          const Icon(Icons.chevron_right),
-        ]),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Color(0xFF0891B2) : Colors.grey.shade500,
+              size: 22,
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? Colors.grey.shade800 : Colors.grey.shade600,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.grey.shade400,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -315,40 +502,88 @@ class _ServicePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      builder: (context, controller) => Column(
-        children: [
-          const SizedBox(height: 12),
-          const Text('Chọn dịch vụ',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 12),
-          Expanded(
-            child: StreamBuilder<List<Service>>(
-              stream: firestoreService.getServices(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final services = snapshot.data!;
-                return ListView.builder(
-                  controller: controller,
-                  itemCount: services.length,
-                  itemBuilder: (context, index) {
-                    final s = services[index];
-                    return ListTile(
-                      leading:
-                          CircleAvatar(backgroundImage: NetworkImage(s.image)),
-                      title: Text(s.name),
-                      trailing: Text('${s.price.toStringAsFixed(0)}đ'),
-                      onTap: () => Navigator.pop(context, s),
-                    );
-                  },
-                );
-              },
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, controller) => Column(
+          children: [
+            SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
-        ],
+            SizedBox(height: 20),
+            Text(
+              'Chọn dịch vụ',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: StreamBuilder<List<Service>>(
+                stream: firestoreService.getServices(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  final services = snapshot.data!;
+                  return ListView.separated(
+                    controller: controller,
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: services.length,
+                    separatorBuilder: (context, index) => Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final s = services[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            s.image,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        title: Text(
+                          s.name,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          '${s.price.toStringAsFixed(0)}đ',
+                          style: TextStyle(
+                            color: Color(0xFF0891B2),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: Color(0xFF0891B2),
+                        ),
+                        onTap: () => Navigator.pop(context, s),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -360,39 +595,91 @@ class _StylistPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      builder: (context, controller) => Column(
-        children: [
-          const SizedBox(height: 12),
-          const Text('Chọn stylist',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 12),
-          Expanded(
-            child: StreamBuilder<List<Stylist>>(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, controller) => Column(
+          children: [
+            SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Chọn stylist',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: StreamBuilder<List<Stylist>>(
                 stream: firestoreService.getStylists(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(child: CircularProgressIndicator());
                   }
                   final stylists = snapshot.data!;
-                  return ListView.builder(
+                  return ListView.separated(
                     controller: controller,
+                    padding: EdgeInsets.symmetric(horizontal: 20),
                     itemCount: stylists.length,
+                    separatorBuilder: (context, index) => Divider(height: 1),
                     itemBuilder: (context, index) {
                       final st = stylists[index];
                       return ListTile(
-                        leading: CircleAvatar(
-                            backgroundImage: NetworkImage(st.image)),
-                        title: Text(st.name),
-                        subtitle: Text('⭐ ${st.rating}'),
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            st.image,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        title: Text(
+                          st.name,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Row(
+                          children: [
+                            Icon(Icons.star, size: 16, color: Colors.amber),
+                            SizedBox(width: 4),
+                            Text(
+                              st.rating.toString(),
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: Color(0xFF0891B2),
+                        ),
                         onTap: () => Navigator.pop(context, st),
                       );
                     },
                   );
-                }),
-          ),
-        ],
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -404,41 +691,104 @@ class _BranchPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      builder: (context, controller) => Column(
-        children: [
-          const SizedBox(height: 12),
-          const Text('Chọn chi nhánh',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 12),
-          Expanded(
-            child: StreamBuilder<List<Branch>>(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, controller) => Column(
+          children: [
+            SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Chọn chi nhánh',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: StreamBuilder<List<Branch>>(
                 stream: firestoreService.getBranches(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(child: CircularProgressIndicator());
                   }
                   final branches = snapshot.data!;
-                  return ListView.builder(
+                  return ListView.separated(
                     controller: controller,
+                    padding: EdgeInsets.symmetric(horizontal: 20),
                     itemCount: branches.length,
+                    separatorBuilder: (context, index) => Divider(height: 1),
                     itemBuilder: (context, index) {
                       final branch = branches[index];
                       return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(branch.image),
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            branch.image,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                        title: Text(branch.name),
-                        subtitle: Text(branch.address),
-                        trailing: Text('⭐ ${branch.rating}'),
+                        title: Text(
+                          branch.name,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 4),
+                            Text(
+                              branch.address,
+                              style: TextStyle(fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.star, size: 14, color: Colors.amber),
+                                SizedBox(width: 4),
+                                Text(
+                                  branch.rating.toString(),
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: Color(0xFF0891B2),
+                        ),
                         onTap: () => Navigator.pop(context, branch),
                       );
                     },
                   );
-                }),
-          ),
-        ],
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

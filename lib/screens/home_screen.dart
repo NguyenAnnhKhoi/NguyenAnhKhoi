@@ -27,13 +27,9 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
-    );
+    )..forward();
     
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-    
-    _controller.forward();
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
   }
 
   @override
@@ -45,146 +41,44 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E3A8A),
+      backgroundColor: Colors.grey[100],
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
           slivers: [
-            // Header Section
-            SliverToBoxAdapter(
-              child: Container(
-                color: const Color(0xFF1E3A8A),
-                padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 35,
-                          backgroundColor: Colors.white,
-                          backgroundImage: _user?.photoURL != null ? NetworkImage(_user!.photoURL!) : null,
-                          child: _user?.photoURL == null 
-                            ? const Icon(Icons.person, size: 40, color: Color(0xFF1E3A8A)) 
-                            : null,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _user?.displayName ?? 'Guest',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                               Text(
-                                _user?.email ?? 'Vui lòng đăng nhập',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            SliverAppBar(
+              expandedHeight: 200,
+              floating: false,
+              pinned: true,
+              backgroundColor: const Color(0xFF0891B2),
+              flexibleSpace: FlexibleSpaceBar(
+                background: _buildHeader(),
               ),
             ),
-
-            // Main Content
             SliverToBoxAdapter(
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 20),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                           _TopButton(icon: Icons.card_giftcard, label: 'Ưu đãi'),
-                           _TopButton(icon: Icons.verified_user, label: 'Cam kết KTV'),
-                           _TopButton(icon: Icons.public, label: 'Hệ thống Salon'),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 24),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Dịch vụ phổ biến',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E3A8A),
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                           _TopButton(icon: Icons.card_giftcard_rounded, label: 'Ưu đãi'),
+                           _TopButton(icon: Icons.verified_user_rounded, label: 'Cam kết'),
+                           _TopButton(icon: Icons.public_rounded, label: 'Hệ thống'),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 28),
+                    _buildSectionTitle('Dịch vụ phổ biến'),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      height: 280,
-                      child: StreamBuilder<List<Service>>(
-                        stream: _firestoreService.getServices(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            // Hiển thị shimmer loading
-                            return GridView.builder(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 1,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 1.2,
-                              ),
-                              itemCount: 3, // Số lượng shimmer placeholders
-                              itemBuilder: (context, index) {
-                                return const ServiceCardShimmer();
-                              },
-                            );
-                          }
-                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                            return const Center(child: Text('Không có dịch vụ nào.'));
-                          }
-                          final services = snapshot.data!;
-                          return GridView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 1,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 1.2,
-                            ),
-                            itemCount: services.length,
-                            itemBuilder: (context, index) {
-                              return _buildServiceCard(services[index]);
-                            },
-                          );
-                        },
-                      ),
-                    ),
+                    _buildServicesList(),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -192,6 +86,117 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: Colors.white,
+                backgroundImage: _user?.photoURL != null ? NetworkImage(_user!.photoURL!) : null,
+                child: _user?.photoURL == null 
+                  ? const Icon(Icons.person, size: 35, color: Color(0xFF0891B2)) 
+                  : null,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Xin chào, ${_user?.displayName?.split(' ').last ?? 'Guest'}!',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                     Text(
+                      _user?.email ?? 'Vui lòng đăng nhập',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey.shade800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServicesList() {
+    return SizedBox(
+      height: 290,
+      child: StreamBuilder<List<Service>>(
+        stream: _firestoreService.getServices(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return GridView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 1,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.3,
+              ),
+              itemCount: 3,
+              itemBuilder: (context, index) => const ServiceCardShimmer(),
+            );
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Không có dịch vụ nào.'));
+          }
+          final services = snapshot.data!;
+          return GridView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 1,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.3,
+            ),
+            itemCount: services.length,
+            itemBuilder: (context, index) => _buildServiceCard(services[index]),
+          );
+        },
       ),
     );
   }
@@ -206,83 +211,80 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
           ),
         );
       },
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                    ),
-                    image: DecorationImage(
-                      image: NetworkImage(service.image),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: Image.network(
+                  service.image,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) => const Icon(Icons.error),
                 ),
               ),
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        service.name,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+            ),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      service.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                          const SizedBox(width: 4),
-                          Text(
-                            service.duration,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                         Text(
+                          '${service.price.toStringAsFixed(0)}đ',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0891B2),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${service.price.toStringAsFixed(0)}đ',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E3A8A),
                         ),
-                      ),
-                    ],
-                  ),
+                        Row(
+                          children: [
+                            const Icon(Icons.star, size: 16, color: Colors.amber),
+                            const SizedBox(width: 4),
+                            Text(
+                              service.rating.toString(),
+                              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -298,31 +300,32 @@ class _TopButton extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 70,
-          height: 70,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             color: Colors.white,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Icon(
             icon,
-            color: const Color(0xFF1E3A8A),
-            size: 32,
+            color: const Color(0xFF0891B2),
+            size: 30,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           label,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: FontWeight.w500,
+            color: Colors.black87
           ),
           textAlign: TextAlign.center,
         ),

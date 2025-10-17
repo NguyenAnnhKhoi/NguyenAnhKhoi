@@ -1,3 +1,4 @@
+// lib/models/stylist.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Stylist {
@@ -25,4 +26,16 @@ class Stylist {
       experience: data['experience'] ?? '',
     );
   }
+
+  // === PHẦN SỬA LỖI: Ghi đè toán tử so sánh và hashCode ===
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Stylist &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+  
 }

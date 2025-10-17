@@ -136,9 +136,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           ],
                         ),
                         child: Image.asset(
-                          'assets/logo.png', // Logo của bạn
-                          width: 100,
-                          height: 100,
+                          'assets/images/gg.png', // Logo của bạn
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(
                               Icons.content_cut_rounded,
