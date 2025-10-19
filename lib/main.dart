@@ -15,6 +15,11 @@ import 'screens/forgot_password_screen.dart';
 import 'services/notification_service.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
+// --- THÊM CÁC IMPORT NÀY ---
+import 'services/firestore_service.dart';
+import 'admin/admin_home_screen.dart';
+// -----------------------------
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().init();
@@ -50,6 +55,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Gentlemen\'s Grooming',
       theme: ThemeData(
+        // ... (Theme của bạn giữ nguyên) ...
         primarySwatch: Colors.cyan,
         primaryColor: const Color(0xFF0891B2),
         scaffoldBackgroundColor: Colors.grey[50],
@@ -104,28 +110,87 @@ class MyApp extends StatelessWidget {
         '/login': (_) => const LoginScreen(),
       },
       builder: EasyLoading.init(),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF0891B2),
-                ),
-              ),
-            );
-          }
-          if (snapshot.hasData) {
-            return const MainScreen();
-          }
-          return const LoginScreen();
-        },
-      ),
+      home: const AuthWrapper(),
     );
   }
 }
 
+// === WIDGET ĐÃ SỬA LỖI ===
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Khởi tạo service ở đây
+    final firestoreService = FirestoreService();
+
+    // 1. Lắng nghe trạng thái đăng nhập (đã đăng nhập hay chưa)
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, authSnapshot) {
+        
+        // Trạng thái đang chờ kết nối...
+        if (authSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF0891B2)),
+            ),
+          );
+        }
+
+        // 2. NẾU ĐÃ ĐĂNG NHẬP (authSnapshot.hasData == true)
+        if (authSnapshot.hasData) {
+          
+          // 3. KIỂM TRA TIẾP: Người này có phải Admin không?
+          return StreamBuilder<bool>(
+            stream: firestoreService.isAdmin(),
+            builder: (context, adminSnapshot) {
+              
+              // **SỬA LỖI: Thêm xử lý lỗi**
+              if (adminSnapshot.hasError) {
+                // Hiển thị lỗi này trong console để bạn gỡ lỗi
+                print("--- LỖI AuthWrapper/isAdmin ---");
+                print(adminSnapshot.error);
+                print("--------------------------------");
+                
+                // Do không thể xác định quyền, tạm thời cho vào trang User
+                // (Đây có thể là lỗi do Firestore Rules)
+                return const MainScreen(); 
+              }
+
+              // **SỬA LỖI: Xử lý trạng thái chờ**
+              if (adminSnapshot.connectionState == ConnectionState.waiting) {
+                // Đây là màn hình loading mà bạn bị kẹt
+                return const Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(color: Color(0xFF0E7490)),
+                  ),
+                );
+              }
+
+              // 5. CÓ DỮ LIỆU (true hoặc false)
+              if (adminSnapshot.data == true) {
+                // LÀ ADMIN -> Chuyển đến trang Admin
+                return const AdminHomeScreen();
+              } else {
+                // LÀ USER THƯỜNG -> Chuyển đến trang User
+                return const MainScreen();
+              }
+            },
+          );
+        }
+
+        // 6. NẾU CHƯA ĐĂNG NHẬP (authSnapshot.hasData == false)
+        // -> Về trang Login (màn hình chung)
+        return const LoginScreen();
+      },
+    );
+  }
+}
+// ======================================================
+
+
+// (Class MainScreen và MainScreenState của bạn giữ nguyên)
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -135,9 +200,6 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-
-  // === PHẦN SỬA LỖI 1: Tạo GlobalKey ===
-  // Key này sẽ cho phép chúng ta truy cập và điều khiển ConvexAppBar
   final GlobalKey<ConvexAppBarState> _appBarKey = GlobalKey<ConvexAppBarState>();
 
   final List<Widget> _actualScreens = [
@@ -161,9 +223,7 @@ class MainScreenState extends State<MainScreen> {
         children: _actualScreens,
       ),
       bottomNavigationBar: ConvexAppBar(
-        // === PHẦN SỬA LỖI 2: Gán Key cho AppBar ===
         key: _appBarKey,
-
         style: TabStyle.reactCircle,
         backgroundColor: Colors.white,
         color: Colors.grey.shade600,
@@ -179,17 +239,12 @@ class MainScreenState extends State<MainScreen> {
         ],
         onTap: (int index) async {
           if (index == 2) {
-            // Khi nhấn "Đặt lịch", chúng ta điều hướng đến màn hình mới
             await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const QuickBookingScreen()),
             );
-            // === PHẦN SỬA LỖI 3: Đồng bộ lại AppBar sau khi quay về ===
-            // Sau khi quay lại, dùng key để "ra lệnh" cho AppBar
-            // nhảy về đúng tab đang được chọn (_selectedIndex)
             _appBarKey.currentState?.animateTo(_selectedIndex);
           } else {
-            // Khi nhấn các tab khác, cập nhật trạng thái như bình thường
             setState(() {
               _selectedIndex = index;
             });

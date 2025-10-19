@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/branch.dart';
 import '../services/firestore_service.dart';
 import 'map_screen.dart';
+// --- THÊM IMPORT ---
+import 'quick_booking_screen.dart';
 
 class BranchScreen extends StatefulWidget {
   const BranchScreen({super.key});
@@ -13,9 +15,33 @@ class BranchScreen extends StatefulWidget {
 
 class _BranchScreenState extends State<BranchScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  List<Branch> _branches = []; // Lưu danh sách chi nhánh
+  List<Branch> _branches = [];
 
-  // Hàm điều hướng đến màn hình bản đồ
+  // --- THAY ĐỔI: Chuyển hướng tới bản đồ với một chi nhánh đích cụ thể ---
+  void _navigateToDirections(Branch destinationBranch) {
+    if (_branches.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MapScreen(
+            branches: _branches,
+            destinationBranch: destinationBranch, // Truyền chi nhánh cần chỉ đường
+          ),
+        ),
+      );
+    }
+  }
+
+  // --- THÊM MỚI: Chuyển hướng tới màn hình đặt lịch nhanh với chi nhánh đã chọn ---
+  void _navigateToQuickBooking(Branch selectedBranch) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuickBookingScreen(initialBranch: selectedBranch),
+      ),
+    );
+  }
+
   void _navigateToMapScreen() {
     if (_branches.isNotEmpty) {
       Navigator.push(
@@ -26,7 +52,7 @@ class _BranchScreenState extends State<BranchScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa có dữ liệu chi nhánh để hiển thị trên bản đồ.')),
+        const SnackBar(content: Text('Chưa có dữ liệu chi nhánh.')),
       );
     }
   }
@@ -69,19 +95,19 @@ class _BranchScreenState extends State<BranchScreen> {
               ),
             ),
             actions: [
+              // --- THAY ĐỔI: Tăng kích thước icon bản đồ ---
               IconButton(
-                // SỬA LẠI HÀNH ĐỘNG CỦA NÚT
                 onPressed: _navigateToMapScreen,
                 icon: Container(
-                  padding: EdgeInsets.all(6),
+                  padding: EdgeInsets.all(8), // Tăng padding
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.map_outlined, color: Colors.white, size: 20),
+                  child: Icon(Icons.map_outlined, color: Colors.white, size: 24), // Tăng size
                 ),
               ),
-              SizedBox(width: 8),
+              SizedBox(width: 10), // Tăng khoảng cách
             ],
           ),
           SliverToBoxAdapter(
@@ -105,12 +131,9 @@ class _BranchScreenState extends State<BranchScreen> {
                   );
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    // ... giữ nguyên phần empty state
-                  );
+                  return Center(child: Text("Không có chi nhánh nào."));
                 }
 
-                // Cập nhật danh sách chi nhánh khi có dữ liệu mới
                 _branches = snapshot.data!;
                 
                 return ListView.builder(
@@ -133,7 +156,6 @@ class _BranchScreenState extends State<BranchScreen> {
     );
   }
 
-  // ... các hàm _buildBranchCard và _infoRow giữ nguyên
   Widget _buildBranchCard(Branch branch) {
     return Container(
       decoration: BoxDecoration(
@@ -215,28 +237,42 @@ class _BranchScreenState extends State<BranchScreen> {
                 SizedBox(height: 8),
                 _infoRow(Icons.access_time_outlined, 'Giờ mở cửa: ${branch.hours}'),
                 SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: Icon(Icons.calendar_month_rounded, size: 20),
-                    label: Text(
-                      'Đặt lịch tại đây',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                // --- THAY ĐỔI: Thay thế 1 nút bằng 2 nút mới ---
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _navigateToDirections(branch),
+                        icon: Icon(Icons.directions_car_rounded, size: 18),
+                        label: Text('Chỉ đường'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Color(0xFF0891B2),
+                          side: BorderSide(color: Color(0xFF0891B2)),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF0891B2),
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _navigateToQuickBooking(branch),
+                        icon: Icon(Icons.calendar_month_rounded, size: 18),
+                        label: Text('Đặt lịch'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF0891B2),
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

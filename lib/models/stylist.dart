@@ -16,6 +16,23 @@ class Stylist {
     required this.experience,
   });
 
+  // Thêm copyWith
+  Stylist copyWith({
+    String? id,
+    String? name,
+    String? image,
+    double? rating,
+    String? experience,
+  }) {
+    return Stylist(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      image: image ?? this.image,
+      rating: rating ?? this.rating,
+      experience: experience ?? this.experience,
+    );
+  }
+
   factory Stylist.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data()!;
     return Stylist(
@@ -26,8 +43,17 @@ class Stylist {
       experience: data['experience'] ?? '',
     );
   }
+  
+  // THÊM MỚI: Phương thức toJson
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'image': image,
+      'rating': rating,
+      'experience': experience,
+    };
+  }
 
-  // === PHẦN SỬA LỖI: Ghi đè toán tử so sánh và hashCode ===
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -37,5 +63,4 @@ class Stylist {
 
   @override
   int get hashCode => id.hashCode;
-  
 }

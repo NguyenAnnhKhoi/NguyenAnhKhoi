@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import '../services/auth_service.dart';
+// KHÔNG import firestore_service
 import 'profile/profile_info_screen.dart';
 import 'profile/favorite_services_screen.dart';
 import 'profile/transaction_history_screen.dart';
@@ -10,6 +11,7 @@ import 'profile/notifications_screen.dart';
 import 'profile/help_support_screen.dart';
 import 'profile/about_us_screen.dart';
 import 'profile/terms_policy_screen.dart';
+// KHÔNG import admin_home_screen
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -20,6 +22,7 @@ class AccountScreen extends StatefulWidget {
 
 class AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
   final _authService = AuthService();
+  // KHÔNG cần _firestoreService ở đây
   User? _user;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -42,13 +45,16 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     _controller.forward();
   }
 
+  // ... (giữ nguyên hàm dispose)
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
-
+  
+  // *** HÀM ĐÃ SỬA LỖI ***
   Future<void> _logout() async {
+    // ... (toàn bộ phần showDialog giữ nguyên) ...
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
@@ -139,15 +145,14 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
 
     if (confirm == true) {
       await _authService.signOut();
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (Route<dynamic> route) => false,
-        );
-      }
+      
+      // *** ĐÃ XÓA KHỐI ĐIỀU HƯỚNG (Navigator) Ở ĐÂY ***
+      // AuthWrapper (trong main.dart) sẽ tự động xử lý việc chuyển màn hình.
+      // Chúng ta không cần làm gì thêm.
     }
   }
 
+  // ... (giữ nguyên hàm _navigateTo)
   void _navigateTo(Widget screen) {
     Navigator.push(
       context,
@@ -160,7 +165,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Header with gradient
+          // ... (Giữ nguyên SliverAppBar)
           SliverAppBar(
             expandedHeight: 240,
             pinned: true,
@@ -267,6 +272,8 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                     children: [
                       SizedBox(height: 8),
                       
+                      // XÓA NÚT ADMIN KHỎI ĐÂY
+                      
                       // Section: Tài khoản
                       _buildSectionTitle('Tài khoản', Icons.person),
                       SizedBox(height: 12),
@@ -342,6 +349,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                       
                       // Logout Button
                       Container(
+                        // ... (giữ nguyên Logout Button)
                         width: double.infinity,
                         height: 58,
                         decoration: BoxDecoration(
@@ -386,6 +394,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                       
                       // Version Info
                       Center(
+                        // ... (giữ nguyên Version Info)
                         child: Text(
                           'Gentlemen\'s Grooming v1.0.0',
                           style: TextStyle(
@@ -407,6 +416,9 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     );
   }
 
+  // XÓA HÀM _buildAdminButton()
+  
+  // ... (giữ nguyên hàm _buildSectionTitle)
   Widget _buildSectionTitle(String title, IconData icon) {
     return Row(
       children: [
@@ -436,6 +448,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     );
   }
 
+  // ... (giữ nguyên hàm _buildMenuCard)
   Widget _buildMenuCard(List<_MenuItem> items) {
     return Container(
       decoration: BoxDecoration(
@@ -527,6 +540,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
   }
 }
 
+// ... (giữ nguyên class _MenuItem)
 class _MenuItem {
   final IconData icon;
   final String title;

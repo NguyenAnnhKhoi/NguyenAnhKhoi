@@ -10,7 +10,10 @@ import '../models/booking.dart';
 import '../services/notification_service.dart';
 
 class QuickBookingScreen extends StatefulWidget {
-  const QuickBookingScreen({super.key});
+  // --- THÊM MỚI: Thêm tham số để nhận chi nhánh ban đầu ---
+  final Branch? initialBranch;
+
+  const QuickBookingScreen({super.key, this.initialBranch});
 
   @override
   State<QuickBookingScreen> createState() => _QuickBookingScreenState();
@@ -37,8 +40,18 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       _nameController.text = user.displayName ?? '';
       _phoneController.text = user.phoneNumber ?? '';
     }
+    // --- THÊM MỚI: Gán chi nhánh ban đầu nếu có ---
+    if (widget.initialBranch != null) {
+      selectedBranch = widget.initialBranch;
+    }
   }
 
+  // ... (Toàn bộ các hàm khác như _resetForm, _confirmQuickBooking, build... giữ nguyên)
+  
+  // ... (Dán toàn bộ phần còn lại của file quick_booking_screen.dart vào đây)
+  // ... (Không cần thay đổi gì thêm ở các hàm còn lại)
+  // ...
+  // ...
   @override
   void dispose() {
     _nameController.dispose();
@@ -95,6 +108,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       if (mounted) {
         _resetForm();
         EasyLoading.showSuccess('Đặt lịch thành công!\nKiểm tra ở tab Lịch sử.');
+        Navigator.pop(context); // Tự động quay lại sau khi đặt thành công
       }
     } catch (e) {
       if (mounted) {
