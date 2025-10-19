@@ -67,6 +67,7 @@ class FirestoreService {
               customerName: data['customerName'] ?? 'Không rõ',
               customerPhone: data['customerPhone'] ?? 'Không rõ',
               branchName: data['branchName'] ?? 'Không rõ',
+              paymentMethod: data['paymentMethod'] ?? 'Tại quầy', // <-- CẬP NHẬT
             ));
           }
         } catch (e) {
@@ -117,6 +118,7 @@ class FirestoreService {
       'customerName': booking.customerName,
       'customerPhone': booking.customerPhone,
       'branchName': booking.branchName,
+      'paymentMethod': booking.paymentMethod, // <-- THÊM MỚI
       'createdAt': FieldValue.serverTimestamp(),
     });
   }

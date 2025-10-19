@@ -1,9 +1,11 @@
+// lib/screens/my_bookings_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/booking.dart';
 import '../services/firestore_service.dart';
 import '../services/notification_service.dart';
+import 'quick_booking_screen.dart'; // <-- THÊM IMPORT NÀY
 
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
@@ -32,18 +34,25 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFF8FAFC),
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 160,
+              expandedHeight: 180,
               floating: true,
               pinned: true,
-              backgroundColor: Color(0xFF0891B2),
+              elevation: 0,
+              backgroundColor: Colors.white,
               flexibleSpace: FlexibleSpaceBar(
+                titlePadding: EdgeInsets.only(left: 20, bottom: 16),
                 title: Text(
-                  'Lịch hẹn của tôi',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  '📅 Lịch hẹn của tôi',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                    color: Color(0xFF0F172A),
+                  ),
                 ),
                 background: Container(
                   decoration: BoxDecoration(
@@ -51,35 +60,93 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFF0891B2),
-                        Color(0xFF06B6D4),
-                        Color(0xFF22D3EE),
+                        Color(0xFFF0F9FF),
+                        Color(0xFFE0F2FE),
+                        Colors.white,
                       ],
                     ),
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.event_note_rounded,
-                      size: 60,
-                      color: Colors.white.withOpacity(0.3),
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 60, right: 20),
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF0891B2).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.calendar_month_rounded,
+                          size: 32,
+                          color: Color(0xFF0891B2),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-              bottom: TabBar(
-                controller: _tabController,
-                indicatorColor: Colors.white,
-                indicatorWeight: 3,
-                tabs: [
-                  Tab(
-                    icon: Icon(Icons.upcoming_rounded),
-                    text: 'Sắp tới',
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(60),
+                child: Container(
+                  color: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF0891B2).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Color(0xFF64748B),
+                      labelStyle: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                      unselectedLabelStyle: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      tabs: [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.upcoming_rounded, size: 18),
+                              SizedBox(width: 6),
+                              Text('Sắp tới'),
+                            ],
+                          ),
+                        ),
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.history_rounded, size: 18),
+                              SizedBox(width: 6),
+                              Text('Lịch sử'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  Tab(
-                    icon: Icon(Icons.history_rounded),
-                    text: 'Lịch sử',
-                  ),
-                ],
+                ),
               ),
             ),
           ];
@@ -147,37 +214,77 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFF0F9FF),
+                  Color(0xFFE0F2FE),
+                ],
+              ),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF0891B2).withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
             ),
-            child: Icon(
-              isUpcoming ? Icons.event_busy_rounded : Icons.history_rounded,
-              size: 64,
-              color: Colors.grey.shade400,
+            child: Text(
+              isUpcoming ? '📅' : '📋',
+              style: TextStyle(fontSize: 72),
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 24),
           Text(
-            isUpcoming ? 'Chưa có lịch hẹn sắp tới' : 'Chưa có lịch sử',
+            isUpcoming ? 'Chưa có lịch hẹn nào' : 'Chưa có lịch sử',
             style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              color: Color(0xFF1E293B),
+              fontWeight: FontWeight.w800,
             ),
           ),
-          SizedBox(height: 8),
-          Text(
-            isUpcoming 
-                ? 'Hãy đặt lịch dịch vụ ngay!' 
-                : 'Các lịch hẹn đã hoàn thành sẽ hiện ở đây',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
+          SizedBox(height: 12),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 48),
+            child: Text(
+              isUpcoming 
+                  ? 'Bắt đầu đặt lịch để trải nghiệm dịch vụ tuyệt vời! ✨' 
+                  : 'Các lịch hẹn đã hoàn thành sẽ hiện ở đây',
+              style: TextStyle(
+                fontSize: 15,
+                color: Color(0xFF64748B),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
           ),
+          if (isUpcoming) ...[
+            SizedBox(height: 32),
+            ElevatedButton.icon(
+              // --- THAY ĐỔI CHỖ NÀY ---
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const QuickBookingScreen()),
+                );
+              },
+              // --- KẾT THÚC THAY ĐỔI ---
+              icon: Icon(Icons.add_circle_outline, size: 20),
+              label: Text('Đặt lịch ngay'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF0891B2),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 4,
+                shadowColor: Color(0xFF0891B2).withOpacity(0.4),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -315,8 +422,8 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                           label: Text('Hủy lịch'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red.shade400,
-                            side: BorderSide(color: Colors.red.shade300),
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: Colors.red.shade200, width: 1.5),
+                            padding: EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -332,8 +439,9 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF0891B2),
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            elevation: 2,
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            elevation: 3,
+                            shadowColor: Color(0xFF0891B2).withOpacity(0.4),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

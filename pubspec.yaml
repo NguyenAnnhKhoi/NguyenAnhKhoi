@@ -26,7 +26,8 @@ dependencies:
   geolocator: ^14.0.1
   url_launcher: ^6.3.2
   http: ^1.5.0
-
+  vietqr_flutter: ^1.0.0 
+  qr_flutter: ^4.1.0 
 
 dev_dependencies:
   flutter_test:
@@ -40,7 +41,7 @@ flutter:
     - assets/images/
 
 flutter_native_splash:
-  color: "#FFFFFF" # Màu trắng
+  color: "#FFFFFF" 
   image: assets/images/splash_logo_with_slogan.png
   android: true
   ios: true

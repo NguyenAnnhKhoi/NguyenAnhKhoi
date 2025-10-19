@@ -9,10 +9,10 @@ class Booking {
   final DateTime dateTime;
   final String status;
   final String note;
-  // --- THÊM CÁC TRƯỜNG MỚI ---
   final String customerName;
   final String customerPhone;
-  final String branchName; // Lưu tên chi nhánh
+  final String branchName;
+  final String paymentMethod; // <-- THÊM MỚI
 
   Booking({
     required this.id,
@@ -21,10 +21,10 @@ class Booking {
     required this.dateTime,
     required this.status,
     this.note = "",
-    // --- CẬP NHẬT CONSTRUCTOR ---
     required this.customerName,
     required this.customerPhone,
     required this.branchName,
+    this.paymentMethod = 'Tại quầy', // <-- THÊM MỚI (mặc định)
   });
 
   Booking copyWith({
@@ -32,17 +32,20 @@ class Booking {
     String? customerName,
     String? customerPhone,
     String? branchName,
+    String? paymentMethod, // <-- THÊM MỚI
+    String? status, // <-- THÊM MỚI (để cập nhật status)
   }) {
     return Booking(
       id: id ?? this.id,
       service: service,
       stylist: stylist,
       dateTime: dateTime,
-      status: status,
+      status: status ?? this.status, // <-- CẬP NHẬT
       note: note,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       branchName: branchName ?? this.branchName,
+      paymentMethod: paymentMethod ?? this.paymentMethod, // <-- CẬP NHẬT
     );
   }
 }

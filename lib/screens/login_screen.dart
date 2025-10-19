@@ -133,53 +133,80 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 40,
+                              offset: const Offset(0, 12),
                             ),
                           ],
                         ),
-                        child: Image.asset(
-                          'assets/images/gg.png', // Logo của bạn
-                          width: 120,
-                          height: 120,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.content_cut_rounded,
-                              size: 100,
-                              color: Color(0xFF0891B2),
-                            );
-                          },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF0891B2).withOpacity(0.1),
+                                Color(0xFF06B6D4).withOpacity(0.05),
+                              ],
+                            ),
+                          ),
+                          child: Image.asset(
+                            'assets/images/gg.png', // Logo của bạn
+                            width: 120,
+                            height: 120,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.content_cut_rounded,
+                                size: 100,
+                                color: Color(0xFF0891B2),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(height: 32),
 
                       // Title
                       Text(
-                        'GENTLEMEN\'S',
+                        '✂️ GENTLEMEN\'S',
                         style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w300,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w400,
                           color: Colors.white,
-                          letterSpacing: 4,
+                          letterSpacing: 3,
                         ),
                       ),
                       Text(
                         'GROOMING',
                         style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
                           color: Colors.white,
-                          letterSpacing: 2,
+                          letterSpacing: 1.5,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.2),
+                              offset: Offset(0, 4),
+                              blurRadius: 8,
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Chào mừng trở lại',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          'Chào mừng trở lại! 👋',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 48),
@@ -318,26 +345,33 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
                                 // Login Button
                                 SizedBox(
-                                  height: 56,
+                                  height: 58,
                                   child: ElevatedButton(
                                     onPressed: _handleEmailSignIn,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Color(0xFF0891B2),
                                       foregroundColor: Colors.white,
-                                      elevation: 4,
+                                      elevation: 6,
                                       shadowColor:
-                                          Color(0xFF0891B2).withOpacity(0.5),
+                                          Color(0xFF0891B2).withOpacity(0.6),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                     ),
-                                    child: Text(
-                                      'Đăng nhập',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                      ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Đăng nhập',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.8,
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Icon(Icons.arrow_forward_rounded, size: 22),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -373,16 +407,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 // Google Sign In
                                 SizedBox(
                                   height: 56,
-                                  child: OutlinedButton.icon(
+                                  child: OutlinedButton(
                                     onPressed: _handleGoogleSignIn,
-                                    icon: Icon(Icons.g_mobiledata, size: 28),
-                                    label: Text(
-                                      'Đăng nhập với Google',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.grey.shade700,
                                       side: BorderSide(
@@ -391,6 +417,38 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(8),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.05),
+                                                blurRadius: 4,
+                                                offset: Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Icon(
+                                            Icons.g_mobiledata, 
+                                            size: 24,
+                                            color: Color(0xFF0891B2),
+                                          ),
+                                        ),
+                                        SizedBox(width: 12),
+                                        Text(
+                                          'Đăng nhập với Google',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),

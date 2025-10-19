@@ -8,9 +8,9 @@ import '../models/branch.dart';
 import '../services/firestore_service.dart';
 import '../models/booking.dart';
 import '../services/notification_service.dart';
+import 'payment_screen.dart'; // <-- THÊM IMPORT
 
 class QuickBookingScreen extends StatefulWidget {
-  // --- THÊM MỚI: Thêm tham số để nhận chi nhánh ban đầu ---
   final Branch? initialBranch;
 
   const QuickBookingScreen({super.key, this.initialBranch});
@@ -28,6 +28,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   Branch? selectedBranch;
+  String _paymentMethod = 'Tại quầy'; // <-- THÊM MỚI
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -40,18 +41,11 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       _nameController.text = user.displayName ?? '';
       _phoneController.text = user.phoneNumber ?? '';
     }
-    // --- THÊM MỚI: Gán chi nhánh ban đầu nếu có ---
     if (widget.initialBranch != null) {
       selectedBranch = widget.initialBranch;
     }
   }
 
-  // ... (Toàn bộ các hàm khác như _resetForm, _confirmQuickBooking, build... giữ nguyên)
-  
-  // ... (Dán toàn bộ phần còn lại của file quick_booking_screen.dart vào đây)
-  // ... (Không cần thay đổi gì thêm ở các hàm còn lại)
-  // ...
-  // ...
   @override
   void dispose() {
     _nameController.dispose();
@@ -66,10 +60,14 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       selectedDate = null;
       selectedTime = null;
       selectedBranch = null;
+      _paymentMethod = 'Tại quầy'; // <-- RESET
+      // Không reset tên và sđt
     });
   }
 
+  // --- HÀM _confirmQuickBooking ĐƯỢC VIẾT LẠI ---
   Future<void> _confirmQuickBooking() async {
+    // 1. Kiểm tra
     if (selectedStylist == null ||
         selectedService == null ||
         selectedDate == null ||
@@ -83,6 +81,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
 
     await EasyLoading.show(status: 'Đang xử lý...');
 
+    // 2. Tạo Booking object
     Booking newBooking = Booking(
       id: '',
       service: selectedService!,
@@ -94,25 +93,39 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
         selectedTime!.hour,
         selectedTime!.minute,
       ),
-      status: 'Chờ xác nhận',
       customerName: _nameController.text.trim(),
       customerPhone: _phoneController.text.trim(),
       branchName: selectedBranch!.name,
+      paymentMethod: _paymentMethod, // <-- Gán phương thức
+      status: _paymentMethod == 'Online' ? 'Đã xác nhận' : 'Chờ xác nhận', // <-- Gán trạng thái
     );
 
-    try {
-      final docRef = await _firestoreService.addBooking(newBooking);
-      newBooking = newBooking.copyWith(id: docRef.id);
-      await _notificationService.scheduleBookingNotification(newBooking);
+    // 3. Xử lý
+    if (_paymentMethod == 'Online') {
+      // Chuyển đến màn hình thanh toán
+      await EasyLoading.dismiss();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PaymentScreen(booking: newBooking),
+        ),
+      );
+    } else {
+      // Thanh toán tại quầy (luồng cũ)
+      try {
+        final docRef = await _firestoreService.addBooking(newBooking);
+        newBooking = newBooking.copyWith(id: docRef.id);
+        await _notificationService.scheduleBookingNotification(newBooking);
 
-      if (mounted) {
-        _resetForm();
-        EasyLoading.showSuccess('Đặt lịch thành công!\nKiểm tra ở tab Lịch sử.');
-        Navigator.pop(context); // Tự động quay lại sau khi đặt thành công
-      }
-    } catch (e) {
-      if (mounted) {
-        EasyLoading.showError('Lỗi: $e');
+        if (mounted) {
+          _resetForm();
+          EasyLoading.showSuccess('Đặt lịch thành công!\nKiểm tra ở tab Lịch sử.');
+          Navigator.pop(context); // Tự động quay lại sau khi đặt thành công
+        }
+      } catch (e) {
+        if (mounted) {
+          EasyLoading.showError('Lỗi: $e');
+        }
       }
     }
   }
@@ -123,6 +136,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
+          // ... (SliverAppBar giữ nguyên) ...
           SliverAppBar(
             expandedHeight: 160,
             floating: false,
@@ -159,6 +173,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
               ),
             ),
           ),
+          
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(20),
@@ -191,6 +206,15 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                     icon: Icons.access_time_rounded,
                     child: _buildSelectDateTime(context),
                   ),
+                  SizedBox(height: 16),
+                  // --- THÊM BƯỚC 5: CHỌN THANH TOÁN ---
+                  _buildStepCard(
+                    step: 5,
+                    title: 'Chọn thanh toán',
+                    icon: Icons.payment_rounded,
+                    child: _buildPaymentSelector(),
+                  ),
+                  // ------------------------------------
                   SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -227,6 +251,40 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
+  // ... (các hàm _build... khác giữ nguyên)
+
+  // --- HÀM WIDGET MỚI ---
+  Widget _buildPaymentSelector() {
+    return SegmentedButton<String>(
+      style: SegmentedButton.styleFrom(
+        backgroundColor: Colors.grey.shade50,
+        selectedBackgroundColor: Color(0xFF0891B2).withOpacity(0.1),
+        selectedForegroundColor: Color(0xFF0891B2),
+        side: BorderSide(color: Colors.grey.shade300),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      segments: const [
+        ButtonSegment<String>(
+          value: 'Tại quầy',
+          label: Text('Tại quầy'),
+          icon: Icon(Icons.storefront_rounded),
+        ),
+        ButtonSegment<String>(
+          value: 'Online',
+          label: Text('Online'),
+          icon: Icon(Icons.qr_code_scanner_rounded),
+        ),
+      ],
+      selected: {_paymentMethod},
+      onSelectionChanged: (Set<String> newSelection) {
+        setState(() {
+          _paymentMethod = newSelection.first;
+        });
+      },
+    );
+  }
+
+  // ... (Tất cả các hàm _build... và _selectButton còn lại giữ nguyên)
   Widget _buildStepCard({
     required int step,
     required String title,
@@ -508,6 +566,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   }
 }
 
+// ... (Các class _ServicePicker, _StylistPicker, _BranchPicker giữ nguyên)
 // --- PICKER WIDGETS ---
 
 class _ServicePicker extends StatelessWidget {

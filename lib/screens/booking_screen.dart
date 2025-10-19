@@ -6,6 +6,8 @@ import '../models/booking.dart';
 import '../models/stylist.dart';
 import '../models/branch.dart';
 import '../services/firestore_service.dart';
+import '../services/notification_service.dart'; // THÊM IMPORT
+import 'payment_screen.dart'; // THÊM IMPORT
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -16,6 +18,7 @@ class BookingScreen extends StatefulWidget {
 
 class BookingScreenState extends State<BookingScreen> with TickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
+  final NotificationService _notificationService = NotificationService(); // THÊM MỚI
   Stylist? selectedStylist;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
@@ -24,6 +27,10 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
   final TextEditingController _phoneController = TextEditingController();
   late AnimationController _controller;
   bool _isLoading = false;
+
+  // --- THÊM MỚI: Trạng thái thanh toán ---
+  String _paymentMethod = 'Tại quầy'; // 'Tại quầy' hoặc 'Online'
+  // ------------------------------------
 
   @override
   void initState() {
@@ -48,7 +55,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     super.dispose();
   }
   
+  // --- HÀM _confirmBooking ĐƯỢC VIẾT LẠI ---
   Future<void> _confirmBooking(Service service) async {
+    // 1. Kiểm tra thông tin
     if (selectedBranch == null || selectedStylist == null || selectedDate == null || selectedTime == null || 
         _nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,8 +73,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     
     setState(() => _isLoading = true);
 
+    // 2. Tạo đối tượng Booking trong bộ nhớ
     final newBooking = Booking(
-      id: '',
+      id: '', // ID sẽ được tạo bởi Firestore
       service: service,
       stylist: selectedStylist!,
       dateTime: DateTime(
@@ -75,115 +85,131 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         selectedTime!.hour,
         selectedTime!.minute,
       ),
-      status: 'Chờ xác nhận',
       customerName: _nameController.text.trim(),
       customerPhone: _phoneController.text.trim(),
       branchName: selectedBranch!.name,
+      paymentMethod: _paymentMethod, // <-- Gán phương thức
+      status: _paymentMethod == 'Online' ? 'Đã xác nhận' : 'Chờ xác nhận', // <-- Gán trạng thái
     );
     
-    try {
-      await _firestoreService.addBooking(newBooking);
-      if(mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            child: Container(
-              padding: EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  colors: [Colors.white, Color(0xFFE0F7FA)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF0891B2).withOpacity(0.1),
-                      shape: BoxShape.circle,
+    // 3. Xử lý dựa trên phương thức thanh toán
+    if (_paymentMethod == 'Online') {
+      // Chuyển đến màn hình thanh toán
+      setState(() => _isLoading = false);
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PaymentScreen(booking: newBooking),
+        ),
+      );
+      
+      // Nếu thanh toán thành công, thoát về màn hình chính
+      if (result == true && mounted) {
+        Navigator.pop(context);
+      }
+      // Nếu result == null (user bấm back), không làm gì, ở lại màn hình booking
+    } else {
+      // Thanh toán tại quầy (luồng cũ)
+      try {
+        final docRef = await _firestoreService.addBooking(newBooking);
+        final bookingWithId = newBooking.copyWith(id: docRef.id);
+        await _notificationService.scheduleBookingNotification(bookingWithId);
+
+        if(mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              child: Container(
+                padding: EdgeInsets.all(32),
+                // ... (Nội dung Dialog thành công giữ nguyên như cũ) ...
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF0891B2).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF0891B2),
+                        size: 64,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.check_circle_rounded,
-                      color: Color(0xFF0891B2),
-                      size: 64,
+                    SizedBox(height: 24),
+                    Text(
+                      'Thành công!',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0891B2),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 24),
-                  Text(
-                    'Thành công!',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0891B2),
+                    SizedBox(height: 12),
+                    Text(
+                      'Đặt lịch thành công!',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade800,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Đặt lịch thành công!',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
+                    SizedBox(height: 8),
+                    Text(
+                      'Chúng tôi sẽ gửi xác nhận trong thời gian sớm nhất.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Chúng tôi sẽ gửi xác nhận trong thời gian sớm nhất.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF0891B2),
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: Color(0xFF0891B2).withOpacity(0.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                    SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Đóng dialog
+                          Navigator.of(context).pop(); // Đóng BookingScreen
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF0891B2),
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          'Hoàn tất',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
-                      child: Text(
-                        'Hoàn tất',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
+      } catch(e) {
+        if(mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi: $e'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      } finally {
+        if(mounted) setState(() => _isLoading = false);
       }
-    } catch(e) {
-      if(mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
-    } finally {
-      if(mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -192,20 +218,41 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     final service = ModalRoute.of(context)!.settings.arguments as Service;
 
     return Scaffold(
+      backgroundColor: Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
+          // ... (SliverAppBar giữ nguyên)
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 200,
             pinned: true,
-            backgroundColor: Color(0xFF0891B2),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
+            elevation: 0,
+            backgroundColor: Colors.white,
+            leading: Container(
+              margin: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new, color: Color(0xFF0891B2)),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
             flexibleSpace: FlexibleSpaceBar(
+              titlePadding: EdgeInsets.only(left: 20, bottom: 16),
               title: Text(
-                'Đặt lịch hẹn',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                '📝 Đặt lịch hẹn',
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                  color: Color(0xFF0F172A),
+                ),
               ),
               background: Container(
                 decoration: BoxDecoration(
@@ -213,25 +260,37 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFF0891B2),
-                      Color(0xFF06B6D4),
-                      Color(0xFF22D3EE),
+                      Color(0xFFF0F9FF),
+                      Color(0xFFE0F2FE),
+                      Colors.white,
                     ],
                   ),
                 ),
-                child: Center(
-                  child: Icon(
-                    Icons.calendar_month_rounded,
-                    size: 80,
-                    color: Colors.white.withOpacity(0.3),
+                child: Padding(
+                  padding: EdgeInsets.only(top: 60, right: 20),
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF0891B2).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        Icons.calendar_month_rounded,
+                        size: 32,
+                        color: Color(0xFF0891B2),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          
           SliverToBoxAdapter(
             child: Container(
-              color: Colors.grey[50],
+              color: Color(0xFFF8FAFC),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
@@ -240,7 +299,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                     _buildServiceInfo(service),
                     SizedBox(height: 28),
                     
-                    _buildSectionTitle('Thông tin khách hàng', Icons.person_outline),
+                    _buildSectionTitle('👤 Thông tin khách hàng', Icons.person_outline),
                     SizedBox(height: 16),
                     _buildTextField(
                       controller: _nameController,
@@ -256,17 +315,17 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                     ),
                     
                     SizedBox(height: 28),
-                    _buildSectionTitle('Chọn chi nhánh', Icons.business_rounded),
+                    _buildSectionTitle('📍 Chọn chi nhánh', Icons.business_rounded),
                     SizedBox(height: 16),
                     _buildBranchSelector(),
                     
                     SizedBox(height: 28),
-                    _buildSectionTitle('Chọn stylist', Icons.person_pin_outlined),
+                    _buildSectionTitle('✂️ Chọn stylist', Icons.person_pin_outlined),
                     SizedBox(height: 16),
                     _buildStylistSelector(),
                     
                     SizedBox(height: 28),
-                    _buildSectionTitle('Chọn thời gian', Icons.access_time_outlined),
+                    _buildSectionTitle('⏰ Chọn thời gian', Icons.access_time_outlined),
                     SizedBox(height: 16),
                     Row(
                       children: [
@@ -275,40 +334,67 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                         Expanded(child: _buildTimePicker(context)),
                       ],
                     ),
+
+                    // --- THÊM PHẦN CHỌN THANH TOÁN ---
+                    SizedBox(height: 28),
+                    _buildSectionTitle('💳 Thanh toán', Icons.payment_rounded),
+                    SizedBox(height: 16),
+                    _buildPaymentSelector(),
+                    // ------------------------------------
                     
                     SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       height: 58,
-                      child: ElevatedButton.icon(
+                      child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF0891B2),
                           foregroundColor: Colors.white,
-                          elevation: 4,
+                          elevation: 6,
                           shadowColor: Color(0xFF0891B2).withOpacity(0.5),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                         onPressed: _isLoading ? null : () => _confirmBooking(service),
-                        icon: _isLoading 
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
+                        child: _isLoading 
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Đang xử lý...',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
                             )
-                          : Icon(Icons.check_circle_outline, size: 24),
-                        label: Text(
-                          _isLoading ? 'Đang xử lý...' : 'Xác nhận đặt lịch',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle_outline, size: 24),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Xác nhận đặt lịch',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
                       ),
                     ),
                     SizedBox(height: 20),
@@ -322,24 +408,34 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     );
   }
 
+  // ... (Tất cả các hàm _build... khác giữ nguyên)
   Widget _buildSectionTitle(String title, IconData icon) {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(8),
+          padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(0xFF0891B2).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(
+              colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF0891B2).withOpacity(0.3),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-          child: Icon(icon, color: Color(0xFF0891B2), size: 20),
+          child: Icon(icon, color: Colors.white, size: 20),
         ),
         SizedBox(width: 12),
         Text(
           title,
           style: TextStyle(
             fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A),
           ),
         ),
       ],
@@ -689,8 +785,40 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       ),
     );
   }
+
+  // --- HÀM WIDGET MỚI ---
+  Widget _buildPaymentSelector() {
+    return SegmentedButton<String>(
+      style: SegmentedButton.styleFrom(
+        backgroundColor: Colors.white,
+        selectedBackgroundColor: Color(0xFF0891B2).withOpacity(0.1),
+        selectedForegroundColor: Color(0xFF0891B2),
+        side: BorderSide(color: Colors.grey.shade300),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      segments: const [
+        ButtonSegment<String>(
+          value: 'Tại quầy',
+          label: Text('Tại quầy', style: TextStyle(fontSize: 14)),
+          icon: Icon(Icons.storefront_rounded, size: 20),
+        ),
+        ButtonSegment<String>(
+          value: 'Online',
+          label: Text('VietQR', style: TextStyle(fontSize: 14)),
+          icon: Icon(Icons.qr_code_scanner_rounded, size: 20),
+        ),
+      ],
+      selected: {_paymentMethod},
+      onSelectionChanged: (Set<String> newSelection) {
+        setState(() {
+          _paymentMethod = newSelection.first;
+        });
+      },
+    );
+  }
 }
 
+// ... (Class _BranchPicker giữ nguyên)
 class _BranchPicker extends StatelessWidget {
   final FirestoreService firestoreService;
   const _BranchPicker({required this.firestoreService});
