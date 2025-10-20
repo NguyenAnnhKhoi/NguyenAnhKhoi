@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../services/auth_service.dart';
+import '../widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   final _passCtrl = TextEditingController();
   final _authService = AuthService();
   bool _obscurePassword = true;
+  bool _isGoogleSigningIn = false;
   
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -60,24 +62,48 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   }
 
   Future<void> _handleGoogleSignIn() async {
-    await EasyLoading.show(status: 'Đang xử lý...');
+    if (_isGoogleSigningIn) return;
+    
+    setState(() {
+      _isGoogleSigningIn = true;
+    });
+    
     try {
       final userCredential = await _authService.signInWithGoogle();
       if (userCredential != null && mounted) {
+        EasyLoading.showSuccess('Đăng nhập thành công!');
+        await Future.delayed(const Duration(milliseconds: 500));
         Navigator.of(context).pushReplacementNamed('/home');
       }
+      // Nếu userCredential == null, người dùng đã hủy đăng nhập
     } catch (e) {
       if (mounted) {
-        EasyLoading.showError(e.toString());
+        String errorMessage = e.toString();
+        if (errorMessage.contains('network')) {
+          errorMessage = 'Không có kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.';
+        } else if (errorMessage.contains('popup-closed-by-user')) {
+          errorMessage = 'Bạn đã hủy đăng nhập.';
+        } else if (errorMessage.contains('sign_in_failed')) {
+          errorMessage = 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+        }
+        EasyLoading.showError(errorMessage);
       }
     } finally {
-      await EasyLoading.dismiss();
+      if (mounted) {
+        setState(() {
+          _isGoogleSigningIn = false;
+        });
+      }
     }
   }
 
   Future<void> _handleEmailSignIn() async {
     if (!_formKey.currentState!.validate()) return;
-    await EasyLoading.show(status: 'Đang đăng nhập...');
+    await EasyLoading.show(
+      status: 'Đang đăng nhập...',
+      maskType: EasyLoadingMaskType.black,
+      dismissOnTap: false,
+    );
     try {
       await _authService.signInWithEmail(
         email: _emailCtrl.text.trim(),
@@ -99,14 +125,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0891B2), // Cyan 600
-              Color(0xFF06B6D4), // Cyan 500
-              Color(0xFF22D3EE), // Cyan 400
+              Color(0xFF0891B2),
+              Color(0xFF06B6D4),
+              Color(0xFF22D3EE),
             ],
           ),
         ),
@@ -144,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             return Icon(
                               Icons.content_cut_rounded,
                               size: 100,
-                              color: Color(0xFF0891B2),
+                              color: Colors.white,
                             );
                           },
                         ),
@@ -154,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       // Title
                       Text(
                         'GENTLEMEN\'S',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w300,
                           color: Colors.white,
@@ -163,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       ),
                       Text(
                         'GROOMING',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -185,12 +211,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                         constraints: const BoxConstraints(maxWidth: 420),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 30,
+                              offset: const Offset(0, 15),
                             ),
                           ],
                         ),
@@ -209,21 +236,23 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   decoration: InputDecoration(
                                     labelText: 'Email',
                                     hintText: 'your@email.com',
-                                    prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF0891B2)),
+                                    labelStyle: TextStyle(color: Color(0xFF6B7280)),
+                                    hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                                    prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF0891B2)),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                      borderSide: const BorderSide(color: Color(0xFF0891B2), width: 2),
                                     ),
                                     filled: true,
-                                    fillColor: Colors.grey.shade50,
+                                    fillColor: const Color(0xFFF9FAFB),
                                     contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                   ),
                                   validator: (v) {
@@ -244,11 +273,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   decoration: InputDecoration(
                                     labelText: 'Mật khẩu',
                                     hintText: '••••••••',
-                                    prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF0891B2)),
+                                    labelStyle: TextStyle(color: Color(0xFF6B7280)),
+                                    hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
+                                    prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF6B7280)),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                        color: Color(0xFF0891B2),
+                                        color: Color(0xFF6B7280),
                                       ),
                                       onPressed: () {
                                         setState(() => _obscurePassword = !_obscurePassword);
@@ -256,18 +287,18 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
-                                      borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                      borderSide: const BorderSide(color: Color(0xFF0891B2), width: 2),
                                     ),
                                     filled: true,
-                                    fillColor: Colors.grey.shade50,
+                                    fillColor: const Color(0xFFF9FAFB),
                                     contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                   ),
                                   validator: (v) {
@@ -283,7 +314,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
                                     onPressed: () => Navigator.of(context).pushNamed('/forgot-password'),
-                                    child: Text(
+                                    child: const Text(
                                       'Quên mật khẩu?',
                                       style: TextStyle(
                                         color: Color(0xFF0891B2),
@@ -300,10 +331,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   child: ElevatedButton(
                                     onPressed: _handleEmailSignIn,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Color(0xFF0891B2),
+                                      backgroundColor: const Color(0xFF0891B2),
                                       foregroundColor: Colors.white,
-                                      elevation: 4,
-                                      shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                                      elevation: 6,
+                                      shadowColor: const Color(0xFF0891B2).withOpacity(0.4),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
@@ -324,45 +355,28 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 // Divider
                                 Row(
                                   children: [
-                                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                                    Expanded(child: Divider(color: Color(0xFFD1D5DB))),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 16),
                                       child: Text(
                                         'HOẶC',
                                         style: TextStyle(
-                                          color: Colors.grey.shade600,
+                                          color: Color(0xFF6B7280),
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
-                                    Expanded(child: Divider(color: Colors.grey.shade300)),
+                                    Expanded(child: Divider(color: Color(0xFFD1D5DB))),
                                   ],
                                 ),
                                 
                                 const SizedBox(height: 24),
                                 
                                 // Google Sign In
-                                SizedBox(
-                                  height: 56,
-                                  child: OutlinedButton.icon(
-                                    onPressed: _handleGoogleSignIn,
-                                    icon: Icon(Icons.g_mobiledata, size: 28),
-                                    label: Text(
-                                      'Đăng nhập với Google',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.grey.shade700,
-                                      side: BorderSide(color: Colors.grey.shade300, width: 2),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                    ),
-                                  ),
+                                GoogleSignInButton(
+                                  onPressed: _handleGoogleSignIn,
+                                  isLoading: _isGoogleSigningIn,
                                 ),
                               ],
                             ),
@@ -379,7 +393,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           Text(
                             'Chưa có tài khoản? ',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withOpacity(0.8),
                               fontSize: 15,
                             ),
                           ),
@@ -388,7 +402,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.symmetric(horizontal: 8),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Đăng ký ngay',
                               style: TextStyle(
                                 color: Colors.white,

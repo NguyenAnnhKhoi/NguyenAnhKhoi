@@ -1,6 +1,7 @@
 // lib/main.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'firebase_options.dart';
@@ -12,8 +13,12 @@ import 'screens/branch_screen.dart';
 import 'screens/quick_booking_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/admin/admin_dashboard.dart';
 import 'services/notification_service.dart';
+import 'services/admin_service.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import 'utils/google_signin_validator.dart';
+import 'utils/firebase_config_checker.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +26,17 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Tạo tài khoản admin mặc định
+  await AdminService().createDefaultAdmin();
+  
+  // Kiểm tra cấu hình Google Sign-In (chỉ trong debug mode)
+  if (kDebugMode) {
+    GoogleSignInValidator.validateAndPrint();
+    FirebaseConfigChecker.checkAndroidConfig();
+    FirebaseConfigChecker.checkGoogleSignInConfig();
+  }
+  
   runApp(const MyApp());
   configLoading();
 }
@@ -52,9 +68,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.cyan,
         primaryColor: const Color(0xFF0891B2),
-        scaffoldBackgroundColor: Colors.grey[50],
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
         useMaterial3: true,
         fontFamily: 'Roboto',
+        brightness: Brightness.light,
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF0891B2),
           elevation: 0,
@@ -62,8 +79,9 @@ class MyApp extends StatelessWidget {
           titleTextStyle: TextStyle(
             color: Colors.white,
             fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontFamily: 'Roboto',
+            letterSpacing: 0.5,
           ),
           iconTheme: IconThemeData(color: Colors.white),
         ),
@@ -71,12 +89,12 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF0891B2),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
             elevation: 4,
-            shadowColor: const Color(0xFF0891B2).withOpacity(0.4),
+            shadowColor: const Color(0xFF0891B2).withOpacity(0.3),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -117,12 +135,73 @@ class MyApp extends StatelessWidget {
             );
           }
           if (snapshot.hasData) {
-            return const MainScreen();
+            return const AuthWrapper();
           }
           return const LoginScreen();
         },
       ),
     );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  final AdminService _adminService = AdminService();
+  bool _isLoading = true;
+  bool _isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final user = await _adminService.getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _isAdmin = user?.isAdmin ?? false;
+          _isLoading = false;
+        });
+        print('Admin status checked: isAdmin = $_isAdmin');
+      }
+    } catch (e) {
+      print('Error checking admin status: $e');
+      if (mounted) {
+        setState(() {
+          _isAdmin = false;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF0891B2),
+          ),
+        ),
+      );
+    }
+
+    print('Building AuthWrapper: isAdmin = $_isAdmin');
+    
+    if (_isAdmin) {
+      return const AdminDashboard();
+    } else {
+      return const MainScreen();
+    }
   }
 }
 
@@ -147,6 +226,38 @@ class MainScreenState extends State<MainScreen> {
     const AccountScreen(),
   ];
 
+  // Method to navigate to MyBookings tab
+  void navigateToMyBookings() {
+    print('navigateToMyBookings called, current _selectedIndex: $_selectedIndex');
+    setState(() {
+      _selectedIndex = 3; // Lịch sử tab index (index 3 in the bottom bar)
+    });
+    print('_selectedIndex updated to: $_selectedIndex');
+    _appBarKey.currentState?.animateTo(3); // Index 3 in the bottom bar
+    print('animateTo(3) called');
+  }
+
+  // Static instance để có thể gọi từ bên ngoài
+  static MainScreenState? _instance;
+  
+  @override
+  void initState() {
+    super.initState();
+    _instance = this;
+  }
+
+  @override
+  void dispose() {
+    _instance = null;
+    super.dispose();
+  }
+
+  // Static method để navigate đến MyBookings từ bên ngoài
+  static void navigateToBookings() {
+    print('navigateToBookings called, _instance: $_instance');
+    _instance?.navigateToMyBookings();
+  }
+
   @override
   Widget build(BuildContext context) {
     int mapIndexToScreen(int tabIndex) {
@@ -166,7 +277,7 @@ class MainScreenState extends State<MainScreen> {
 
         style: TabStyle.reactCircle,
         backgroundColor: Colors.white,
-        color: Colors.grey.shade600,
+        color: Colors.grey.shade400,
         activeColor: const Color(0xFF0891B2),
         height: 60,
         initialActiveIndex: _selectedIndex,

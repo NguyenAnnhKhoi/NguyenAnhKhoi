@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDkOG2jRSmjM4VXH8JNk8FlT1F8nsMf4g8',
-    appId: '1:571999879235:android:5b156255c723dceed394f6',
+    appId: '1:571999879235:android:a216d06160162d89d394f6',
     messagingSenderId: '571999879235',
     projectId: 'doanmobile-6c221',
     storageBucket: 'doanmobile-6c221.firebasestorage.app',
@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '571999879235',
     projectId: 'doanmobile-6c221',
     storageBucket: 'doanmobile-6c221.firebasestorage.app',
-    iosBundleId: 'com.example.nguyenanhkhoi1',
+    iosBundleId: 'com.doan.doanmonhoc',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '571999879235',
     projectId: 'doanmobile-6c221',
     storageBucket: 'doanmobile-6c221.firebasestorage.app',
-    iosBundleId: 'com.example.nguyenanhkhoi1',
+    iosBundleId: 'com.doan.doanmonhoc',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

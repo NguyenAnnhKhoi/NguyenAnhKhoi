@@ -57,6 +57,7 @@ class FirestoreService {
             customerName: data['customerName'] ?? 'Không rõ',
             customerPhone: data['customerPhone'] ?? 'Không rõ',
             branchName: data['branchName'] ?? 'Không rõ',
+            paymentMethod: data['paymentMethod'],
           ));
         }
       } catch (e) {
@@ -86,11 +87,11 @@ class FirestoreService {
 
   // --- GHI DỮ LIỆU ---
 
-  Future<DocumentReference> addBooking(Booking booking) {
+  Future<Booking> addBooking(Booking booking) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception("Bạn cần đăng nhập để đặt lịch");
 
-    return _db.collection('bookings').add({
+    final docRef = await _db.collection('bookings').add({
       'userId': user.uid,
       'serviceId': booking.service.id,
       'stylistId': booking.stylist.id,
@@ -103,10 +104,21 @@ class FirestoreService {
       'branchName': booking.branchName,
       'createdAt': FieldValue.serverTimestamp(), // Thêm thời gian tạo để dễ sắp xếp
     });
+    
+    // Trả về booking với ID đã được tạo
+    return booking.copyWith(id: docRef.id);
   }
 
   Future<void> cancelBooking(String bookingId) {
     return _db.collection('bookings').doc(bookingId).delete();
+  }
+
+  Future<void> updateBooking(Booking booking) {
+    return _db.collection('bookings').doc(booking.id).update({
+      'status': booking.status,
+      'paymentMethod': booking.paymentMethod,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
   
   Future<void> toggleFavoriteService(String serviceId) async {

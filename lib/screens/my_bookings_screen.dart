@@ -36,17 +36,14 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 160,
+              expandedHeight: 180,
               floating: true,
               pinned: true,
-              backgroundColor: Color(0xFF0891B2),
+              backgroundColor: const Color(0xFF0891B2),
               flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  'Lịch hẹn của tôi',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+               
                 background: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -85,7 +82,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
           ];
         },
         body: Container(
-          color: Colors.grey[50],
+          color: const Color.fromARGB(255, 248, 248, 248),
           child: StreamBuilder<List<Booking>>(
             stream: _firestoreService.getUserBookings(),
             builder: (context, snapshot) {
@@ -149,7 +146,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
           Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: const Color(0xFF2D2D2D),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -163,7 +160,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
             isUpcoming ? 'Chưa có lịch hẹn sắp tới' : 'Chưa có lịch sử',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey.shade600,
+              color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -174,7 +171,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                 : 'Các lịch hẹn đã hoàn thành sẽ hiện ở đây',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade500,
+              color: Colors.grey.shade400,
             ),
             textAlign: TextAlign.center,
           ),
@@ -186,11 +183,12 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
   Widget _buildBookingCard(Booking booking, {required bool isUpcoming}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade700, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withOpacity(0.3),
             blurRadius: 12,
             offset: Offset(0, 4),
           ),
@@ -222,18 +220,18 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
+                          color: Colors.white,
                         ),
                       ),
                       SizedBox(height: 6),
                       Row(
                         children: [
-                          Icon(Icons.person_outline, size: 16, color: Colors.grey.shade600),
+                          Icon(Icons.person_outline, size: 16, color: Colors.grey.shade400),
                           SizedBox(width: 6),
                           Text(
                             booking.stylist.name,
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: Colors.grey.shade400,
                               fontSize: 14,
                             ),
                           ),
@@ -242,13 +240,13 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.business_outlined, size: 16, color: Colors.grey.shade600),
+                          Icon(Icons.business_outlined, size: 16, color: Colors.grey.shade400),
                           SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               booking.branchName,
                               style: TextStyle(
-                                color: Colors.grey.shade600,
+                                color: Colors.grey.shade400,
                                 fontSize: 13,
                               ),
                               maxLines: 1,
@@ -267,7 +265,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: const Color(0xFF2D2D2D),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20),
@@ -280,13 +278,13 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF0891B2)),
+                        Icon(Icons.calendar_today_rounded, size: 16, color: Colors.grey.shade400),
                         SizedBox(width: 8),
                         Text(
                           DateFormat('dd/MM/yyyy, HH:mm').format(booking.dateTime),
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
+                            color: Colors.white,
                             fontSize: 14,
                           ),
                         ),
@@ -298,7 +296,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Color(0xFF0891B2),
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -314,8 +312,8 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                           icon: Icon(Icons.cancel_outlined, size: 18),
                           label: Text('Hủy lịch'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red.shade400,
-                            side: BorderSide(color: Colors.red.shade300),
+                            foregroundColor: Colors.red.shade300,
+                            side: BorderSide(color: Colors.red.shade400),
                             padding: EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -330,10 +328,10 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                           icon: Icon(Icons.edit_calendar_rounded, size: 18),
                           label: Text('Đổi lịch'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF0891B2),
-                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF1A1A1A),
                             padding: EdgeInsets.symmetric(vertical: 12),
-                            elevation: 2,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

@@ -1,5 +1,6 @@
-package com.example.nguyenanhkhoi1
+package com.doan.doanmonhoc
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+

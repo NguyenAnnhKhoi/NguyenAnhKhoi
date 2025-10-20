@@ -13,6 +13,7 @@ class Booking {
   final String customerName;
   final String customerPhone;
   final String branchName; // Lưu tên chi nhánh
+  final String? paymentMethod; // Phương thức thanh toán
 
   Booking({
     required this.id,
@@ -25,6 +26,7 @@ class Booking {
     required this.customerName,
     required this.customerPhone,
     required this.branchName,
+    this.paymentMethod,
   });
 
   Booking copyWith({
@@ -32,17 +34,20 @@ class Booking {
     String? customerName,
     String? customerPhone,
     String? branchName,
+    String? status,
+    String? paymentMethod,
   }) {
     return Booking(
       id: id ?? this.id,
       service: service,
       stylist: stylist,
       dateTime: dateTime,
-      status: status,
+      status: status ?? this.status,
       note: note,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       branchName: branchName ?? this.branchName,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
     );
   }
 }

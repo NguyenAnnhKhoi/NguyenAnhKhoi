@@ -206,14 +206,14 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: [
-              Color(0xFF06B6D4), // Cyan 500
-              Color(0xFF0891B2), // Cyan 600
-              Color(0xFF0E7490), // Cyan 700
+              Color(0xFF0891B2),
+              Color(0xFF06B6D4),
+              Color(0xFF22D3EE),
             ],
           ),
         ),
@@ -258,7 +258,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                             child: Icon(
                               Icons.content_cut_rounded,
                               size: 80,
-                              color: Color(0xFF0891B2),
+                              color: Color(0xFFD4AF37),
                             ),
                           ),
                           SizedBox(height: 32),
@@ -278,7 +278,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                             'Tạo tài khoản mới để bắt đầu',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withOpacity(0.8),
                             ),
                           ),
                           SizedBox(height: 40),
@@ -291,9 +291,9 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 20,
-                                  offset: Offset(0, 10),
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 25,
+                                  offset: Offset(0, 12),
                                 ),
                               ],
                             ),
@@ -311,21 +311,21 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Tên người dùng',
                                         hintText: 'Nhập tên của bạn',
-                                        prefixIcon: Icon(Icons.person_outline, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(Icons.person_outline, color: Color(0xFF6B7280)),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderSide: BorderSide(color: Color(0xFFD4AF37), width: 2),
                                         ),
                                         filled: true,
-                                        fillColor: Colors.grey.shade50,
+                                        fillColor: Color(0xFFF9FAFB),
                                         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                       ),
                                       validator: (value) {
@@ -348,21 +348,21 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Email',
                                         hintText: 'your@email.com',
-                                        prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF6B7280)),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderSide: BorderSide(color: Color(0xFFD4AF37), width: 2),
                                         ),
                                         filled: true,
-                                        fillColor: Colors.grey.shade50,
+                                        fillColor: Color(0xFFF9FAFB),
                                         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                       ),
                                       validator: (value) {
@@ -385,11 +385,11 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Mật khẩu',
                                         hintText: '••••••••',
-                                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF6B7280)),
                                         suffixIcon: IconButton(
                                           icon: Icon(
                                             _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                            color: Color(0xFF0891B2),
+                                            color: Color(0xFF6B7280),
                                           ),
                                           onPressed: () {
                                             setState(() => _obscurePassword = !_obscurePassword);
@@ -397,18 +397,18 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                         ),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderSide: BorderSide(color: Color(0xFFD4AF37), width: 2),
                                         ),
                                         filled: true,
-                                        fillColor: Colors.grey.shade50,
+                                        fillColor: Color(0xFFF9FAFB),
                                         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                       ),
                                       validator: (value) {
@@ -431,11 +431,11 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Xác nhận mật khẩu',
                                         hintText: '••••••••',
-                                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF6B7280)),
                                         suffixIcon: IconButton(
                                           icon: Icon(
                                             _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                                            color: Color(0xFF0891B2),
+                                            color: Color(0xFF6B7280),
                                           ),
                                           onPressed: () {
                                             setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
@@ -443,18 +443,18 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                         ),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderSide: BorderSide(color: Color(0xFFD1D5DB)),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderSide: BorderSide(color: Color(0xFFD4AF37), width: 2),
                                         ),
                                         filled: true,
-                                        fillColor: Colors.grey.shade50,
+                                        fillColor: Color(0xFFF9FAFB),
                                         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                                       ),
                                       validator: (value) {
@@ -475,10 +475,10 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       child: ElevatedButton(
                                         onPressed: _isLoading ? null : _register,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Color(0xFF0891B2),
-                                          foregroundColor: Colors.white,
+                                          backgroundColor: Color(0xFFD4AF37),
+                                          foregroundColor: Color(0xFF1A1A1A),
                                           elevation: 4,
-                                          shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                                          shadowColor: Color(0xFFD4AF37).withOpacity(0.3),
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(16),
                                           ),
@@ -514,29 +514,29 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                'Đã có tài khoản? ',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 15,
-                                ),
+                          Text(
+                            'Đã có tài khoản? ',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.8),
+                              fontSize: 15,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                            ),
+                            child: Text(
+                              'Đăng nhập',
+                              style: TextStyle(
+                                color: Color(0xFFD4AF37),
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Color(0xFFD4AF37),
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(horizontal: 8),
-                                ),
-                                child: Text(
-                                  'Đăng nhập',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: Colors.white,
-                                  ),
-                                ),
-                              ),
+                            ),
+                          ),
                             ],
                           ),
                         ],

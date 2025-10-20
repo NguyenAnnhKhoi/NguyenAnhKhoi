@@ -6,6 +6,7 @@ import '../models/booking.dart';
 import '../models/stylist.dart';
 import '../models/branch.dart';
 import '../services/firestore_service.dart';
+import '../main.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -84,92 +85,24 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     try {
       await _firestoreService.addBooking(newBooking);
       if(mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            child: Container(
-              padding: EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  colors: [Colors.white, Color(0xFFE0F7FA)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF0891B2).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.check_circle_rounded,
-                      color: Color(0xFF0891B2),
-                      size: 64,
-                    ),
-                  ),
-                  SizedBox(height: 24),
-                  Text(
-                    'Thành công!',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0891B2),
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Đặt lịch thành công!',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Chúng tôi sẽ gửi xác nhận trong thời gian sớm nhất.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF0891B2),
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: Color(0xFF0891B2).withOpacity(0.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        'Hoàn tất',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        print('Booking created successfully, navigating...');
+        // Show success message and navigate back to home with bookings tab selected
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đặt lịch thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
+        // Navigate back to home screen and switch to bookings tab
+        Navigator.pop(context);
+        print('Navigator.pop completed, calling navigateToBookings...');
+        // Add a small delay to ensure Navigator.pop is fully completed
+        Future.delayed(Duration(milliseconds: 100), () {
+          MainScreenState.navigateToBookings();
+          print('navigateToBookings called');
+        });
       }
     } catch(e) {
       if(mounted) {
@@ -192,23 +125,21 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     final service = ModalRoute.of(context)!.settings.arguments as Service;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 240,
             pinned: true,
-            backgroundColor: Color(0xFF0891B2),
+            backgroundColor: const Color(0xFF0891B2),
+            elevation: 0,
             leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Đặt lịch hẹn',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -231,14 +162,14 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           ),
           SliverToBoxAdapter(
             child: Container(
-              color: Colors.grey[50],
+              color: const Color(0xFFF8FAFC),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildServiceInfo(service),
-                    SizedBox(height: 28),
+                    const SizedBox(height: 28),
                     
                     _buildSectionTitle('Thông tin khách hàng', Icons.person_outline),
                     SizedBox(height: 16),
@@ -282,10 +213,10 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                       height: 58,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF0891B2),
+                          backgroundColor: const Color(0xFF0891B2),
                           foregroundColor: Colors.white,
                           elevation: 4,
-                          shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                          shadowColor: const Color(0xFF0891B2).withOpacity(0.3),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -295,7 +226,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                           ? SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(
+                              child: const CircularProgressIndicator(
                                 strokeWidth: 2.5,
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
@@ -326,37 +257,42 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Color(0xFF0891B2).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: Color(0xFF0891B2), size: 20),
+          width: 4,
+          height: 24,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFD4AF37), Color(0xFFB8860B)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+            ),
         ),
-        SizedBox(width: 12),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
+        const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFF1A1A1A),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
       ],
     );
   }
 
   Widget _buildServiceInfo(Service service) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -371,34 +307,34 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
               fit: BoxFit.cover,
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   service.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: Color(0xFF1E293B),
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
-                    SizedBox(width: 4),
+                    Icon(Icons.access_time, size: 16, color: const Color(0xFF0891B2)),
+                    const SizedBox(width: 4),
                     Text(
                       service.duration,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
                     ),
                   ],
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   '${service.price.toStringAsFixed(0)}đ',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     color: Color(0xFF0891B2),
                     fontWeight: FontWeight.bold,
@@ -421,27 +357,29 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         }
         final stylists = snapshot.data!;
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.grey.shade50,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selectedStylist != null ? Color(0xFF0891B2) : Colors.grey.shade300,
+              color: selectedStylist != null ? const Color(0xFF0891B2) : Colors.grey.shade300,
               width: selectedStylist != null ? 2 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 8,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<Stylist>(
               isExpanded: true,
-              hint: Text('Chọn stylist của bạn'),
+              hint: Text('Chọn stylist của bạn', style: TextStyle(color: Colors.grey.shade500)),
               value: selectedStylist,
+              dropdownColor: Colors.white,
+              style: const TextStyle(color: Color(0xFF1E293B)),
               onChanged: (val) => setState(() => selectedStylist = val),
               items: stylists.map((s) {
                 return DropdownMenuItem(
@@ -455,6 +393,16 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                           width: 40,
                           height: 40,
                           fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 40,
+                            height: 40,
+                            color: Colors.grey.shade800,
+                            child: Icon(
+                              Icons.person_outline,
+                              color: Colors.grey.shade600,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(width: 12),
@@ -465,15 +413,21 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                           children: [
                             Text(
                               s.name,
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1E293B),
+                              ),
                             ),
                             Row(
                               children: [
-                                Icon(Icons.star, size: 14, color: Colors.amber),
-                                SizedBox(width: 4),
+                                const Icon(Icons.star, size: 14, color: Colors.amber),
+                                const SizedBox(width: 4),
                                 Text(
                                   s.rating.toString(),
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF64748B),
+                                  ),
                                 ),
                               ],
                             ),
@@ -561,19 +515,19 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     required bool isSelected,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isSelected ? const Color(0xFF0891B2).withOpacity(0.1) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isSelected ? Color(0xFF0891B2) : Colors.grey.shade300,
+            color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade300,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -581,16 +535,16 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         children: [
           Icon(
             icon,
-            color: isSelected ? Color(0xFF0891B2) : Colors.grey.shade400,
+            color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade500,
             size: 28,
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             text,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: isSelected ? Color(0xFF0891B2) : Colors.grey.shade600,
+              color: isSelected ? const Color(0xFF0891B2) : const Color(0xFF64748B),
             ),
             textAlign: TextAlign.center,
           ),
@@ -608,25 +562,23 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: TextStyle(fontSize: 16),
+      style: const TextStyle(fontSize: 16, color: Color(0xFF1E293B)),
       decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Color(0xFF0891B2)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
+        hintText: label,
+        hintStyle: TextStyle(color: Colors.grey.shade500),
+        prefixIcon: Icon(icon, color: const Color(0xFF0891B2)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF0891B2), width: 2),
         ),
         filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
     );
   }
@@ -645,19 +597,19 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         if (picked != null) setState(() => selectedBranch = picked);
       },
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: selectedBranch != null ? const Color(0xFF0891B2).withOpacity(0.1) : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selectedBranch != null ? Color(0xFF0891B2) : Colors.grey.shade300,
+            color: selectedBranch != null ? const Color(0xFF0891B2) : Colors.grey.shade300,
             width: selectedBranch != null ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 8,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -665,24 +617,24 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           children: [
             Icon(
               Icons.business_rounded,
-              color: selectedBranch != null ? Color(0xFF0891B2) : Colors.grey.shade400,
+              color: selectedBranch != null ? const Color(0xFF0891B2) : Colors.grey.shade500,
               size: 24,
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
                 selectedBranch?.name ?? 'Chọn chi nhánh',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: selectedBranch != null ? Colors.grey.shade800 : Colors.grey.shade500,
+                  color: selectedBranch != null ? const Color(0xFF0891B2) : const Color(0xFF64748B),
                 ),
               ),
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,
-              color: Colors.grey.shade400,
+              color: selectedBranch != null ? const Color(0xFF0891B2) : Colors.grey.shade400,
             ),
           ],
         ),
@@ -699,8 +651,9 @@ class _BranchPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(color: Colors.grey.shade700),
       ),
       child: DraggableScrollableSheet(
         initialChildSize: 0.6,
@@ -711,10 +664,14 @@ class _BranchPicker extends StatelessWidget {
           children: [
             SizedBox(height: 12),
             Container(
-              width: 40,
-              height: 5,
+              width: 50,
+              height: 6,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                gradient: LinearGradient(
+                  colors: [Colors.grey.shade600, Colors.grey.shade400],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -724,7 +681,7 @@ class _BranchPicker extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: Colors.grey.shade800,
+                color: Colors.white,
               ),
             ),
             SizedBox(height: 20),
@@ -732,11 +689,8 @@ class _BranchPicker extends StatelessWidget {
               child: StreamBuilder<List<Branch>>(
                 stream: firestoreService.getBranches(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (!snapshot.hasData) {
                     return Center(child: CircularProgressIndicator());
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text("Không có chi nhánh nào."));
                   }
                   final branches = snapshot.data!;
                   return ListView.separated(
@@ -746,50 +700,85 @@ class _BranchPicker extends StatelessWidget {
                     separatorBuilder: (context, index) => Divider(height: 1),
                     itemBuilder: (context, index) {
                       final branch = branches[index];
-                      return ListTile(
-                        contentPadding: EdgeInsets.symmetric(vertical: 8),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            branch.image,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D2D2D),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade700),
                         ),
-                        title: Text(
-                          branch.name,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 4),
-                            Text(
-                              branch.address,
-                              style: TextStyle(fontSize: 12),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(Icons.star, size: 14, color: Colors.amber),
-                                SizedBox(width: 4),
-                                Text(
-                                  branch.rating.toString(),
-                                  style: TextStyle(fontSize: 12),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(16),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              branch.image,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey.shade800,
+                                child: Icon(
+                                  Icons.business_rounded,
+                                  color: Colors.grey.shade600,
+                                  size: 30,
                                 ),
-                              ],
+                              ),
                             ),
-                          ],
+                          ),
+                          title: Text(
+                            branch.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 4),
+                              Text(
+                                branch.address,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade400,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.star, size: 14, color: Colors.amber),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    branch.rating.toString(),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          trailing: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                          onTap: () => Navigator.pop(context, branch),
                         ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: Color(0xFF0891B2),
-                        ),
-                        onTap: () => Navigator.pop(context, branch),
                       );
                     },
                   );

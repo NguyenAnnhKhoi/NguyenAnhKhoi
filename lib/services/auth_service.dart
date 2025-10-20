@@ -2,10 +2,17 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../utils/google_signin_config.dart';
+import 'admin_service.dart';
+import '../models/user.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId: GoogleSignInConfig.webClientId, // Sử dụng web client ID làm server client ID
+  );
+  final AdminService _adminService = AdminService();
 
   /// Lắng nghe sự thay đổi trạng thái đăng nhập
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -13,10 +20,17 @@ class AuthService {
   /// Đăng nhập bằng Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      // Kiểm tra kết nối mạng trước khi đăng nhập
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null; // Người dùng đã hủy
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      // Kiểm tra token có hợp lệ không
+      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
+        throw 'Không thể lấy thông tin xác thực từ Google. Vui lòng thử lại.';
+      }
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -25,6 +39,15 @@ class AuthService {
       return await _auth.signInWithCredential(credential);
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    } on Exception catch (e) {
+      if (e.toString().contains('network')) {
+        throw 'Không có kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.';
+      } else if (e.toString().contains('sign_in_failed')) {
+        throw 'Đăng nhập Google thất bại. Vui lòng thử lại.';
+      } else if (e.toString().contains('popup_closed_by_user')) {
+        throw 'Bạn đã hủy đăng nhập.';
+      }
+      throw 'Lỗi đăng nhập Google: ${e.toString()}';
     } catch (e) {
       throw 'Lỗi đăng nhập Google: ${e.toString()}';
     }
@@ -33,10 +56,15 @@ class AuthService {
   /// Đăng nhập bằng Email & Password
   Future<UserCredential> signInWithEmail({required String email, required String password}) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
+      final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      
+      // Cập nhật thông tin user sau khi đăng nhập
+      await _adminService.updateUserAfterLogin();
+      
+      return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
@@ -55,6 +83,10 @@ class AuthService {
       );
       await userCredential.user?.updateDisplayName(username);
       await userCredential.user?.sendEmailVerification();
+      
+      // Lưu thông tin user vào Firestore
+      await _adminService.updateUserAfterLogin();
+      
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -83,6 +115,24 @@ class AuthService {
     }
   }
 
+  /// Kiểm tra quyền admin
+  Future<bool> isAdmin() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false;
+      
+      return await _adminService.isAdmin(user.uid);
+    } catch (e) {
+      print("Lỗi khi kiểm tra quyền admin: $e");
+      return false;
+    }
+  }
+
+  /// Lấy thông tin user hiện tại
+  Future<UserModel?> getCurrentUser() async {
+    return await _adminService.getCurrentUser();
+  }
+
   // Hàm private để xử lý lỗi
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
@@ -101,6 +151,16 @@ class AuthService {
         return 'Không tìm thấy người dùng với email này.';
       case 'email-already-in-use':
         return 'Email này đã được sử dụng bởi một tài khoản khác.';
+      case 'operation-not-allowed':
+        return 'Phương thức đăng nhập này không được phép.';
+      case 'too-many-requests':
+        return 'Quá nhiều yêu cầu. Vui lòng thử lại sau.';
+      case 'invalid-verification-code':
+        return 'Mã xác thực không hợp lệ.';
+      case 'invalid-verification-id':
+        return 'ID xác thực không hợp lệ.';
+      case 'credential-already-in-use':
+        return 'Thông tin đăng nhập này đã được sử dụng.';
       default:
         return 'Lỗi xác thực: ${e.message ?? e.code}';
     }

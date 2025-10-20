@@ -34,21 +34,18 @@ class _BranchScreenState extends State<BranchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 220,
             floating: false,
             pinned: true,
-            backgroundColor: Color(0xFF0891B2),
+            backgroundColor: const Color(0xFF0891B2),
+            elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Hệ thống Salon',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -59,29 +56,69 @@ class _BranchScreenState extends State<BranchScreen> {
                     ],
                   ),
                 ),
-                child: Center(
-                  child: Icon(
-                    Icons.storefront_rounded,
-                    size: 60,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 20,
+                      right: 20,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 20,
+                      left: 20,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Khám phá các chi nhánh',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tìm salon gần bạn nhất',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             actions: [
-              IconButton(
-                // SỬA LẠI HÀNH ĐỘNG CỦA NÚT
-                onPressed: _navigateToMapScreen,
-                icon: Container(
-                  padding: EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
+              Container(
+                margin: const EdgeInsets.only(right: 16),
+                child: IconButton(
+                  onPressed: _navigateToMapScreen,
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.1)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: const Icon(Icons.map_outlined, color: Colors.white, size: 22),
                   ),
-                  child: Icon(Icons.map_outlined, color: Colors.white, size: 20),
                 ),
               ),
-              SizedBox(width: 8),
             ],
           ),
           SliverToBoxAdapter(
@@ -89,41 +126,178 @@ class _BranchScreenState extends State<BranchScreen> {
               stream: _firestoreService.getBranches(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(),
+                  return Container(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Đang tải chi nhánh...',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
                 if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Text('Lỗi: ${snapshot.error}'),
+                  return Container(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Color(0xFFEF4444),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Có lỗi xảy ra',
+                            style: TextStyle(
+                              color: Color(0xFF1E293B),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Vui lòng thử lại sau',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
-                    // ... giữ nguyên phần empty state
+                  return Container(
+                    height: 200,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.store_outlined,
+                              size: 48,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Chưa có chi nhánh',
+                            style: TextStyle(
+                              color: Color(0xFF1E293B),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Các chi nhánh sẽ hiển thị ở đây',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }
 
                 // Cập nhật danh sách chi nhánh khi có dữ liệu mới
                 _branches = snapshot.data!;
                 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  padding: EdgeInsets.all(20),
-                  itemCount: _branches.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 20),
-                      child: _buildBranchCard(_branches[index]),
-                    );
-                  },
+                return Column(
+                  children: [
+                    // Header section
+                    Container(
+                      margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE0F2FE),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.location_city_rounded,
+                              color: Color(0xFF2563EB),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${_branches.length} chi nhánh',
+                                  style: const TextStyle(
+                                    color: Color(0xFF1E293B),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'Có sẵn trong hệ thống',
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Branches list
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: _branches.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: _buildBranchCard(_branches[index]),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 );
               },
             ),
@@ -139,11 +313,12 @@ class _BranchScreenState extends State<BranchScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 12,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -153,7 +328,7 @@ class _BranchScreenState extends State<BranchScreen> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 child: Image.network(
                   branch.image,
                   height: 180,
@@ -161,11 +336,11 @@ class _BranchScreenState extends State<BranchScreen> {
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     height: 180,
-                    color: Colors.grey.shade200,
-                    child: Icon(
+                    color: const Color(0xFFF8FAFC),
+                    child: const Icon(
                       Icons.business_rounded,
                       size: 60,
-                      color: Colors.grey.shade400,
+                      color: Color(0xFF94A3B8),
                     ),
                   ),
                 ),
@@ -174,19 +349,20 @@ class _BranchScreenState extends State<BranchScreen> {
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.9),
+                    color: Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.star, color: Colors.white, size: 16),
-                      SizedBox(width: 4),
+                      const Icon(Icons.star, color: Color(0xFFF59E0B), size: 16),
+                      const SizedBox(width: 4),
                       Text(
                         branch.rating.toString(),
-                        style: TextStyle(
-                          color: Colors.white,
+                        style: const TextStyle(
+                          color: Color(0xFF1E293B),
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
@@ -198,30 +374,30 @@ class _BranchScreenState extends State<BranchScreen> {
             ],
           ),
           Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   branch.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: Color(0xFF1E293B),
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 _infoRow(Icons.location_on_outlined, branch.address),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 _infoRow(Icons.access_time_outlined, 'Giờ mở cửa: ${branch.hours}'),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton.icon(
                     onPressed: () {},
-                    icon: Icon(Icons.calendar_month_rounded, size: 20),
-                    label: Text(
+                    icon: const Icon(Icons.calendar_month_rounded, size: 20),
+                    label: const Text(
                       'Đặt lịch tại đây',
                       style: TextStyle(
                         fontSize: 16,
@@ -229,9 +405,9 @@ class _BranchScreenState extends State<BranchScreen> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF0891B2),
+                      backgroundColor: const Color(0xFF2563EB),
                       foregroundColor: Colors.white,
-                      elevation: 2,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -249,12 +425,12 @@ class _BranchScreenState extends State<BranchScreen> {
   Widget _infoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, color: Color(0xFF0891B2), size: 18),
-        SizedBox(width: 10),
+        Icon(icon, color: const Color(0xFF64748B), size: 18),
+        const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
           ),
         ),
       ],

@@ -8,6 +8,7 @@ import '../models/branch.dart';
 import '../services/firestore_service.dart';
 import '../models/booking.dart';
 import '../services/notification_service.dart';
+import '../main.dart';
 
 class QuickBookingScreen extends StatefulWidget {
   const QuickBookingScreen({super.key});
@@ -88,13 +89,27 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
 
     try {
-      final docRef = await _firestoreService.addBooking(newBooking);
-      newBooking = newBooking.copyWith(id: docRef.id);
-      await _notificationService.scheduleBookingNotification(newBooking);
+      final createdBooking = await _firestoreService.addBooking(newBooking);
+      await _notificationService.scheduleBookingNotification(createdBooking);
 
       if (mounted) {
         _resetForm();
-        EasyLoading.showSuccess('Đặt lịch thành công!\nKiểm tra ở tab Lịch sử.');
+        EasyLoading.dismiss();
+        // Show success message and navigate back to home
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đặt lịch thành công!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+        // Navigate back to home screen and switch to bookings tab
+        Navigator.pop(context);
+        // Add a small delay to ensure Navigator.pop is fully completed
+        Future.delayed(Duration(milliseconds: 100), () {
+          MainScreenState.navigateToBookings();
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -106,104 +121,174 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0891B2),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0891B2), Color(0xFF06B6D4), Color(0xFF22D3EE)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+      ),
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 160,
-            floating: false,
-            pinned: true,
-            backgroundColor: Color(0xFF0891B2),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Đặt lịch nhanh',
-                style: TextStyle(fontWeight: FontWeight.bold),
+          // Hero section
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0891B2), Color(0xFF06B6D4), Color(0xFF22D3EE)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0891B2).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF0891B2),
-                      Color(0xFF06B6D4),
-                      Color(0xFF22D3EE),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.schedule_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Đặt lịch nhanh',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Chọn dịch vụ và thời gian phù hợp',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.flash_on_rounded,
-                    size: 60,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                ),
+                ],
               ),
             ),
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  _buildStepCard(
-                    step: 1,
-                    title: 'Thông tin của bạn',
-                    icon: Icons.person_outline,
+                  _buildFormSection(
+                    title: 'Thông tin khách hàng',
                     child: _buildCustomerInfo(),
                   ),
-                  SizedBox(height: 16),
-                  _buildStepCard(
-                    step: 2,
+                  const SizedBox(height: 20),
+                  _buildFormSection(
                     title: 'Chọn chi nhánh',
-                    icon: Icons.business_rounded,
                     child: _buildSelectBranch(context),
                   ),
-                  SizedBox(height: 16),
-                  _buildStepCard(
-                    step: 3,
+                  const SizedBox(height: 20),
+                  _buildFormSection(
                     title: 'Chọn dịch vụ',
-                    icon: Icons.content_cut_rounded,
                     child: _buildSelectService(context),
                   ),
-                  SizedBox(height: 16),
-                  _buildStepCard(
-                    step: 4,
-                    title: 'Chọn thời gian & stylist',
-                    icon: Icons.access_time_rounded,
+                  const SizedBox(height: 20),
+                  _buildFormSection(
+                    title: 'Chọn ngày, giờ & stylist',
                     child: _buildSelectDateTime(context),
                   ),
-                  SizedBox(height: 32),
-                  SizedBox(
+                  const SizedBox(height: 32),
+                  // Enhanced confirm button
+                  Container(
                     width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton.icon(
+                    height: 64,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF0891B2), Color(0xFF06B6D4), Color(0xFF22D3EE)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0891B2).withOpacity(0.4),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF0891B2),
+                        backgroundColor: Colors.transparent,
                         foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       onPressed: _confirmQuickBooking,
-                      icon: Icon(Icons.check_circle_outline, size: 24),
-                      label: Text(
-                        'XÁC NHẬN ĐẶT LỊCH',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                          letterSpacing: 0.5,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'CHỐT GIỜ CẮT',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              letterSpacing: 1.2,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -213,10 +298,8 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
-  Widget _buildStepCard({
-    required int step,
+  Widget _buildFormSection({
     required String title,
-    required IconData icon,
     required Widget child,
   }) {
     return Container(
@@ -225,54 +308,43 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '$step',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
+                    borderRadius: BorderRadius.all(Radius.circular(2)),
                   ),
                 ),
-              ),
-              SizedBox(width: 12),
-              Icon(icon, color: Color(0xFF0891B2), size: 24),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
+                const SizedBox(width: 12),
+                Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.grey.shade800,
-                    fontSize: 17,
+                  style: const TextStyle(
+                    color: Color(0xFF1E293B),
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
+              ],
+            ),
+            const SizedBox(height: 20),
           child,
         ],
       ),
@@ -284,42 +356,46 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       children: [
         TextField(
           controller: _nameController,
-          style: TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 16, color: Color(0xFF1E293B)),
           decoration: InputDecoration(
-            labelText: 'Họ và tên',
-            prefixIcon: Icon(Icons.person_outline, color: Color(0xFF0891B2)),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            hintText: 'Họ và tên',
+            hintStyle: TextStyle(color: Colors.grey.shade500),
+            prefixIcon: Icon(Icons.person_outline, color: const Color(0xFF0891B2)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFF0891B2), width: 2),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 16),
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
-          style: TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 16, color: Color(0xFF1E293B)),
           decoration: InputDecoration(
-            labelText: 'Số điện thoại',
-            prefixIcon: Icon(Icons.phone_outlined, color: Color(0xFF0891B2)),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+            hintText: 'Số điện thoại',
+            hintStyle: TextStyle(color: Colors.grey.shade500),
+            prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF0891B2)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFF0891B2), width: 2),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           ),
         ),
       ],
@@ -453,14 +529,14 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(14),
+          color: isSelected ? const Color(0xFF0891B2).withOpacity(0.1) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? Color(0xFF0891B2) : Colors.grey.shade300,
+            color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -468,24 +544,24 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Color(0xFF0891B2) : Colors.grey.shade500,
-              size: 22,
+              color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade500,
+              size: 24,
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
                 text,
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? Colors.grey.shade800 : Colors.grey.shade600,
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? const Color(0xFF0891B2) : const Color(0xFF64748B),
                 ),
               ),
             ),
             Icon(
-              Icons.chevron_right_rounded,
-              color: Colors.grey.shade400,
-              size: 20,
+              Icons.arrow_forward_ios_rounded,
+              color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade400,
+              size: 16,
             ),
           ],
         ),
@@ -505,7 +581,14 @@ class _ServicePicker extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: DraggableScrollableSheet(
         initialChildSize: 0.6,
@@ -516,10 +599,14 @@ class _ServicePicker extends StatelessWidget {
           children: [
             SizedBox(height: 12),
             Container(
-              width: 40,
-              height: 5,
+              width: 50,
+              height: 6,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                gradient: LinearGradient(
+                  colors: [Colors.grey.shade600, Colors.grey.shade400],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -529,7 +616,7 @@ class _ServicePicker extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: Colors.grey.shade800,
+                color: Colors.white,
               ),
             ),
             SizedBox(height: 20),
@@ -548,34 +635,67 @@ class _ServicePicker extends StatelessWidget {
                     separatorBuilder: (context, index) => Divider(height: 1),
                     itemBuilder: (context, index) {
                       final s = services[index];
-                      return ListTile(
-                        contentPadding: EdgeInsets.symmetric(vertical: 8),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            s.image,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D2D2D),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade700),
+                        ),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(16),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              s.image,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey.shade800,
+                                child: Icon(
+                                  Icons.content_cut_rounded,
+                                  color: Colors.grey.shade600,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        title: Text(
-                          s.name,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          '${s.price.toStringAsFixed(0)}đ',
-                          style: TextStyle(
-                            color: Color(0xFF0891B2),
-                            fontWeight: FontWeight.bold,
+                          title: Text(
+                            s.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
                           ),
+                          subtitle: Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${s.price.toStringAsFixed(0)}đ',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          trailing: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                          onTap: () => Navigator.pop(context, s),
                         ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: Color(0xFF0891B2),
-                        ),
-                        onTap: () => Navigator.pop(context, s),
                       );
                     },
                   );
@@ -597,8 +717,9 @@ class _StylistPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(color: Colors.grey.shade700),
       ),
       child: DraggableScrollableSheet(
         initialChildSize: 0.6,
@@ -609,10 +730,14 @@ class _StylistPicker extends StatelessWidget {
           children: [
             SizedBox(height: 12),
             Container(
-              width: 40,
-              height: 5,
+              width: 50,
+              height: 6,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                gradient: LinearGradient(
+                  colors: [Colors.grey.shade600, Colors.grey.shade400],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -622,7 +747,7 @@ class _StylistPicker extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: Colors.grey.shade800,
+                color: Colors.white,
               ),
             ),
             SizedBox(height: 20),
@@ -641,37 +766,69 @@ class _StylistPicker extends StatelessWidget {
                     separatorBuilder: (context, index) => Divider(height: 1),
                     itemBuilder: (context, index) {
                       final st = stylists[index];
-                      return ListTile(
-                        contentPadding: EdgeInsets.symmetric(vertical: 8),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            st.image,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D2D2D),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade700),
                         ),
-                        title: Text(
-                          st.name,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Row(
-                          children: [
-                            Icon(Icons.star, size: 16, color: Colors.amber),
-                            SizedBox(width: 4),
-                            Text(
-                              st.rating.toString(),
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(16),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              st.image,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey.shade800,
+                                child: Icon(
+                                  Icons.person_outline,
+                                  color: Colors.grey.shade600,
+                                  size: 30,
+                                ),
+                              ),
                             ),
-                          ],
+                          ),
+                          title: Text(
+                            st.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Row(
+                            children: [
+                              Icon(Icons.star, size: 16, color: Colors.amber),
+                              SizedBox(width: 4),
+                              Text(
+                                st.rating.toString(),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          trailing: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                          onTap: () => Navigator.pop(context, st),
                         ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: Color(0xFF0891B2),
-                        ),
-                        onTap: () => Navigator.pop(context, st),
                       );
                     },
                   );
@@ -693,8 +850,9 @@ class _BranchPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(color: Colors.grey.shade700),
       ),
       child: DraggableScrollableSheet(
         initialChildSize: 0.6,
@@ -705,10 +863,14 @@ class _BranchPicker extends StatelessWidget {
           children: [
             SizedBox(height: 12),
             Container(
-              width: 40,
-              height: 5,
+              width: 50,
+              height: 6,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                gradient: LinearGradient(
+                  colors: [Colors.grey.shade600, Colors.grey.shade400],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -718,7 +880,7 @@ class _BranchPicker extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: Colors.grey.shade800,
+                color: Colors.white,
               ),
             ),
             SizedBox(height: 20),
@@ -737,50 +899,85 @@ class _BranchPicker extends StatelessWidget {
                     separatorBuilder: (context, index) => Divider(height: 1),
                     itemBuilder: (context, index) {
                       final branch = branches[index];
-                      return ListTile(
-                        contentPadding: EdgeInsets.symmetric(vertical: 8),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            branch.image,
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
+                      return Container(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D2D2D),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade700),
                         ),
-                        title: Text(
-                          branch.name,
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 4),
-                            Text(
-                              branch.address,
-                              style: TextStyle(fontSize: 12),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(Icons.star, size: 14, color: Colors.amber),
-                                SizedBox(width: 4),
-                                Text(
-                                  branch.rating.toString(),
-                                  style: TextStyle(fontSize: 12),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(16),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              branch.image,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey.shade800,
+                                child: Icon(
+                                  Icons.business_rounded,
+                                  color: Colors.grey.shade600,
+                                  size: 30,
                                 ),
-                              ],
+                              ),
                             ),
-                          ],
+                          ),
+                          title: Text(
+                            branch.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 4),
+                              Text(
+                                branch.address,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade400,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.star, size: 14, color: Colors.amber),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    branch.rating.toString(),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          trailing: Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                          onTap: () => Navigator.pop(context, branch),
                         ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: Color(0xFF0891B2),
-                        ),
-                        onTap: () => Navigator.pop(context, branch),
                       );
                     },
                   );
