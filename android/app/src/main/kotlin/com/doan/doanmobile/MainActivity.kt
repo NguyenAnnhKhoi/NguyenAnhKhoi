@@ -1,4 +1,4 @@
-package com.doan.doanmonhoc
+package com.doan.doanmobile
 
 import io.flutter.embedding.android.FlutterActivity
 
