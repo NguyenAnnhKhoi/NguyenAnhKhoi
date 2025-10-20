@@ -82,7 +82,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
           ];
         },
         body: Container(
-          color: const Color.fromARGB(255, 248, 248, 248),
+          color: const Color(0xFFF8FAFC),
           child: StreamBuilder<List<Booking>>(
             stream: _firestoreService.getUserBookings(),
             builder: (context, snapshot) {
@@ -146,21 +146,21 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
           Container(
             padding: EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF2D2D2D),
+              color: const Color(0xFF0891B2).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               isUpcoming ? Icons.event_busy_rounded : Icons.history_rounded,
               size: 64,
-              color: Colors.grey.shade400,
+              color: const Color(0xFF0891B2),
             ),
           ),
           SizedBox(height: 20),
           Text(
             isUpcoming ? 'Chưa có lịch hẹn sắp tới' : 'Chưa có lịch sử',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
-              color: Colors.white,
+              color: Color(0xFF1E293B),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -169,9 +169,9 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
             isUpcoming 
                 ? 'Hãy đặt lịch dịch vụ ngay!' 
                 : 'Các lịch hẹn đã hoàn thành sẽ hiện ở đây',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade400,
+              color: Color(0xFF64748B),
             ),
             textAlign: TextAlign.center,
           ),
@@ -183,14 +183,13 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
   Widget _buildBookingCard(Booking booking, {required bool isUpcoming}) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade700, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 12,
-            offset: Offset(0, 4),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -217,21 +216,21 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                     children: [
                       Text(
                         booking.service.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Color(0xFF1E293B),
                         ),
                       ),
                       SizedBox(height: 6),
                       Row(
                         children: [
-                          Icon(Icons.person_outline, size: 16, color: Colors.grey.shade400),
+                          Icon(Icons.person_outline, size: 16, color: const Color(0xFF0891B2)),
                           SizedBox(width: 6),
                           Text(
                             booking.stylist.name,
-                            style: TextStyle(
-                              color: Colors.grey.shade400,
+                            style: const TextStyle(
+                              color: Color(0xFF64748B),
                               fontSize: 14,
                             ),
                           ),
@@ -240,13 +239,13 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                       SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.business_outlined, size: 16, color: Colors.grey.shade400),
+                          Icon(Icons.business_outlined, size: 16, color: const Color(0xFF0891B2)),
                           SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               booking.branchName,
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
+                              style: const TextStyle(
+                                color: Color(0xFF64748B),
                                 fontSize: 13,
                               ),
                               maxLines: 1,
@@ -264,8 +263,8 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
           
           Container(
             padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2D2D2D),
+            decoration: const BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20),
@@ -278,13 +277,13 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.calendar_today_rounded, size: 16, color: Colors.grey.shade400),
+                        const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF0891B2)),
                         SizedBox(width: 8),
                         Text(
                           DateFormat('dd/MM/yyyy, HH:mm').format(booking.dateTime),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: Color(0xFF1E293B),
                             fontSize: 14,
                           ),
                         ),
@@ -293,45 +292,46 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                     Text(
                       NumberFormat.currency(locale: 'vi_VN', symbol: 'đ')
                           .format(booking.service.price),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Colors.white,
+                        color: Color(0xFF0891B2),
                       ),
                     ),
                   ],
                 ),
                 
                 if (isUpcoming) ...[
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => _showCancelDialog(booking),
-                          icon: Icon(Icons.cancel_outlined, size: 18),
-                          label: Text('Hủy lịch'),
+                          icon: const Icon(Icons.cancel_outlined, size: 18),
+                          label: const Text('Hủy lịch'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red.shade300,
+                            foregroundColor: Colors.red.shade400,
                             side: BorderSide(color: Colors.red.shade400),
-                            padding: EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () {},
-                          icon: Icon(Icons.edit_calendar_rounded, size: 18),
-                          label: Text('Đổi lịch'),
+                          icon: const Icon(Icons.edit_calendar_rounded, size: 18),
+                          label: const Text('Đổi lịch'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF1A1A1A),
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            elevation: 0,
+                            backgroundColor: const Color(0xFF0891B2),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            elevation: 3,
+                            shadowColor: const Color(0xFF0891B2).withOpacity(0.2),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

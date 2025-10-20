@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/stylist.dart';
+import 'admin_ui.dart';
 
 class ManageStylistsScreen extends StatefulWidget {
   const ManageStylistsScreen({super.key});
@@ -118,33 +119,19 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
-      appBar: AppBar(
-        title: const Text('Quản lý Stylist'),
-        backgroundColor: const Color(0xFF1A1A1A),
-      ),
+    return AdminScaffold(
+      title: 'Quản lý Stylist',
       body: Column(
         children: [
           // Form
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade800),
-              ),
-            ),
+          AdminSection(
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tên stylist',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: adminInputDecoration('Tên stylist'),
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return 'Vui lòng nhập tên stylist';
@@ -159,10 +146,7 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                         child: TextFormField(
                           controller: _ratingController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Đánh giá',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Đánh giá'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập đánh giá';
@@ -179,10 +163,7 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _experienceController,
-                          decoration: const InputDecoration(
-                            labelText: 'Kinh nghiệm',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Kinh nghiệm'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập kinh nghiệm';
@@ -196,10 +177,7 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _imageController,
-                    decoration: const InputDecoration(
-                      labelText: 'URL hình ảnh',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: adminInputDecoration('URL hình ảnh'),
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return 'Vui lòng nhập URL hình ảnh';
@@ -210,25 +188,14 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _addOrUpdateStylist,
-                          child: _isLoading
-                              ? const CircularProgressIndicator()
-                              : Text(_editingStylist != null ? 'Cập nhật' : 'Thêm mới'),
-                        ),
-                      ),
+                      Expanded(child: AdminPrimaryButton(
+                        label: _editingStylist != null ? 'Cập nhật' : 'Thêm mới',
+                        icon: _editingStylist != null ? Icons.save : Icons.add,
+                        onPressed: _isLoading ? null : _addOrUpdateStylist,
+                      )),
                       const SizedBox(width: 16),
                       if (_editingStylist != null)
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _clearForm,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade600,
-                            ),
-                            child: const Text('Hủy'),
-                          ),
-                        ),
+                        Expanded(child: AdminDangerButton(label: 'Hủy', onPressed: _clearForm)),
                     ],
                   ),
                 ],
@@ -257,7 +224,7 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                   return const Center(
                     child: Text(
                       'Chưa có stylist nào',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: AdminColors.textSecondary),
                     ),
                   );
                 }
@@ -266,9 +233,7 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                   itemCount: stylists.length,
                   itemBuilder: (context, index) {
                     final stylist = stylists[index];
-                    return Card(
-                      margin: const EdgeInsets.all(8),
-                      color: const Color(0xFF1A1A1A),
+                    return AdminCard(
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundImage: stylist.image.isNotEmpty
@@ -280,18 +245,18 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                         ),
                         title: Text(
                           stylist.name,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AdminColors.textPrimary),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Kinh nghiệm: ${stylist.experience}',
-                              style: const TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
                             Text(
                               'Đánh giá: ${stylist.rating.toStringAsFixed(1)}/5',
-                              style: const TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
                           ],
                         ),

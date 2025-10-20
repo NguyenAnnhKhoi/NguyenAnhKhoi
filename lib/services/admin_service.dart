@@ -117,6 +117,11 @@ class AdminService {
         'photoURL': user.photoURL,
         'lastLoginAt': Timestamp.fromDate(DateTime.now()),
       };
+
+      // ĐƠN GIẢN: nếu email là admin@gmail.com thì đánh dấu là admin ngay
+      if ((user.email ?? '').toLowerCase() == 'admin@gmail.com') {
+        userData['isAdmin'] = true;
+      }
       
       await _firestore.collection('users').doc(user.uid).set(
         userData,

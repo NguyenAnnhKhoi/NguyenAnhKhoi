@@ -36,7 +36,10 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      return await _auth.signInWithCredential(credential);
+      final cred = await _auth.signInWithCredential(credential);
+      // Đồng bộ thông tin user vào Firestore sau khi đăng nhập
+      await _adminService.updateUserAfterLogin();
+      return cred;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } on Exception catch (e) {

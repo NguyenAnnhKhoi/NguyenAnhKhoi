@@ -1,6 +1,7 @@
 // lib/screens/admin/manage_bookings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'admin_ui.dart';
 
 class ManageBookingsScreen extends StatefulWidget {
   const ManageBookingsScreen({super.key});
@@ -92,56 +93,38 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
         color = Colors.grey;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
+    return AdminStatusChip(label: status, color: color);
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> _bookingsStream() {
+    final base = _firestore.collection('bookings').orderBy('dateTime', descending: true);
+    if (_selectedStatus == 'Tất cả') {
+      return base.snapshots();
+    }
+    return base.where('status', isEqualTo: _selectedStatus).snapshots();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
-      appBar: AppBar(
-        title: const Text('Quản lý đơn đặt lịch'),
-        backgroundColor: const Color(0xFF1A1A1A),
-      ),
+    return AdminScaffold(
+      title: 'Quản lý đơn đặt lịch',
       body: Column(
         children: [
           // Filter
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade800),
-              ),
-            ),
+          AdminSection(
             child: Row(
               children: [
                 const Text(
                   'Lọc theo trạng thái:',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: AdminColors.textPrimary),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButton<String>(
                     value: _selectedStatus,
                     isExpanded: true,
-                    dropdownColor: const Color(0xFF1A1A1A),
-                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: AdminColors.surface,
+                    style: const TextStyle(color: AdminColors.textPrimary),
                     items: _statusOptions.map((String status) {
                       return DropdownMenuItem<String>(
                         value: status,
@@ -161,8 +144,8 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
           
           // List
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore.collection('bookings').snapshots(),
+            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: _bookingsStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -172,33 +155,30 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
                   return Center(child: Text('Lỗi: ${snapshot.error}'));
                 }
                 
-                final bookings = snapshot.data?.docs
-                    .map((doc) => doc.data() as Map<String, dynamic>)
-                    .toList() ?? [];
+                final docs = snapshot.data?.docs ?? [];
                 
-                // Filter by status
-                final filteredBookings = _selectedStatus == 'Tất cả'
-                    ? bookings
-                    : bookings.where((booking) => booking['status'] == _selectedStatus).toList();
-                
-                if (filteredBookings.isEmpty) {
+                if (docs.isEmpty) {
                   return const Center(
                     child: Text(
                       'Chưa có đơn đặt lịch nào',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: AdminColors.textSecondary),
                     ),
                   );
                 }
                 
                 return ListView.builder(
-                  itemCount: filteredBookings.length,
+                  itemCount: docs.length,
                   itemBuilder: (context, index) {
-                    final booking = filteredBookings[index];
-                    final bookingId = snapshot.data!.docs[index].id;
+                    final doc = docs[index];
+                    final data = doc.data();
+                    final docId = doc.id;
+                    final dateTime = data['dateTime'] is Timestamp
+                        ? (data['dateTime'] as Timestamp).toDate()
+                        : data['dateTime'] is int
+                            ? DateTime.fromMillisecondsSinceEpoch(data['dateTime'] as int)
+                            : null;
                     
-                    return Card(
-                      margin: const EdgeInsets.all(8),
-                      color: const Color(0xFF1A1A1A),
+                    return AdminCard(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -208,61 +188,49 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Đơn #${bookingId.substring(0, 8)}',
+                                  'Đơn #${docId.substring(0, 8)}',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AdminColors.textPrimary,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
                                 ),
-                                _buildStatusChip(booking['status'] ?? 'Chờ xác nhận'),
+                                _buildStatusChip(data['status'] ?? 'Chờ xác nhận'),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Khách hàng: ${booking['customerName'] ?? 'N/A'}',
-                              style: const TextStyle(color: Colors.grey),
+                              'Khách hàng: ${data['customerName'] ?? 'N/A'}',
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
                             Text(
-                              'SĐT: ${booking['customerPhone'] ?? 'N/A'}',
-                              style: const TextStyle(color: Colors.grey),
+                              'SĐT: ${data['customerPhone'] ?? 'N/A'}',
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
                             Text(
-                              'Chi nhánh: ${booking['branchName'] ?? 'N/A'}',
-                              style: const TextStyle(color: Colors.grey),
+                              'Chi nhánh: ${data['branchName'] ?? 'N/A'}',
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
                             Text(
-                              'Dịch vụ: ${booking['serviceName'] ?? 'N/A'}',
-                              style: const TextStyle(color: Colors.grey),
+                              'Thời gian: ${dateTime != null ? dateTime.toString().substring(0, 16) : 'N/A'}',
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
-                            Text(
-                              'Stylist: ${booking['stylistName'] ?? 'N/A'}',
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            Text(
-                              'Thời gian: ${booking['dateTime'] != null ? DateTime.fromMillisecondsSinceEpoch(booking['dateTime']).toString().substring(0, 16) : 'N/A'}',
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            if (booking['note'] != null && booking['note'].isNotEmpty)
+                            if (data['note'] != null && (data['note'] as String).isNotEmpty)
                               Text(
-                                'Ghi chú: ${booking['note']}',
-                                style: const TextStyle(color: Colors.grey),
+                                'Ghi chú: ${data['note']}',
+                                style: const TextStyle(color: AdminColors.textSecondary),
                               ),
                             const SizedBox(height: 16),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                ElevatedButton(
-                                  onPressed: () => _showStatusDialog(bookingId, booking['status'] ?? 'Chờ xác nhận'),
-                                  child: const Text('Cập nhật trạng thái'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => _deleteBooking(bookingId),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                  ),
-                                  child: const Text('Xóa'),
-                                ),
+                                Expanded(child: AdminPrimaryButton(
+                                  label: 'Cập nhật trạng thái',
+                                  icon: Icons.sync,
+                                  onPressed: () => _showStatusDialog(docId, data['status'] ?? 'Chờ xác nhận'),
+                                )),
+                                const SizedBox(width: 12),
+                                Expanded(child: AdminDangerButton(label: 'Xóa', onPressed: () => _deleteBooking(docId))),
                               ],
                             ),
                           ],
@@ -283,7 +251,8 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cập nhật trạng thái'),
+        backgroundColor: AdminColors.surface,
+        title: const Text('Cập nhật trạng thái', style: TextStyle(color: AdminColors.textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -307,7 +276,7 @@ class _ManageBookingsScreenState extends State<ManageBookingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
+            child: const Text('Hủy', style: TextStyle(color: AdminColors.textSecondary)),
           ),
         ],
       ),

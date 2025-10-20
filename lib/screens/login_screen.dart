@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../services/auth_service.dart';
+import '../main.dart';
 import '../widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -73,7 +74,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       if (userCredential != null && mounted) {
         EasyLoading.showSuccess('Đăng nhập thành công!');
         await Future.delayed(const Duration(milliseconds: 500));
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Điều hướng qua AuthWrapper để phân quyền admin/user
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        );
       }
       // Nếu userCredential == null, người dùng đã hủy đăng nhập
     } catch (e) {
@@ -110,7 +114,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         password: _passCtrl.text,
       );
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Điều hướng qua AuthWrapper để phân quyền admin/user
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        );
       }
     } catch (e) {
       if (mounted) {

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/branch.dart';
+import 'admin_ui.dart';
 
 class ManageBranchesScreen extends StatefulWidget {
   const ManageBranchesScreen({super.key});
@@ -133,33 +134,19 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
-      appBar: AppBar(
-        title: const Text('Quản lý chi nhánh'),
-        backgroundColor: const Color(0xFF1A1A1A),
-      ),
+    return AdminScaffold(
+      title: 'Quản lý chi nhánh',
       body: Column(
         children: [
           // Form
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade800),
-              ),
-            ),
+          AdminSection(
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tên chi nhánh',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: adminInputDecoration('Tên chi nhánh'),
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return 'Vui lòng nhập tên chi nhánh';
@@ -170,10 +157,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _addressController,
-                    decoration: const InputDecoration(
-                      labelText: 'Địa chỉ',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: adminInputDecoration('Địa chỉ'),
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return 'Vui lòng nhập địa chỉ';
@@ -187,10 +171,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _hoursController,
-                          decoration: const InputDecoration(
-                            labelText: 'Giờ hoạt động',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Giờ hoạt động'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập giờ hoạt động';
@@ -204,10 +185,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                         child: TextFormField(
                           controller: _ratingController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Đánh giá',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Đánh giá'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập đánh giá';
@@ -229,10 +207,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                         child: TextFormField(
                           controller: _latitudeController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Vĩ độ',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Vĩ độ'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập vĩ độ';
@@ -249,10 +224,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                         child: TextFormField(
                           controller: _longitudeController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Kinh độ',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Kinh độ'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập kinh độ';
@@ -269,10 +241,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _imageController,
-                    decoration: const InputDecoration(
-                      labelText: 'URL hình ảnh',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: adminInputDecoration('URL hình ảnh'),
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return 'Vui lòng nhập URL hình ảnh';
@@ -283,25 +252,14 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _addOrUpdateBranch,
-                          child: _isLoading
-                              ? const CircularProgressIndicator()
-                              : Text(_editingBranch != null ? 'Cập nhật' : 'Thêm mới'),
-                        ),
-                      ),
+                      Expanded(child: AdminPrimaryButton(
+                        label: _editingBranch != null ? 'Cập nhật' : 'Thêm mới',
+                        icon: _editingBranch != null ? Icons.save : Icons.add,
+                        onPressed: _isLoading ? null : _addOrUpdateBranch,
+                      )),
                       const SizedBox(width: 16),
                       if (_editingBranch != null)
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _clearForm,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade600,
-                            ),
-                            child: const Text('Hủy'),
-                          ),
-                        ),
+                        Expanded(child: AdminDangerButton(label: 'Hủy', onPressed: _clearForm)),
                     ],
                   ),
                 ],
@@ -330,7 +288,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                   return const Center(
                     child: Text(
                       'Chưa có chi nhánh nào',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: AdminColors.textSecondary),
                     ),
                   );
                 }
@@ -339,9 +297,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                   itemCount: branches.length,
                   itemBuilder: (context, index) {
                     final branch = branches[index];
-                    return Card(
-                      margin: const EdgeInsets.all(8),
-                      color: const Color(0xFF1A1A1A),
+                    return AdminCard(
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundImage: branch.image.isNotEmpty
@@ -353,18 +309,18 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                         ),
                         title: Text(
                           branch.name,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AdminColors.textPrimary),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               branch.address,
-                              style: const TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
                             Text(
                               branch.hours,
-                              style: const TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: AdminColors.textSecondary),
                             ),
                           ],
                         ),

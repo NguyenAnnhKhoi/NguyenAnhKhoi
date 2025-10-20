@@ -120,6 +120,7 @@ class MyApp extends StatelessWidget {
         '/register': (_) => const RegisterScreen(),
         '/forgot-password': (_) => const ForgotPasswordScreen(),
         '/login': (_) => const LoginScreen(),
+        '/auth': (_) => const AuthWrapper(),
       },
       builder: EasyLoading.init(),
       home: StreamBuilder<User?>(

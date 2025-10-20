@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/service.dart';
+import 'admin_ui.dart';
 
 class ManageServicesScreen extends StatefulWidget {
   const ManageServicesScreen({super.key});
@@ -123,23 +124,12 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
-      appBar: AppBar(
-        title: const Text('Quản lý dịch vụ'),
-        backgroundColor: const Color(0xFF1A1A1A),
-      ),
+    return AdminScaffold(
+      title: 'Quản lý dịch vụ',
       body: Column(
         children: [
           // Form
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade800),
-              ),
-            ),
+          AdminSection(
             child: Form(
               key: _formKey,
               child: Column(
@@ -149,10 +139,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Tên dịch vụ',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Tên dịch vụ'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập tên dịch vụ';
@@ -166,10 +153,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                         child: TextFormField(
                           controller: _priceController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Giá (VNĐ)',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Giá (VNĐ)'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập giá';
@@ -189,10 +173,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _durationController,
-                          decoration: const InputDecoration(
-                            labelText: 'Thời gian',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Thời gian'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập thời gian';
@@ -206,10 +187,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                         child: TextFormField(
                           controller: _ratingController,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Đánh giá',
-                            border: OutlineInputBorder(),
-                          ),
+                          decoration: adminInputDecoration('Đánh giá'),
                           validator: (value) {
                             if (value?.isEmpty ?? true) {
                               return 'Vui lòng nhập đánh giá';
@@ -227,10 +205,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _imageController,
-                    decoration: const InputDecoration(
-                      labelText: 'URL hình ảnh',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: adminInputDecoration('URL hình ảnh'),
                     validator: (value) {
                       if (value?.isEmpty ?? true) {
                         return 'Vui lòng nhập URL hình ảnh';
@@ -241,25 +216,14 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _addOrUpdateService,
-                          child: _isLoading
-                              ? const CircularProgressIndicator()
-                              : Text(_editingService != null ? 'Cập nhật' : 'Thêm mới'),
-                        ),
-                      ),
+                      Expanded(child: AdminPrimaryButton(
+                        label: _editingService != null ? 'Cập nhật' : 'Thêm mới',
+                        icon: _editingService != null ? Icons.save : Icons.add,
+                        onPressed: _isLoading ? null : _addOrUpdateService,
+                      )),
                       const SizedBox(width: 16),
                       if (_editingService != null)
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _clearForm,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade600,
-                            ),
-                            child: const Text('Hủy'),
-                          ),
-                        ),
+                        Expanded(child: AdminDangerButton(label: 'Hủy', onPressed: _clearForm)),
                     ],
                   ),
                 ],
@@ -288,7 +252,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                   return const Center(
                     child: Text(
                       'Chưa có dịch vụ nào',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: AdminColors.textSecondary),
                     ),
                   );
                 }
@@ -297,9 +261,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                   itemCount: services.length,
                   itemBuilder: (context, index) {
                     final service = services[index];
-                    return Card(
-                      margin: const EdgeInsets.all(8),
-                      color: const Color(0xFF1A1A1A),
+                    return AdminCard(
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundImage: service.image.isNotEmpty
@@ -311,11 +273,11 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                         ),
                         title: Text(
                           service.name,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AdminColors.textPrimary),
                         ),
                         subtitle: Text(
                           '${service.price.toStringAsFixed(0)} VNĐ - ${service.duration}',
-                          style: const TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: AdminColors.textSecondary),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
