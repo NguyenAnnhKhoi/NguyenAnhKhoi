@@ -7,6 +7,7 @@ import '../models/stylist.dart';
 import '../models/branch.dart';
 import '../services/firestore_service.dart';
 import '../main.dart';
+import '../screens/payment_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -15,7 +16,8 @@ class BookingScreen extends StatefulWidget {
   BookingScreenState createState() => BookingScreenState();
 }
 
-class BookingScreenState extends State<BookingScreen> with TickerProviderStateMixin {
+class BookingScreenState extends State<BookingScreen>
+    with TickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   Stylist? selectedStylist;
   DateTime? selectedDate;
@@ -48,75 +50,95 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     _phoneController.dispose();
     super.dispose();
   }
-  
+
+  bool _validateForm() {
+    if (selectedBranch == null) {
+      _showSnackBar('Vui lòng chọn chi nhánh.');
+      return false;
+    }
+    if (selectedStylist == null) {
+      _showSnackBar('Vui lòng chọn stylist.');
+      return false;
+    }
+    if (selectedDate == null) {
+      _showSnackBar('Vui lòng chọn ngày.');
+      return false;
+    }
+    if (selectedTime == null) {
+      _showSnackBar('Vui lòng chọn giờ.');
+      return false;
+    }
+    if (_nameController.text.trim().isEmpty) {
+      _showSnackBar('Vui lòng nhập họ và tên.');
+      return false;
+    }
+    if (_phoneController.text.trim().isEmpty) {
+      _showSnackBar('Vui lòng nhập số điện thoại.');
+      return false;
+    }
+    return true;
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF0891B2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   Future<void> _confirmBooking(Service service) async {
-    if (selectedBranch == null || selectedStylist == null || selectedDate == null || selectedTime == null || 
-        _nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
+    if (!_validateForm()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final newBooking = Booking(
+        id: '',
+        service: service,
+        stylist: selectedStylist!,
+        dateTime: DateTime(
+          selectedDate!.year,
+          selectedDate!.month,
+          selectedDate!.day,
+          selectedTime!.hour,
+          selectedTime!.minute,
+        ),
+        status: 'Chờ xác nhận',
+        customerName: _nameController.text.trim(),
+        customerPhone: _phoneController.text.trim(),
+        branchName: selectedBranch!.name,
+        amount: service.price,
+        isPaid: false,
+      );
+
+      // Lưu booking
+      final createdBooking = await _firestoreService.addBooking(newBooking);
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        // Chuyển đến trang thanh toán mà không hiện thông báo thành công
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentScreen(booking: createdBooking),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Vui lòng điền đầy đủ thông tin.'),
-          backgroundColor: Colors.orange,
+          content: Text('Lỗi: $e'), 
+          backgroundColor: const Color(0xFF0891B2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
-      return;
-    }
-    
-    setState(() => _isLoading = true);
-
-    final newBooking = Booking(
-      id: '',
-      service: service,
-      stylist: selectedStylist!,
-      dateTime: DateTime(
-        selectedDate!.year,
-        selectedDate!.month,
-        selectedDate!.day,
-        selectedTime!.hour,
-        selectedTime!.minute,
-      ),
-      status: 'Chờ xác nhận',
-      customerName: _nameController.text.trim(),
-      customerPhone: _phoneController.text.trim(),
-      branchName: selectedBranch!.name,
-    );
-    
-    try {
-      await _firestoreService.addBooking(newBooking);
-      if(mounted) {
-        print('Booking created successfully, navigating...');
-        // Show success message and navigate back to home with bookings tab selected
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đặt lịch thành công!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-        // Navigate back to home screen and switch to bookings tab
-        Navigator.pop(context);
-        print('Navigator.pop completed, calling navigateToBookings...');
-        // Add a small delay to ensure Navigator.pop is fully completed
-        Future.delayed(Duration(milliseconds: 100), () {
-          MainScreenState.navigateToBookings();
-          print('navigateToBookings called');
-        });
-      }
-    } catch(e) {
-      if(mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-      }
-    } finally {
-      if(mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -170,8 +192,11 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                   children: [
                     _buildServiceInfo(service),
                     const SizedBox(height: 28),
-                    
-                    _buildSectionTitle('Thông tin khách hàng', Icons.person_outline),
+
+                    _buildSectionTitle(
+                      'Thông tin khách hàng',
+                      Icons.person_outline,
+                    ),
                     SizedBox(height: 16),
                     _buildTextField(
                       controller: _nameController,
@@ -185,19 +210,28 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                     ),
-                    
+
                     SizedBox(height: 28),
-                    _buildSectionTitle('Chọn chi nhánh', Icons.business_rounded),
+                    _buildSectionTitle(
+                      'Chọn chi nhánh',
+                      Icons.business_rounded,
+                    ),
                     SizedBox(height: 16),
                     _buildBranchSelector(),
-                    
+
                     SizedBox(height: 28),
-                    _buildSectionTitle('Chọn stylist', Icons.person_pin_outlined),
+                    _buildSectionTitle(
+                      'Chọn stylist',
+                      Icons.person_pin_outlined,
+                    ),
                     SizedBox(height: 16),
                     _buildStylistSelector(),
-                    
+
                     SizedBox(height: 28),
-                    _buildSectionTitle('Chọn thời gian', Icons.access_time_outlined),
+                    _buildSectionTitle(
+                      'Chọn thời gian',
+                      Icons.access_time_outlined,
+                    ),
                     SizedBox(height: 16),
                     Row(
                       children: [
@@ -206,7 +240,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                         Expanded(child: _buildTimePicker(context)),
                       ],
                     ),
-                    
+
                     SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
@@ -221,17 +255,21 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        onPressed: _isLoading ? null : () => _confirmBooking(service),
-                        icon: _isLoading 
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Icon(Icons.check_circle_outline, size: 24),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _confirmBooking(service),
+                        icon: _isLoading
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Icon(Icons.check_circle_outline, size: 24),
                         label: Text(
                           _isLoading ? 'Đang xử lý...' : 'Xác nhận đặt lịch',
                           style: TextStyle(
@@ -259,25 +297,25 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         Container(
           width: 4,
           height: 24,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFD4AF37), Color(0xFFB8860B)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(2)),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFD4AF37), Color(0xFFB8860B)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
+            borderRadius: BorderRadius.all(Radius.circular(2)),
+          ),
         ),
         const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Color(0xFF1A1A1A),
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
+        ),
       ],
     );
   }
@@ -323,11 +361,18 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 16, color: const Color(0xFF0891B2)),
+                    Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: const Color(0xFF0891B2),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       service.duration,
-                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -347,7 +392,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       ),
     );
   }
-  
+
   Widget _buildStylistSelector() {
     return StreamBuilder<List<Stylist>>(
       stream: _firestoreService.getStylists(),
@@ -362,7 +407,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
             color: Colors.grey.shade50,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selectedStylist != null ? const Color(0xFF0891B2) : Colors.grey.shade300,
+              color: selectedStylist != null
+                  ? const Color(0xFF0891B2)
+                  : Colors.grey.shade300,
               width: selectedStylist != null ? 2 : 1,
             ),
             boxShadow: [
@@ -376,7 +423,10 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           child: DropdownButtonHideUnderline(
             child: DropdownButton<Stylist>(
               isExpanded: true,
-              hint: Text('Chọn stylist của bạn', style: TextStyle(color: Colors.grey.shade500)),
+              hint: Text(
+                'Chọn stylist của bạn',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
               value: selectedStylist,
               dropdownColor: Colors.white,
               style: const TextStyle(color: Color(0xFF1E293B)),
@@ -420,7 +470,11 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                             ),
                             Row(
                               children: [
-                                const Icon(Icons.star, size: 14, color: Colors.amber),
+                                const Icon(
+                                  Icons.star,
+                                  size: 14,
+                                  color: Colors.amber,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   s.rating.toString(),
@@ -444,7 +498,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       },
     );
   }
-  
+
   Widget _buildDatePicker(BuildContext context) {
     return InkWell(
       onTap: () async {
@@ -517,10 +571,12 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF0891B2).withOpacity(0.1) : Colors.grey.shade50,
+        color: isSelected
+            ? const Color(0xFF0891B2).withOpacity(0.1)
+            : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade300,
+          color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade300,
           width: isSelected ? 2 : 1,
         ),
         boxShadow: [
@@ -544,7 +600,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: isSelected ? const Color(0xFF0891B2) : const Color(0xFF64748B),
+              color: isSelected
+                  ? const Color(0xFF0891B2)
+                  : const Color(0xFF64748B),
             ),
             textAlign: TextAlign.center,
           ),
@@ -578,7 +636,10 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
       ),
     );
   }
@@ -590,19 +651,22 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => _BranchPicker(
-            firestoreService: _firestoreService,
-          ),
+          builder: (context) =>
+              _BranchPicker(firestoreService: _firestoreService),
         );
         if (picked != null) setState(() => selectedBranch = picked);
       },
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: selectedBranch != null ? const Color(0xFF0891B2).withOpacity(0.1) : Colors.grey.shade50,
+          color: selectedBranch != null
+              ? const Color(0xFF0891B2).withOpacity(0.1)
+              : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selectedBranch != null ? const Color(0xFF0891B2) : Colors.grey.shade300,
+            color: selectedBranch != null
+                ? const Color(0xFF0891B2)
+                : Colors.grey.shade300,
             width: selectedBranch != null ? 2 : 1,
           ),
           boxShadow: [
@@ -617,7 +681,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           children: [
             Icon(
               Icons.business_rounded,
-              color: selectedBranch != null ? const Color(0xFF0891B2) : Colors.grey.shade500,
+              color: selectedBranch != null
+                  ? const Color(0xFF0891B2)
+                  : Colors.grey.shade500,
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -627,14 +693,18 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: selectedBranch != null ? const Color(0xFF0891B2) : const Color(0xFF64748B),
+                  color: selectedBranch != null
+                      ? const Color(0xFF0891B2)
+                      : const Color(0xFF64748B),
                 ),
               ),
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
               size: 16,
-              color: selectedBranch != null ? const Color(0xFF0891B2) : Colors.grey.shade400,
+              color: selectedBranch != null
+                  ? const Color(0xFF0891B2)
+                  : Colors.grey.shade400,
             ),
           ],
         ),
@@ -752,7 +822,11 @@ class _BranchPicker extends StatelessWidget {
                               SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.star, size: 14, color: Colors.amber),
+                                  Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: Colors.amber,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     branch.rating.toString(),

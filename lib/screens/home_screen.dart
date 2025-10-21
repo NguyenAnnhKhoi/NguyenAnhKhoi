@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/service.dart';
 import '../services/firestore_service.dart';
-import 'booking_screen.dart';
+import '../screens/payment_screen.dart';
+import '../models/booking.dart';
+import '../screens/booking_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,7 +14,8 @@ class HomeScreen extends StatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   User? _user;
   late AnimationController _controller;
@@ -31,9 +34,9 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
       duration: const Duration(milliseconds: 800),
       vsync: this,
     )..forward();
-    
+
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-    
+
     _searchController.addListener(_onSearchChanged);
     _loadServices();
   }
@@ -85,15 +88,11 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
               pinned: true,
               backgroundColor: const Color(0xFF0891B2),
               elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                background: _buildHeader(),
-              ),
+              flexibleSpace: FlexibleSpaceBar(background: _buildHeader()),
             ),
             SliverToBoxAdapter(
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF5F5F5),
-                ),
+                decoration: const BoxDecoration(color: Color(0xFFF5F5F5)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -104,20 +103,20 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _TopButton(
-                            icon: Icons.card_giftcard_rounded, 
-                            label: 'Ưu đãi', 
+                            icon: Icons.card_giftcard_rounded,
+                            label: 'Ưu đãi',
                             color: const Color(0xFFFFF7ED),
                             iconColor: const Color(0xFFEA580C),
                           ),
                           _TopButton(
-                            icon: Icons.verified_user_rounded, 
-                            label: 'Cam kết KTV', 
+                            icon: Icons.verified_user_rounded,
+                            label: 'Cam kết KTV',
                             color: const Color(0xFFF0FDF4),
                             iconColor: const Color(0xFF16A34A),
                           ),
                           _TopButton(
-                            icon: Icons.public_rounded, 
-                            label: 'Chi nhánh', 
+                            icon: Icons.public_rounded,
+                            label: 'Chi nhánh',
                             color: const Color(0xFFEFF6FF),
                             iconColor: const Color(0xFF2563EB),
                           ),
@@ -143,11 +142,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFF0891B2),
-            Color(0xFF06B6D4),
-            Color(0xFF22D3EE),
-          ],
+          colors: [Color(0xFF0891B2), Color(0xFF06B6D4), Color(0xFF22D3EE)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -186,10 +181,16 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                     child: CircleAvatar(
                       radius: 32,
                       backgroundColor: const Color(0xFFF8FAFC),
-                      backgroundImage: _user?.photoURL != null ? NetworkImage(_user!.photoURL!) : null,
-                      child: _user?.photoURL == null 
-                        ? const Icon(Icons.person, size: 32, color: Color(0xFF64748B)) 
-                        : null,
+                      backgroundImage: _user?.photoURL != null
+                          ? NetworkImage(_user!.photoURL!)
+                          : null,
+                      child: _user?.photoURL == null
+                          ? const Icon(
+                              Icons.person,
+                              size: 32,
+                              color: Color(0xFF64748B),
+                            )
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -226,7 +227,11 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                     ),
                     child: IconButton(
                       onPressed: () {},
-                      icon: const Icon(Icons.flag_outlined, color: Colors.white, size: 24),
+                      icon: const Icon(
+                        Icons.flag_outlined,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -238,7 +243,11 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                     ),
                     child: IconButton(
                       onPressed: () {},
-                      icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 24),
+                      icon: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ],
@@ -246,7 +255,10 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
               const SizedBox(height: 24),
               // Functional Search Bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -344,11 +356,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Color(0xFF9CA3AF),
-                  ),
+                  Icon(Icons.search_off, size: 64, color: Color(0xFF9CA3AF)),
                   SizedBox(height: 16),
                   Text(
                     'Không tìm thấy dịch vụ',
@@ -361,43 +369,50 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                   SizedBox(height: 8),
                   Text(
                     'Thử tìm kiếm với từ khóa khác',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF9CA3AF),
-                    ),
+                    style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
                   ),
                 ],
               ),
             )
           : _filteredServices.isEmpty
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
-                  ),
-                )
-              : GridView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.3,
-                  ),
-                  itemCount: _filteredServices.length,
-                  itemBuilder: (context, index) => _buildServiceCard(_filteredServices[index]),
-                ),
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+              ),
+            )
+          : GridView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 1,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.3,
+              ),
+              itemCount: _filteredServices.length,
+              itemBuilder: (context, index) =>
+                  _buildServiceCard(_filteredServices[index]),
+            ),
     );
   }
 
   Widget _buildServiceCard(Service service) {
     return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
+      onTap: () async {
+        final booking = await Navigator.of(context).push<Booking>(
           MaterialPageRoute(
             builder: (_) => const BookingScreen(),
             settings: RouteSettings(arguments: service),
           ),
         );
+
+        if (booking != null && mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentScreen(booking: booking),
+            ),
+          );
+        }
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(
@@ -421,14 +436,20 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                     child: Image.network(
                       service.image,
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (c, e, s) => Container(
                         color: const Color(0xFFF8F9FA),
-                        child: const Icon(Icons.content_cut_rounded, size: 50, color: Color(0xFF9CA3AF)),
+                        child: const Icon(
+                          Icons.content_cut_rounded,
+                          size: 50,
+                          color: Color(0xFF9CA3AF),
+                        ),
                       ),
                     ),
                   ),
@@ -436,7 +457,10 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                     top: 12,
                     right: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.95),
                         borderRadius: BorderRadius.circular(12),
@@ -445,7 +469,11 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.star, size: 14, color: Color(0xFFF59E0B)),
+                          const Icon(
+                            Icons.star,
+                            size: 14,
+                            color: Color(0xFFF59E0B),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             service.rating.toString(),
@@ -492,7 +520,10 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF3F4F6),
                             borderRadius: BorderRadius.circular(8),
@@ -500,7 +531,11 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.access_time, size: 14, color: Color(0xFF6B7280)),
+                              const Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: Color(0xFF6B7280),
+                              ),
                               const SizedBox(width: 4),
                               const Text(
                                 '30 phút',
@@ -532,8 +567,8 @@ class _TopButton extends StatelessWidget {
   final Color color;
   final Color iconColor;
   const _TopButton({
-    required this.icon, 
-    required this.label, 
+    required this.icon,
+    required this.label,
     required this.color,
     required this.iconColor,
   });
@@ -557,11 +592,7 @@ class _TopButton extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 32,
-          ),
+          child: Icon(icon, color: iconColor, size: 32),
         ),
         const SizedBox(height: 12),
         Text(

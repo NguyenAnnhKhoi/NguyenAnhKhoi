@@ -26,7 +26,12 @@ class _BranchScreenState extends State<BranchScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa có dữ liệu chi nhánh để hiển thị trên bản đồ.')),
+        SnackBar(
+          content: Text('Chưa có dữ liệu chi nhánh để hiển thị trên bản đồ.'),
+          backgroundColor: const Color(0xFF0891B2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
     }
   }

@@ -9,11 +9,14 @@ class Booking {
   final DateTime dateTime;
   final String status;
   final String note;
-  // --- THÊM CÁC TRƯỜNG MỚI ---
   final String customerName;
   final String customerPhone;
-  final String branchName; // Lưu tên chi nhánh
-  final String? paymentMethod; // Phương thức thanh toán
+  final String branchName;
+  final String? paymentMethod;
+  final bool isPaid;
+  final double amount;
+  final String? paymentId;
+  final DateTime? paidAt;
 
   Booking({
     required this.id,
@@ -22,32 +25,47 @@ class Booking {
     required this.dateTime,
     required this.status,
     this.note = "",
-    // --- CẬP NHẬT CONSTRUCTOR ---
     required this.customerName,
     required this.customerPhone,
     required this.branchName,
     this.paymentMethod,
+    this.isPaid = false,
+    required this.amount,
+    this.paymentId,
+    this.paidAt,
   });
 
   Booking copyWith({
     String? id,
+    Service? service,
+    Stylist? stylist,
+    DateTime? dateTime,
+    String? status,
+    String? note,
     String? customerName,
     String? customerPhone,
     String? branchName,
-    String? status,
     String? paymentMethod,
+    bool? isPaid,
+    double? amount,
+    String? paymentId,
+    DateTime? paidAt,
   }) {
     return Booking(
       id: id ?? this.id,
-      service: service,
-      stylist: stylist,
-      dateTime: dateTime,
+      service: service ?? this.service,
+      stylist: stylist ?? this.stylist,
+      dateTime: dateTime ?? this.dateTime,
       status: status ?? this.status,
-      note: note,
+      note: note ?? this.note,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       branchName: branchName ?? this.branchName,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      isPaid: isPaid ?? this.isPaid,
+      amount: amount ?? this.amount,
+      paymentId: paymentId ?? this.paymentId,
+      paidAt: paidAt ?? this.paidAt,
     );
   }
 }

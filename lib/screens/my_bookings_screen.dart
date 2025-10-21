@@ -420,7 +420,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Đã hủy lịch hẹn'),
-                                backgroundColor: Colors.green,
+                                backgroundColor: const Color(0xFF0891B2),
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -434,7 +434,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Lỗi: $e'),
-                                backgroundColor: Colors.red,
+                                backgroundColor: const Color(0xFF0891B2),
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),

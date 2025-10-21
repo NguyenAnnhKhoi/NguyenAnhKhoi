@@ -61,8 +61,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Dịch vụ định vị đã bị tắt. Vui lòng bật để tiếp tục.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Dịch vụ định vị đã bị tắt. Vui lòng bật để tiếp tục.'),
+          backgroundColor: const Color(0xFF0891B2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
       return;
     }
 
@@ -72,15 +78,27 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (permission == LocationPermission.denied) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Quyền truy cập vị trí bị từ chối.')));
+          SnackBar(
+            content: Text('Quyền truy cập vị trí bị từ chối.'),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Quyền truy cập vị trí bị từ chối vĩnh viễn, chúng tôi không thể yêu cầu quyền.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Quyền truy cập vị trí bị từ chối vĩnh viễn, chúng tôi không thể yêu cầu quyền.'),
+          backgroundColor: const Color(0xFF0891B2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
       return;
     }
   }
@@ -133,7 +151,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     if (_userLocation == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không tìm thấy vị trí của bạn.')),
+        SnackBar(
+          content: Text('Không tìm thấy vị trí của bạn.'),
+          backgroundColor: const Color(0xFF0891B2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
       return;
     }

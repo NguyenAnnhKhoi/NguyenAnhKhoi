@@ -2,6 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter/foundation.dart';
 import '../models/service.dart';
 import '../models/stylist.dart';
 import '../models/branch.dart';
@@ -9,6 +10,7 @@ import '../services/firestore_service.dart';
 import '../models/booking.dart';
 import '../services/notification_service.dart';
 import '../main.dart';
+import '../screens/payment_screen.dart';
 
 class QuickBookingScreen extends StatefulWidget {
   const QuickBookingScreen({super.key});
@@ -57,7 +59,76 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     });
   }
 
-  Future<void> _confirmQuickBooking() async {
+  Future<void> _confirmBooking() async {
+    if (!_validateForm()) return;
+
+    try {
+      EasyLoading.show(status: 'Đang xử lý...');
+
+      final newBooking = Booking(
+        id: '',
+        service: selectedService!,
+        stylist: selectedStylist!,
+        dateTime: DateTime(
+          selectedDate!.year,
+          selectedDate!.month,
+          selectedDate!.day,
+          selectedTime!.hour,
+          selectedTime!.minute,
+        ),
+        status: 'Chờ xác nhận',
+        customerName: _nameController.text.trim(),
+        customerPhone: _phoneController.text.trim(),
+        branchName: selectedBranch!.name,
+        amount: selectedService!.price,
+        isPaid: false,
+      );
+
+      if (kDebugMode) {
+        print('Creating booking for:');
+        print('Service: ${selectedService!.name}');
+        print('Amount: ${selectedService!.price}');
+      }
+
+      // Lưu booking vào Firestore
+      final createdBooking = await _firestoreService.addBooking(newBooking);
+
+      // Schedule notification
+      await _notificationService.scheduleBookingNotification(createdBooking);
+
+      if (mounted) {
+        EasyLoading.dismiss();
+
+        // Chuyển đến trang thanh toán mà không hiện thông báo thành công
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentScreen(booking: createdBooking),
+          ),
+        );
+
+        // Sau khi thanh toán xong, quay về home và hiển thị bookings
+        Navigator.pop(context);
+        Future.delayed(Duration(milliseconds: 100), () {
+          MainScreenState.navigateToBookings();
+        });
+      }
+    } catch (e) {
+      EasyLoading.dismiss();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: $e'), 
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
+  }
+
+  bool _validateForm() {
     if (selectedStylist == null ||
         selectedService == null ||
         selectedDate == null ||
@@ -66,56 +137,9 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
         _nameController.text.trim().isEmpty ||
         _phoneController.text.trim().isEmpty) {
       EasyLoading.showInfo('Vui lòng điền đủ thông tin');
-      return;
+      return false;
     }
-
-    await EasyLoading.show(status: 'Đang xử lý...');
-
-    Booking newBooking = Booking(
-      id: '',
-      service: selectedService!,
-      stylist: selectedStylist!,
-      dateTime: DateTime(
-        selectedDate!.year,
-        selectedDate!.month,
-        selectedDate!.day,
-        selectedTime!.hour,
-        selectedTime!.minute,
-      ),
-      status: 'Chờ xác nhận',
-      customerName: _nameController.text.trim(),
-      customerPhone: _phoneController.text.trim(),
-      branchName: selectedBranch!.name,
-    );
-
-    try {
-      final createdBooking = await _firestoreService.addBooking(newBooking);
-      await _notificationService.scheduleBookingNotification(createdBooking);
-
-      if (mounted) {
-        _resetForm();
-        EasyLoading.dismiss();
-        // Show success message and navigate back to home
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đặt lịch thành công!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-        // Navigate back to home screen and switch to bookings tab
-        Navigator.pop(context);
-        // Add a small delay to ensure Navigator.pop is fully completed
-        Future.delayed(Duration(milliseconds: 100), () {
-          MainScreenState.navigateToBookings();
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        EasyLoading.showError('Lỗi: $e');
-      }
-    }
+    return true;
   }
 
   @override
@@ -129,7 +153,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        
+
         centerTitle: true,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -150,7 +174,11 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF0891B2), Color(0xFF06B6D4), Color(0xFF22D3EE)],
+                  colors: [
+                    Color(0xFF0891B2),
+                    Color(0xFF06B6D4),
+                    Color(0xFF22D3EE),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -168,18 +196,18 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                 children: [
                   Row(
                     children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.schedule_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: const Icon(
+                          Icons.schedule_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
                       SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -242,7 +270,11 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                     height: 64,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF0891B2), Color(0xFF06B6D4), Color(0xFF22D3EE)],
+                        colors: [
+                          Color(0xFF0891B2),
+                          Color(0xFF06B6D4),
+                          Color(0xFF22D3EE),
+                        ],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                       ),
@@ -265,7 +297,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      onPressed: _confirmQuickBooking,
+                      onPressed: _confirmBooking,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -298,10 +330,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     );
   }
 
-  Widget _buildFormSection({
-    required String title,
-    required Widget child,
-  }) {
+  Widget _buildFormSection({required String title, required Widget child}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -318,33 +347,33 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.all(Radius.circular(2)),
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
+                  borderRadius: BorderRadius.all(Radius.circular(2)),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF1E293B),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF1E293B),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
           child,
         ],
       ),
@@ -360,7 +389,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           decoration: InputDecoration(
             hintText: 'Họ và tên',
             hintStyle: TextStyle(color: Colors.grey.shade500),
-            prefixIcon: Icon(Icons.person_outline, color: const Color(0xFF0891B2)),
+            prefixIcon: Icon(
+              Icons.person_outline,
+              color: const Color(0xFF0891B2),
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -372,7 +404,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 18,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -383,7 +418,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           decoration: InputDecoration(
             hintText: 'Số điện thoại',
             hintStyle: TextStyle(color: Colors.grey.shade500),
-            prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF0891B2)),
+            prefixIcon: const Icon(
+              Icons.phone_outlined,
+              color: Color(0xFF0891B2),
+            ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -395,7 +433,10 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 18,
+            ),
           ),
         ),
       ],
@@ -412,7 +453,8 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
-          builder: (context) => _BranchPicker(firestoreService: _firestoreService),
+          builder: (context) =>
+              _BranchPicker(firestoreService: _firestoreService),
         );
         if (picked != null) setState(() => selectedBranch = picked);
       },
@@ -429,7 +471,8 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
-          builder: (context) => _ServicePicker(firestoreService: _firestoreService),
+          builder: (context) =>
+              _ServicePicker(firestoreService: _firestoreService),
         );
         if (picked != null) setState(() => selectedService = picked);
       },
@@ -512,7 +555,8 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
               context: context,
               backgroundColor: Colors.transparent,
               isScrollControlled: true,
-              builder: (context) => _StylistPicker(firestoreService: _firestoreService),
+              builder: (context) =>
+                  _StylistPicker(firestoreService: _firestoreService),
             );
             if (picked != null) setState(() => selectedStylist = picked);
           },
@@ -533,7 +577,9 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0891B2).withOpacity(0.1) : Colors.grey.shade50,
+          color: isSelected
+              ? const Color(0xFF0891B2).withOpacity(0.1)
+              : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade300,
@@ -544,7 +590,9 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade500,
+              color: isSelected
+                  ? const Color(0xFF0891B2)
+                  : Colors.grey.shade500,
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -554,13 +602,17 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? const Color(0xFF0891B2) : const Color(0xFF64748B),
+                  color: isSelected
+                      ? const Color(0xFF0891B2)
+                      : const Color(0xFF64748B),
                 ),
               ),
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
-              color: isSelected ? const Color(0xFF0891B2) : Colors.grey.shade400,
+              color: isSelected
+                  ? const Color(0xFF0891B2)
+                  : Colors.grey.shade400,
               size: 16,
             ),
           ],
@@ -951,7 +1003,11 @@ class _BranchPicker extends StatelessWidget {
                               SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.star, size: 14, color: Colors.amber),
+                                  Icon(
+                                    Icons.star,
+                                    size: 14,
+                                    color: Colors.amber,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     branch.rating.toString(),

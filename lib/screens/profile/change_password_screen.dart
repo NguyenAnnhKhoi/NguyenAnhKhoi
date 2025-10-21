@@ -30,7 +30,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     // Kiểm tra user và email để tránh lỗi null
     if (user == null || user.email == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không tìm thấy thông tin người dùng.'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không tìm thấy thông tin người dùng.'),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
         setState(() => _isLoading = false);
       }
       return;
@@ -49,7 +56,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       
       if (mounted) {
         // Hiển thị thông báo thành công
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.'),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
         
         // *** PHẦN SỬA LỖI QUAN TRỌNG NHẤT ***
         // Gọi hàm đăng xuất
@@ -66,7 +80,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         final message = e.code == 'wrong-password' 
             ? 'Mật khẩu hiện tại không đúng.' 
             : 'Lỗi: ${e.message ?? 'Vui lòng thử lại.'}';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
       }
     } finally {
       // Đảm bảo loading indicator luôn được tắt

@@ -47,19 +47,34 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
       if (_editingStylist != null) {
         await _firestore.collection('stylists').doc(_editingStylist!.id).update(stylistData);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cập nhật stylist thành công!')),
+          SnackBar(
+            content: Text('Cập nhật stylist thành công!'),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         );
       } else {
         await _firestore.collection('stylists').add(stylistData);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thêm stylist thành công!')),
+          SnackBar(
+            content: Text('Thêm stylist thành công!'),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         );
       }
 
       _clearForm();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
+        SnackBar(
+          content: Text('Lỗi: $e'),
+          backgroundColor: const Color(0xFF0891B2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -107,11 +122,21 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
       try {
         await _firestore.collection('stylists').doc(stylistId).delete();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Xóa stylist thành công!')),
+          SnackBar(
+            content: Text('Xóa stylist thành công!'),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(
+            content: Text('Lỗi: $e'),
+            backgroundColor: const Color(0xFF0891B2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         );
       }
     }
