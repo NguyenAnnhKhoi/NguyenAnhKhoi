@@ -104,6 +104,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
     if (_paymentMethod == 'Online') {
       // Chuyển đến màn hình thanh toán
       await EasyLoading.dismiss();
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(

@@ -1,7 +1,8 @@
 // lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,7 +14,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  final _authService = AuthService();
   bool _obscurePassword = true;
 
   late AnimationController _fadeController;
@@ -60,43 +60,43 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   }
 
   Future<void> _handleGoogleSignIn() async {
+    final authProvider = context.read<AuthProvider>();
     await EasyLoading.show(status: 'Đang xử lý...');
     try {
-      await _authService.signInWithGoogle();
-      // AuthWrapper sẽ tự động xử lý điều hướng
-
-      // SỬA LỖI: Gọi dismiss() ngay tại đây, TRƯỚC KHI AuthWrapper điều hướng.
+      final success = await authProvider.signInWithGoogle();
       await EasyLoading.dismiss();
+      
+      if (!success && mounted) {
+        EasyLoading.showError(authProvider.errorMessage ?? 'Đăng nhập thất bại');
+      }
     } catch (e) {
-      // SỬA LỖI: Gọi dismiss() trước khi hiển thị lỗi
       await EasyLoading.dismiss();
       if (mounted) {
         EasyLoading.showError(e.toString());
       }
     }
-    // BỎ KHỐI `finally` vì nó được gọi quá muộn
   }
 
   Future<void> _handleEmailSignIn() async {
     if (!_formKey.currentState!.validate()) return;
+    final authProvider = context.read<AuthProvider>();
     await EasyLoading.show(status: 'Đang đăng nhập...');
     try {
-      await _authService.signInWithEmail(
+      final success = await authProvider.signInWithEmail(
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text,
       );
-      // AuthWrapper sẽ tự động xử lý điều hướng
-
-      // SỬA LỖI: Gọi dismiss() ngay tại đây, TRƯỚC KHI AuthWrapper điều hướng.
       await EasyLoading.dismiss();
+      
+      if (!success && mounted) {
+        EasyLoading.showError(authProvider.errorMessage ?? 'Đăng nhập thất bại');
+      }
     } catch (e) {
-      // SỬA LỖI: Gọi dismiss() trước khi hiển thị lỗi
       await EasyLoading.dismiss();
       if (mounted) {
         EasyLoading.showError(e.toString());
       }
     }
-    // BỎ KHỐI `finally` vì nó được gọi quá muộn
   }
 
   @override
@@ -264,11 +264,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   ),
                                   validator: (v) {
                                     final value = v?.trim() ?? '';
-                                    if (value.isEmpty)
+                                    if (value.isEmpty) {
                                       return 'Vui lòng nhập email';
+                                    }
                                     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$')
-                                        .hasMatch(value))
+                                        .hasMatch(value)) {
                                       return 'Email không hợp lệ';
+                                    }
                                     return null;
                                   },
                                 ),
@@ -317,10 +319,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                         horizontal: 20, vertical: 18),
                                   ),
                                   validator: (v) {
-                                    if (v == null || v.isEmpty)
+                                    if (v == null || v.isEmpty) {
                                       return 'Vui lòng nhập mật khẩu';
-                                    if (v.length < 6)
+                                    }
+                                    if (v.length < 6) {
                                       return 'Mật khẩu phải có ít nhất 6 ký tự';
+                                    }
                                     return null;
                                   },
                                 ),

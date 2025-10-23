@@ -1,13 +1,15 @@
-// lib/screens/payment_screen.dart
 import 'package:flutter/material.dart';
 import '../models/booking.dart';
 import '../services/firestore_service.dart';
-import '../services/notification_service.dart';
-import 'package:intl/intl.dart';
+import '../services/vietqr_generator.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Booking booking;
-  const PaymentScreen({super.key, required this.booking});
+
+  const PaymentScreen({
+    Key? key,
+    required this.booking,
+  }) : super(key: key);
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -15,309 +17,271 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  final NotificationService _notificationService = NotificationService();
-  bool _isLoading = false;
+  // Không cần _selectedPaymentMethod vì luôn là VietQR
 
-  // --- THÔNG TIN MOCK ĐỂ TẠO MÃ VIETQR ---
-  // Thay thế bằng thông tin thật của bạn
-  final String bankBin = "260804"; // BIN của Vietcombank
-  final String bankAccount = "0977175770"; // Số tài khoản của bạn
-  final String accountName = "THAN QUANG TUAN"; // Tên chủ tài khoản
-  // ------------------------------------------
-
-  String _getQRString() {
-    // Tạo nội dung chuyển khoản, ví dụ: "TG Tuan cat toc 15:30"
-    String memo =
-        'TG ${widget.booking.customerName.split(' ').last} ${widget.booking.service.name.split(' ').first} ${DateFormat('HH:mm').format(widget.booking.dateTime)}';
-
-    // Tạo URL VietQR thủ công theo format chuẩn
-    // Format: https://img.vietqr.io/image/[bankBin]-[accountNumber]-compact2.jpg?amount=[amount]&addInfo=[memo]&accountName=[accountName]
-    final amount = widget.booking.service.price.toInt();
-    final encodedMemo = Uri.encodeComponent(memo);
-    final encodedAccountName = Uri.encodeComponent(accountName);
-    
-    return 'https://img.vietqr.io/image/$bankBin-$bankAccount-compact2.jpg?amount=$amount&addInfo=$encodedMemo&accountName=$encodedAccountName';
-  }
-
-  Future<void> _confirmPayment() async {
-    setState(() => _isLoading = true);
-    
+  Widget _buildVietQRSection() {
     try {
-      // 1. Lưu booking vào Firestore
-      final docRef = await _firestoreService.addBooking(widget.booking);
-      final newBooking = widget.booking.copyWith(id: docRef.id);
+      // Format số tiền thành chuỗi số nguyên
+      final amount = widget.booking.service.price.toStringAsFixed(0);
 
-      // 2. Đặt lịch thông báo
-      await _notificationService.scheduleBookingNotification(newBooking);
-
-      if (!mounted) return;
-
-      // 3. Hiển thị dialog thành công
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          child: Container(
-            padding: EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.check_circle_rounded, color: Colors.green, size: 80),
-                SizedBox(height: 24),
-                Text(
-                  'Thanh toán thành công!',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'Lịch hẹn của bạn đã được xác nhận. Hẹn gặp bạn nhé!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, color: Colors.grey.shade700),
-                ),
-                SizedBox(height: 28),
-                ElevatedButton(
-                  onPressed: () {
-                    // Đóng dialog trước
-                    Navigator.of(context).pop();
-                    // Trả về true để BookingScreen biết thanh toán thành công
-                    Navigator.of(context).pop(true);
-                  },
-                  child: Text('Về trang chủ'),
-                ),
-              ],
-            ),
-          ),
-        ),
+      // Tạo URL hình ảnh VietQR
+      final qrImageUrl = VietQRGenerator.generateImageUrl(
+        amount: amount,
+        addInfo: 'DH${widget.booking.id}',
       );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi khi lưu lịch hẹn: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final qrString = _getQRString();
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Thanh toán Online'),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(24.0),
+      return Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // QR Code
+            Container(
+              width: 250, // Đặt kích thước cố định
+              height: 250,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Image.network( // Sử dụng Image.network để hiển thị QR từ URL
+                qrImageUrl,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error, color: Colors.red, size: 40),
+                        SizedBox(height: 8),
+                        Text(
+                          'Lỗi tải mã QR',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 16),
+
+            // Thông tin thanh toán
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
-                ),
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  _buildPaymentInfo(
+                    'Ngân hàng:',
+                    'MB Bank', // Giữ nguyên hoặc có thể lấy từ config
+                    Icons.account_balance,
+                  ),
+                  Divider(height: 16),
+                  _buildPaymentInfo(
+                    'Số tài khoản:',
+                    VietQRGenerator.ACCOUNT_NO, // Sử dụng hằng số mới
+                    Icons.credit_card,
+                  ),
+                  Divider(height: 16),
+                  _buildPaymentInfo(
+                    'Chủ tài khoản:',
+                    VietQRGenerator.ACCOUNT_NAME, // Sử dụng hằng số mới
+                    Icons.person,
+                  ),
+                  Divider(height: 16),
+                  _buildPaymentInfo(
+                    'Số tiền:',
+                    '${widget.booking.service.price.toStringAsFixed(0)}đ',
+                    Icons.monetization_on,
+                  ),
+                  Divider(height: 16),
+                  _buildPaymentInfo(
+                    'Nội dung CK:',
+                    'DH${widget.booking.id}',
+                    Icons.message,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 40),
-                  SizedBox(width: 16),
+                  Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                  SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Quét mã để thanh toán',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Sử dụng App ngân hàng hoặc ví điện tử',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Vui lòng mở ứng dụng ngân hàng và quét mã QR để thanh toán',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.blue.shade900,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            SizedBox(height: 24),
-            Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade300, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 16,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                ),
-                padding: EdgeInsets.all(16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    qrString,
-                    width: 280,
-                    height: 280,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return SizedBox(
-                        width: 280,
-                        height: 280,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 280,
-                        height: 280,
-                        color: Colors.grey.shade100,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
-                            SizedBox(height: 8),
-                            Text(
-                              'Lỗi tạo mã QR',
-                              style: TextStyle(color: Colors.red.shade400),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 24),
-            _buildInfoCard(context, currencyFormat),
-            SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: _isLoading ? null : _confirmPayment,
-              icon: _isLoading
-                  ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Icon(Icons.check_circle_outline),
-              label: Text(_isLoading ? 'Đang xử lý...' : 'Tôi đã thanh toán'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
-              ),
+          ],
+        ),
+      );
+    } catch (e) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.red, size: 48),
+            SizedBox(height: 16),
+            Text(
+              'Không thể tạo mã QR:\n$e',
+              style: TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
-      ),
+      );
+    }
+  }
+
+  Widget _buildPaymentInfo(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.grey[600]),
+        SizedBox(width: 8),
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+        Spacer(),
+        Text(
+          value,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+      ],
     );
   }
 
-  Widget _buildInfoCard(BuildContext context, NumberFormat currencyFormat) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Chi tiết dịch vụ',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 16),
-          _buildInfoRow(
-            Icons.content_cut_rounded,
-            'Dịch vụ',
-            widget.booking.service.name,
-          ),
-          _buildInfoRow(
-            Icons.person_outline,
-            'Stylist',
-            widget.booking.stylist.name,
-          ),
-          _buildInfoRow(
-            Icons.business_rounded,
-            'Chi nhánh',
-            widget.booking.branchName,
-          ),
-          _buildInfoRow(
-            Icons.calendar_month_rounded,
-            'Thời gian',
-            DateFormat('dd/MM/yyyy, HH:mm').format(widget.booking.dateTime),
-          ),
-          Divider(height: 24, color: Colors.grey.shade200),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'TỔNG CỘNG',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-              Text(
-                currencyFormat.format(widget.booking.service.price),
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+  Future<void> _confirmPayment() async {
+    // Cập nhật trạng thái booking với phương thức VietQR
+    final updatedBooking = widget.booking.copyWith(
+      paymentMethod: 'vietqr', // Luôn là VietQR
+      status: 'Đã xác nhận', // Hoặc 'Chờ xác nhận' nếu cần admin duyệt
     );
+
+    try {
+      // Nếu booking chưa có ID (chưa được tạo trên Firestore), tạo mới
+      if (widget.booking.id.isEmpty) {
+        await _firestoreService.addBooking(updatedBooking);
+      } else {
+        // Nếu đã có ID, cập nhật
+        await _firestoreService.updateBooking(updatedBooking);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✓ Thanh toán thành công! Lịch hẹn đã được xác nhận.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+
+        // Đợi một chút để người dùng thấy thông báo
+        await Future.delayed(Duration(milliseconds: 500));
+
+        // Chuyển về màn hình My Bookings (lịch sử đặt lịch)
+        if (!mounted) return;
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed('/my-bookings');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi xác nhận thanh toán: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: Colors.grey.shade500),
-          SizedBox(width: 12),
-          Text(
-            '$label:',
-            style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Thanh toán Online'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            // Trả về false khi người dùng bấm nút back
+            Navigator.of(context).pop(false);
+          },
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Chỉ hiển thị mã VietQR, không có lựa chọn
+            _buildVietQRSection(),
+            SizedBox(height: 24),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: ElevatedButton(
+          onPressed: _confirmPayment,
+          child: Text(
+            'Tôi đã thanh toán',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey.shade800),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF0891B2),
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

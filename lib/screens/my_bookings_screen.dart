@@ -411,6 +411,55 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                   ],
                 ),
                 
+                SizedBox(height: 12),
+                // Hiển thị trạng thái thanh toán
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: booking.paymentMethod == 'vietqr'
+                            ? Colors.green.shade50
+                            : Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: booking.paymentMethod == 'vietqr'
+                              ? Colors.green.shade200
+                              : Colors.orange.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            booking.paymentMethod == 'vietqr'
+                                ? Icons.check_circle
+                                : Icons.schedule,
+                            size: 14,
+                            color: booking.paymentMethod == 'vietqr'
+                                ? Colors.green.shade700
+                                : Colors.orange.shade700,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            booking.paymentMethod == 'vietqr'
+                                ? 'Đã thanh toán'
+                                : 'Chưa thanh toán',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: booking.paymentMethod == 'vietqr'
+                                  ? Colors.green.shade700
+                                  : Colors.orange.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
                 if (isUpcoming) ...[
                   SizedBox(height: 16),
                   Row(

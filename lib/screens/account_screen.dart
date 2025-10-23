@@ -1,9 +1,7 @@
 // lib/screens/account_screen.dart
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import '../services/auth_service.dart';
-// KHÔNG import firestore_service
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import 'profile/profile_info_screen.dart';
 import 'profile/favorite_services_screen.dart';
 import 'profile/transaction_history_screen.dart';
@@ -11,7 +9,6 @@ import 'profile/notifications_screen.dart';
 import 'profile/help_support_screen.dart';
 import 'profile/about_us_screen.dart';
 import 'profile/terms_policy_screen.dart';
-// KHÔNG import admin_home_screen
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -21,16 +18,12 @@ class AccountScreen extends StatefulWidget {
 }
 
 class AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
-  final _authService = AuthService();
-  // KHÔNG cần _firestoreService ở đây
-  User? _user;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser;
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 600),
@@ -144,9 +137,8 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     );
 
     if (confirm == true) {
-      await _authService.signOut();
+      await context.read<AuthProvider>().signOut();
       
-      // *** ĐÃ XÓA KHỐI ĐIỀU HƯỚNG (Navigator) Ở ĐÂY ***
       // AuthWrapper (trong main.dart) sẽ tự động xử lý việc chuyển màn hình.
       // Chúng ta không cần làm gì thêm.
     }
@@ -162,100 +154,103 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // ... (Giữ nguyên SliverAppBar)
-          SliverAppBar(
-            expandedHeight: 240,
-            pinned: true,
-            backgroundColor: Color(0xFF0891B2),
-            elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF0891B2),
-                      Color(0xFF06B6D4),
-                      Color(0xFF22D3EE),
-                    ],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(height: 15),
-                      // Avatar với border gradient
-                      Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Colors.white, Colors.white.withOpacity(0.7)],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
-                              blurRadius: 20,
-                              offset: Offset(0, 8),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.user;
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              // ... (Giữ nguyên SliverAppBar)
+              SliverAppBar(
+                expandedHeight: 240,
+                pinned: true,
+                backgroundColor: Color(0xFF0891B2),
+                elevation: 0,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF0891B2),
+                          Color(0xFF06B6D4),
+                          Color(0xFF22D3EE),
+                        ],
+                      ),
+                    ),
+                    child: SafeArea(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(height: 15),
+                          // Avatar với border gradient
+                          Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [Colors.white, Colors.white.withOpacity(0.7)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 20,
+                                  offset: Offset(0, 8),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: 52,
-                          backgroundColor: Colors.white,
-                          child: CircleAvatar(
-                            radius: 48,
-                            backgroundColor: Color(0xFF0891B2).withOpacity(0.1),
-                            backgroundImage: _user?.photoURL != null 
-                                ? NetworkImage(_user!.photoURL!) 
-                                : null,
-                            child: _user?.photoURL == null
-                                ? Icon(
-                                    Icons.person,
-                                    size: 48,
-                                    color: Color(0xFF0891B2),
-                                  )
-                                : null,
+                            child: CircleAvatar(
+                              radius: 52,
+                              backgroundColor: Colors.white,
+                              child: CircleAvatar(
+                                radius: 48,
+                                backgroundColor: Color(0xFF0891B2).withOpacity(0.1),
+                                backgroundImage: user?.photoURL != null 
+                                    ? NetworkImage(user!.photoURL!) 
+                                    : null,
+                                child: user?.photoURL == null
+                                    ? Icon(
+                                        Icons.person,
+                                        size: 48,
+                                        color: Color(0xFF0891B2),
+                                      )
+                                    : null,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        _user?.displayName ?? "Guest",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          _user?.email ?? "",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                          SizedBox(height: 16),
+                          Text(
+                            user?.displayName ?? "Guest",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
+                          SizedBox(height: 6),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              user?.email ?? "",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
           
           // Content
           SliverToBoxAdapter(
@@ -407,12 +402,14 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                       SizedBox(height: 1),
                     ],
                   ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      );
+      },
     );
   }
 

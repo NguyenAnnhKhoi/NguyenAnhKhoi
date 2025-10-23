@@ -1,4 +1,5 @@
 // lib/services/notification_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -39,7 +40,7 @@ class NotificationService {
     
     // Đảm bảo không đặt lịch thông báo cho một thời điểm trong quá khứ
     if (scheduledTime.isBefore(DateTime.now())) {
-      print("Không đặt thông báo vì thời gian đã qua.");
+      debugPrint("Không đặt thông báo vì thời gian đã qua.");
       return;
     }
 
@@ -63,14 +64,14 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       );
-      print("Đã đặt thông báo thành công cho booking ${booking.id}");
+      debugPrint("Đã đặt thông báo thành công cho booking ${booking.id}");
     } catch (e) {
-      print("Lỗi khi đặt thông báo: $e");
+      debugPrint("Lỗi khi đặt thông báo: $e");
     }
   }
 
   Future<void> cancelNotification(String bookingId) async {
     await _notificationsPlugin.cancel(bookingId.hashCode);
-    print("Đã hủy thông báo cho booking $bookingId");
+    debugPrint("Đã hủy thông báo cho booking $bookingId");
   }
 }

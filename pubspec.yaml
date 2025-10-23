@@ -28,6 +28,8 @@ dependencies:
   http: ^1.5.0
   vietqr_flutter: ^1.0.0 
   qr_flutter: ^4.1.0 
+  vietqr_core: ^0.2.5+1
+  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:

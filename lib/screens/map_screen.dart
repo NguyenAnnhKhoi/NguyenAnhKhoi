@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
@@ -157,7 +158,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
-      print("Lỗi khi lấy vị trí: $e");
+      debugPrint("Lỗi khi lấy vị trí: $e");
     }
   }
 
@@ -175,7 +176,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           ),
         );
       } catch (e) {
-        print("Lỗi khi thêm marker chi nhánh: $e");
+        debugPrint("Lỗi khi thêm marker chi nhánh: $e");
       }
     }
   }

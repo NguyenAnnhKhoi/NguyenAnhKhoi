@@ -208,23 +208,68 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                     ],
                                   ),
                                   SizedBox(height: 4),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.shade50,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'Hoàn thành',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.green.shade700,
-                                        fontWeight: FontWeight.w600,
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'Hoàn thành',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.green.shade700,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      SizedBox(width: 8),
+                                      // Hiển thị trạng thái thanh toán
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: booking.paymentMethod == 'vietqr'
+                                              ? Colors.blue.shade50
+                                              : Colors.orange.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              booking.paymentMethod == 'vietqr'
+                                                  ? Icons.check_circle
+                                                  : Icons.schedule,
+                                              size: 12,
+                                              color: booking.paymentMethod == 'vietqr'
+                                                  ? Colors.blue.shade700
+                                                  : Colors.orange.shade700,
+                                            ),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              booking.paymentMethod == 'vietqr'
+                                                  ? 'Đã thanh toán'
+                                                  : 'Chưa thanh toán',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: booking.paymentMethod == 'vietqr'
+                                                    ? Colors.blue.shade700
+                                                    : Colors.orange.shade700,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

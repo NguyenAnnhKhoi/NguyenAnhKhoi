@@ -1,5 +1,5 @@
 // lib/services/auth_service.dart
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -79,7 +79,7 @@ class AuthService {
       await _auth.signOut();
     } catch (e) {
       // Bỏ qua lỗi nếu có
-      print("Lỗi khi đăng xuất: $e");
+      debugPrint("Lỗi khi đăng xuất: $e");
     }
   }
 

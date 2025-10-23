@@ -78,8 +78,10 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       await _user!.updatePhotoURL(newPhotoUrl);
 
       setState(() => _photoUrl = newPhotoUrl);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật ảnh thành công!')));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
     } finally {
       setState(() => _isLoading = false);
@@ -100,9 +102,11 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
         await _user!.updateDisplayName(_nameController.text.trim());
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật thông tin thành công!')));
       setState(() => _isEditing = false);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi cập nhật: $e')));
     } finally {
       setState(() => _isLoading = false);

@@ -1,6 +1,7 @@
 // lib/screens/register_screen.dart
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -11,17 +12,19 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStateMixin {
+  // Form & Controllers
   final _formKey = GlobalKey<FormState>();
-  final _authService = AuthService();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  // State
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
+  // Animations
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
@@ -73,13 +76,21 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
     setState(() => _isLoading = true);
 
     try {
-      await _authService.signUpWithEmail(
+      final success = await context.read<AuthProvider>().signUpWithEmail(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         username: _usernameController.text.trim(),
       );
 
       if (!mounted) return;
+      
+      if (!success) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.read<AuthProvider>().errorMessage ?? 'Đăng ký thất bại')),
+        );
+        return;
+      }
 
       // Hiển thị thông báo thành công
       showDialog(

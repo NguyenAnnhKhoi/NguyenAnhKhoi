@@ -1,8 +1,9 @@
 // lib/screens/home_screen.dart
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/service.dart';
-import '../services/firestore_service.dart';
+import '../providers/auth_provider.dart';
+import '../providers/services_provider.dart';
 import 'booking_screen.dart';
 import '../widgets/service_card_shimmer.dart';
 
@@ -14,15 +15,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
-  final FirestoreService _firestoreService = FirestoreService();
-  User? _user;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _user = FirebaseAuth.instance.currentUser;
+    // Tải dịch vụ khi màn hình được khởi tạo
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ServicesProvider>().loadServices();
+    });
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -106,53 +108,56 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   }
 
   Widget _buildHeader() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0891B2),
-            Color(0xFF06B6D4),
-            Color(0xFF22D3EE),
-          ],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        final user = authProvider.user;
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF0891B2),
+                Color(0xFF06B6D4),
+                Color(0xFF22D3EE),
+              ],
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Colors.white, Colors.white.withOpacity(0.8)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 12,
-                          offset: Offset(0, 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Colors.white, Colors.white.withOpacity(0.8)],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 12,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Colors.white,
-                      backgroundImage: _user?.photoURL != null ? NetworkImage(_user!.photoURL!) : null,
-                      child: _user?.photoURL == null 
-                        ? const Icon(Icons.person, size: 30, color: Color(0xFF0891B2)) 
-                        : null,
-                    ),
-                  ),
+                        child: CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.white,
+                          backgroundImage: user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
+                          child: user?.photoURL == null 
+                            ? const Icon(Icons.person, size: 30, color: Color(0xFF0891B2)) 
+                            : null,
+                        ),
+                      ),
                   Container(
                     padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
@@ -173,44 +178,46 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 4),
-              Text(
-                _user?.displayName ?? 'Guest',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              SizedBox(height: 8),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.grade_rounded, color: Colors.amber, size: 16),
-                    SizedBox(width: 6),
-                    Text(
-                      'Thành viên VIP',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  SizedBox(height: 4),
+                  Text(
+                    user?.displayName ?? 'Guest',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 8),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.grade_rounded, color: Colors.amber, size: 16),
+                        SizedBox(width: 6),
+                        Text(
+                          'Thành viên VIP',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -230,13 +237,12 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   }
 
   Widget _buildServicesList() {
-    return SizedBox(
-      height: 290,
-      child: StreamBuilder<List<Service>>(
-        stream: _firestoreService.getServices(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return GridView.builder(
+    return Consumer<ServicesProvider>(
+      builder: (context, servicesProvider, child) {
+        if (servicesProvider.isLoadingServices) {
+          return SizedBox(
+            height: 290,
+            child: GridView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -246,13 +252,17 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
               ),
               itemCount: 3,
               itemBuilder: (context, index) => const ServiceCardShimmer(),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Không có dịch vụ nào.'));
-          }
-          final services = snapshot.data!;
-          return GridView.builder(
+            ),
+          );
+        }
+        
+        if (servicesProvider.services.isEmpty) {
+          return const Center(child: Text('Không có dịch vụ nào.'));
+        }
+        
+        return SizedBox(
+          height: 290,
+          child: GridView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -260,11 +270,11 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
               mainAxisSpacing: 16,
               childAspectRatio: 1.3,
             ),
-            itemCount: services.length,
-            itemBuilder: (context, index) => _buildServiceCard(services[index]),
-          );
-        },
-      ),
+            itemCount: servicesProvider.services.length,
+            itemBuilder: (context, index) => _buildServiceCard(servicesProvider.services[index]),
+          ),
+        );
+      },
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../models/service.dart';
 import '../models/stylist.dart';
 import '../models/booking.dart';
@@ -71,7 +72,7 @@ class FirestoreService {
             ));
           }
         } catch (e) {
-          print('Error fetching booking details: $e');
+          debugPrint('Error fetching booking details: $e');
         }
       }
       return bookings;
@@ -125,6 +126,14 @@ class FirestoreService {
 
   Future<void> cancelBooking(String bookingId) {
     return _db.collection('bookings').doc(bookingId).delete();
+  }
+
+  Future<void> updateBooking(Booking booking) {
+    return _db.collection('bookings').doc(booking.id).update({
+      'status': booking.status,
+      'paymentMethod': booking.paymentMethod,
+      // Cập nhật bất kỳ trường nào khác nếu cần
+    });
   }
 
   Future<void> toggleFavoriteService(String serviceId) async {
