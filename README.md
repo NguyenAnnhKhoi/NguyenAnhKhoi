@@ -46,8 +46,10 @@
 #### 📅 Đặt Lịch
 - **Đặt lịch thường**: Chọn dịch vụ → Chi nhánh → Stylist → Ngày giờ
 - **Đặt lịch nhanh**: Flow ngược lại cho sự tiện lợi
+- **Smart Stylist Selection**: Tự động ẩn/hiện stylists đã bận ⭐ NEW
 - Chọn phương thức thanh toán (Online/Tại quầy)
 - Xem lịch đã đặt với trạng thái realtime
+- Reschedule booking dễ dàng
 
 #### 💰 Thanh Toán
 - **VietQR Integration**: Thanh toán online qua QR code
@@ -69,6 +71,12 @@
 
 ### 🔧 Dành Cho Admin
 
+- **Quản lý Booking** ⭐ NEW
+  - Xem tất cả bookings theo trạng thái (Tabs)
+  - Xác nhận booking với auto-check xung đột lịch
+  - Từ chối booking với lý do cụ thể
+  - Đề xuất stylists thay thế khi có xung đột
+  - Xem chi tiết booking đầy đủ
 - Quản lý dịch vụ (CRUD)
 - Quản lý stylist
 - Quản lý chi nhánh
@@ -230,9 +238,20 @@ flutter pub outdated
 
 Xem thêm tài liệu chi tiết:
 
+### Core Docs
 - [📋 Code Optimization Summary](CODE_OPTIMIZATION_SUMMARY.md)
 - [🏗️ Architecture Guide](ARCHITECTURE_GUIDE.md)
 - [🎨 Design Guide](DESIGN_GUIDE.md)
+
+### Feature Docs ⭐ NEW
+- [📅 Booking Management Guide](BOOKING_MANAGEMENT_GUIDE.md) - Hướng dẫn chi tiết
+- [🚀 Booking Management Quickstart](BOOKING_MANAGEMENT_QUICKSTART.md) - Quick start
+- [✅ Booking Management Complete](BOOKING_MANAGEMENT_COMPLETE.md) - Summary
+- [🎨 Booking Management Visual Flow](BOOKING_MANAGEMENT_VISUAL_FLOW.md) - Diagrams
+
+### Other Guides
+- [🔤 Google Fonts & Icons Guide](GOOGLE_FONTS_ICONS_GUIDE.md)
+- [📋 Project Checklist](PROJECT_CHECKLIST.md)
 
 ### API Documentation
 

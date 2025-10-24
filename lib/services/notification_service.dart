@@ -74,4 +74,43 @@ class NotificationService {
     await _notificationsPlugin.cancel(bookingId.hashCode);
     debugPrint("Đã hủy thông báo cho booking $bookingId");
   }
+
+  // Thêm method generic để schedule reminder
+  Future<void> scheduleBookingReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+  }) async {
+    // Đảm bảo không đặt lịch thông báo cho một thời điểm trong quá khứ
+    if (scheduledDate.isBefore(DateTime.now())) {
+      debugPrint("Không đặt thông báo vì thời gian đã qua.");
+      return;
+    }
+
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDate, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'booking_channel',
+            'Booking Reminders',
+            channelDescription: 'Kênh thông báo cho lịch hẹn',
+            importance: Importance.max,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
+      debugPrint("Đã đặt thông báo thành công");
+    } catch (e) {
+      debugPrint("Lỗi khi đặt thông báo: $e");
+    }
+  }
 }

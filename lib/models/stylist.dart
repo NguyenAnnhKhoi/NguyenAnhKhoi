@@ -7,6 +7,8 @@ class Stylist {
   final String image;
   final double rating;
   final String experience;
+  final String? branchId; // ID của chi nhánh
+  final String? branchName; // Tên chi nhánh (để hiển thị)
 
   Stylist({
     required this.id,
@@ -14,6 +16,8 @@ class Stylist {
     required this.image,
     required this.rating,
     required this.experience,
+    this.branchId,
+    this.branchName,
   });
 
   // Thêm copyWith
@@ -23,6 +27,8 @@ class Stylist {
     String? image,
     double? rating,
     String? experience,
+    String? branchId,
+    String? branchName,
   }) {
     return Stylist(
       id: id ?? this.id,
@@ -30,6 +36,8 @@ class Stylist {
       image: image ?? this.image,
       rating: rating ?? this.rating,
       experience: experience ?? this.experience,
+      branchId: branchId ?? this.branchId,
+      branchName: branchName ?? this.branchName,
     );
   }
 
@@ -41,6 +49,8 @@ class Stylist {
       image: data['image'] ?? '',
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       experience: data['experience'] ?? '',
+      branchId: data['branchId'],
+      branchName: data['branchName'],
     );
   }
   
@@ -51,6 +61,8 @@ class Stylist {
       'image': image,
       'rating': rating,
       'experience': experience,
+      'branchId': branchId,
+      'branchName': branchName,
     };
   }
 

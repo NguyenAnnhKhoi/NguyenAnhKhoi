@@ -505,11 +505,20 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           text: selectedStylist?.name ?? 'Chọn stylist',
           isSelected: selectedStylist != null,
           onTap: () async {
+            // Kiểm tra đã chọn chi nhánh chưa
+            if (selectedBranch == null) {
+              EasyLoading.showInfo('Vui lòng chọn chi nhánh trước');
+              return;
+            }
+            
             final Stylist? picked = await showModalBottomSheet<Stylist>(
               context: context,
               backgroundColor: Colors.transparent,
               isScrollControlled: true,
-              builder: (context) => _StylistPicker(firestoreService: _firestoreService),
+              builder: (context) => _StylistPicker(
+                firestoreService: _firestoreService,
+                selectedBranch: selectedBranch!, // Truyền branch đã chọn
+              ),
             );
             if (picked != null) setState(() => selectedStylist = picked);
           },
@@ -665,7 +674,12 @@ class _ServicePicker extends StatelessWidget {
 
 class _StylistPicker extends StatelessWidget {
   final FirestoreService firestoreService;
-  const _StylistPicker({required this.firestoreService});
+  final Branch selectedBranch; // Thêm tham số selectedBranch
+  
+  const _StylistPicker({
+    required this.firestoreService,
+    required this.selectedBranch, // Required parameter
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -699,15 +713,50 @@ class _StylistPicker extends StatelessWidget {
                 color: Colors.grey.shade800,
               ),
             ),
+            SizedBox(height: 8),
+            Text(
+              'Chi nhánh: ${selectedBranch.name}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.blue.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             SizedBox(height: 20),
             Expanded(
               child: StreamBuilder<List<Stylist>>(
                 stream: firestoreService.getStylists(),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   }
-                  final stylists = snapshot.data!;
+                  
+                  if (!snapshot.hasData) {
+                    return Center(child: Text('Không có dữ liệu'));
+                  }
+                  
+                  // Lọc stylists theo branch đã chọn
+                  var stylists = snapshot.data!
+                      .where((s) => s.branchId == selectedBranch.id)
+                      .toList();
+                  
+                  if (stylists.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person_off_outlined, size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'Không có stylist nào\ntại chi nhánh này',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  
                   return ListView.separated(
                     controller: controller,
                     padding: EdgeInsets.symmetric(horizontal: 20),
@@ -730,14 +779,46 @@ class _StylistPicker extends StatelessWidget {
                           st.name,
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
-                        subtitle: Row(
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.star, size: 16, color: Colors.amber),
-                            SizedBox(width: 4),
-                            Text(
-                              st.rating.toString(),
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                            SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.star, size: 16, color: Colors.amber),
+                                SizedBox(width: 4),
+                                Text(
+                                  st.rating.toString(),
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                SizedBox(width: 12),
+                                Icon(Icons.work_outline, size: 16, color: Colors.grey.shade600),
+                                SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    st.experience,
+                                    style: TextStyle(fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
+                            if (st.branchName != null) ...[
+                              SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.business_rounded, size: 14, color: Colors.blue.shade700),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    st.branchName!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                         trailing: Icon(

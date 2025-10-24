@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'manage_services_screen.dart';
 import 'manage_branches_screen.dart';
 import 'manage_stylists_screen.dart';
+import 'manage_bookings_screen.dart';
 import '../services/auth_service.dart';
 
 class AdminHomeScreen extends StatelessWidget {
@@ -31,6 +32,18 @@ class AdminHomeScreen extends StatelessWidget {
         children: [
           _buildAdminCard(
             context,
+            icon: Icons.calendar_today_rounded,
+            title: 'Quản lý Đặt lịch',
+            color: Colors.purple.shade400,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ManageBookingsScreen()),
+              );
+            },
+          ),
+          _buildAdminCard(
+            context,
             icon: Icons.content_cut_rounded,
             title: 'Quản lý Dịch vụ',
             color: Colors.blue.shade400,
@@ -47,7 +60,6 @@ class AdminHomeScreen extends StatelessWidget {
             title: 'Quản lý Chi nhánh',
             color: Colors.green.shade400,
             onTap: () {
-              // CẬP NHẬT: Điều hướng thật
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageBranchesScreen()),
@@ -60,7 +72,6 @@ class AdminHomeScreen extends StatelessWidget {
             title: 'Quản lý Stylist',
             color: Colors.orange.shade400,
             onTap: () {
-              // CẬP NHẬT: Điều hướng thật
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageStylistsScreen()),

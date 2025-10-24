@@ -6,8 +6,8 @@ import '../models/booking.dart';
 import '../models/stylist.dart';
 import '../models/branch.dart';
 import '../services/firestore_service.dart';
-import '../services/notification_service.dart'; // THÊM IMPORT
-import 'payment_screen.dart'; // THÊM IMPORT
+import '../services/notification_service.dart';
+import 'payment_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
@@ -73,7 +73,46 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     
     setState(() => _isLoading = true);
 
-    // 2. Tạo đối tượng Booking trong bộ nhớ
+    // Parse duration từ service
+    final serviceDuration = service.duration;
+    int durationMinutes = 60; // Mặc định 60 phút
+    
+    if (serviceDuration.contains('giờ')) {
+      final hours = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+      durationMinutes = hours * 60;
+    } else {
+      durationMinutes = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 60;
+    }
+
+    // 2. Kiểm tra stylist có khả dụng không (double-check)
+    final isAvailable = await _firestoreService.checkStylistAvailability(
+      stylistId: selectedStylist!.id,
+      dateTime: DateTime(
+        selectedDate!.year,
+        selectedDate!.month,
+        selectedDate!.day,
+        selectedTime!.hour,
+        selectedTime!.minute,
+      ),
+      durationMinutes: durationMinutes, // Truyền duration vào
+    );
+
+    if (!isAvailable) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Stylist đã có lịch hẹn vào thời gian này. Vui lòng chọn thời gian khác.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+      return;
+    }
+
+    // 3. Tạo đối tượng Booking trong bộ nhớ - TỰ ĐỘNG XÁC NHẬN
     final newBooking = Booking(
       id: '', // ID sẽ được tạo bởi Firestore
       service: service,
@@ -88,11 +127,11 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       customerName: _nameController.text.trim(),
       customerPhone: _phoneController.text.trim(),
       branchName: selectedBranch!.name,
-      paymentMethod: _paymentMethod, // <-- Gán phương thức
-      status: _paymentMethod == 'Online' ? 'Đã xác nhận' : 'Chờ xác nhận', // <-- Gán trạng thái
+      paymentMethod: _paymentMethod,
+      status: 'confirmed', // TỰ ĐỘNG XÁC NHẬN - KHÔNG CẦN ADMIN DUYỆT
     );
     
-    // 3. Xử lý dựa trên phương thức thanh toán
+    // 4. Xử lý dựa trên phương thức thanh toán
     if (_paymentMethod == 'Online') {
       // Chuyển đến màn hình thanh toán
       setState(() => _isLoading = false);
@@ -322,7 +361,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                     SizedBox(height: 28),
                     _buildSectionTitle('✂️ Chọn stylist', Icons.person_pin_outlined),
                     SizedBox(height: 16),
-                    _buildStylistSelector(),
+                    _buildStylistSelector(service), // Truyền service vào
                     
                     SizedBox(height: 28),
                     _buildSectionTitle('⏰ Chọn thời gian', Icons.access_time_outlined),
@@ -508,82 +547,120 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     );
   }
   
-  Widget _buildStylistSelector() {
-    return StreamBuilder<List<Stylist>>(
-      stream: _firestoreService.getStylists(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Center(child: CircularProgressIndicator());
-        }
-        final stylists = snapshot.data!;
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selectedStylist != null ? Color(0xFF0891B2) : Colors.grey.shade300,
-              width: selectedStylist != null ? 2 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+  Widget _buildStylistSelector(Service service) {
+    // Kiểm tra đã chọn chi nhánh chưa
+    if (selectedBranch == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.blue.shade700),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Vui lòng chọn chi nhánh trước khi chọn stylist',
+                style: TextStyle(
+                  color: Colors.blue.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ],
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<Stylist>(
-              isExpanded: true,
-              hint: Text('Chọn stylist của bạn'),
-              value: selectedStylist,
-              onChanged: (val) => setState(() => selectedStylist = val),
-              items: stylists.map((s) {
-                return DropdownMenuItem(
-                  value: s,
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          s.image,
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              s.name,
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            Row(
-                              children: [
-                                Icon(Icons.star, size: 14, color: Colors.amber),
-                                SizedBox(width: 4),
-                                Text(
-                                  s.rating.toString(),
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
             ),
+          ],
+        ),
+      );
+    }
+    
+    // Sử dụng modal picker giống Quick Booking
+    return InkWell(
+      onTap: () async {
+        final Stylist? picked = await showModalBottomSheet<Stylist>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => _StylistPicker(
+            firestoreService: _firestoreService,
+            selectedBranch: selectedBranch!,
           ),
         );
+        if (picked != null) {
+          setState(() => selectedStylist = picked);
+        }
       },
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selectedStylist != null ? Color(0xFF0891B2) : Colors.grey.shade300,
+            width: selectedStylist != null ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.person_outline,
+              color: selectedStylist != null ? Color(0xFF0891B2) : Colors.grey.shade400,
+              size: 24,
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    selectedStylist?.name ?? 'Chọn stylist',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: selectedStylist != null ? Colors.grey.shade800 : Colors.grey.shade500,
+                    ),
+                  ),
+                  if (selectedStylist != null) ...[
+                    SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.star, size: 14, color: Colors.amber),
+                        SizedBox(width: 4),
+                        Text(
+                          selectedStylist!.rating.toString(),
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                        if (selectedStylist!.branchName != null) ...[
+                          SizedBox(width: 12),
+                          Icon(Icons.business_rounded, size: 14, color: Colors.blue.shade700),
+                          SizedBox(width: 4),
+                          Text(
+                            selectedStylist!.branchName!,
+                            style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey.shade400,
+            ),
+          ],
+        ),
+      ),
     );
   }
   
@@ -918,6 +995,175 @@ class _BranchPicker extends StatelessWidget {
                           color: Color(0xFF0891B2),
                         ),
                         onTap: () => Navigator.pop(context, branch),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Thêm class _StylistPicker
+class _StylistPicker extends StatelessWidget {
+  final FirestoreService firestoreService;
+  final Branch selectedBranch;
+  
+  const _StylistPicker({
+    required this.firestoreService,
+    required this.selectedBranch,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, controller) => Column(
+          children: [
+            SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Chọn stylist',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Chi nhánh: ${selectedBranch.name}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.blue.shade700,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: StreamBuilder<List<Stylist>>(
+                stream: firestoreService.getStylists(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  
+                  if (!snapshot.hasData) {
+                    return Center(child: Text('Không có dữ liệu'));
+                  }
+                  
+                  // Lọc stylists theo branch đã chọn
+                  var stylists = snapshot.data!
+                      .where((s) => s.branchId == selectedBranch.id)
+                      .toList();
+                  
+                  if (stylists.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person_off_outlined, size: 64, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'Không có stylist nào\ntại chi nhánh này',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  
+                  return ListView.separated(
+                    controller: controller,
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: stylists.length,
+                    separatorBuilder: (context, index) => Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final st = stylists[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            st.image,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        title: Text(
+                          st.name,
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.star, size: 16, color: Colors.amber),
+                                SizedBox(width: 4),
+                                Text(
+                                  st.rating.toString(),
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                SizedBox(width: 12),
+                                Icon(Icons.work_outline, size: 16, color: Colors.grey.shade600),
+                                SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    st.experience,
+                                    style: TextStyle(fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (st.branchName != null) ...[
+                              SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.business_rounded, size: 14, color: Colors.blue.shade700),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    st.branchName!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: Color(0xFF0891B2),
+                        ),
+                        onTap: () => Navigator.pop(context, st),
                       );
                     },
                   );

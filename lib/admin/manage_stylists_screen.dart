@@ -103,7 +103,21 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                   ),
                   title: Text(stylist.name,
                       style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Kinh nghiệm: ${stylist.experience}'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Kinh nghiệm: ${stylist.experience}'),
+                      if (stylist.branchName != null)
+                        Text(
+                          'Chi nhánh: ${stylist.branchName}',
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
