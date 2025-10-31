@@ -35,6 +35,9 @@ class Booking {
   final String paymentMethod;
   final String? userId; // ID của user đặt lịch
   final String? rejectionReason; // Lý do từ chối (nếu có)
+  final double? finalAmount; // Giá cuối cùng sau khi áp dụng voucher
+  final String? voucherId; // ID voucher đã dùng
+  final double? discountAmount; // Số tiền đã giảm
 
   Booking({
     required this.id,
@@ -49,6 +52,9 @@ class Booking {
     this.paymentMethod = 'Tại quầy',
     this.userId,
     this.rejectionReason,
+    this.finalAmount,
+    this.voucherId,
+    this.discountAmount,
   });
 
   Booking copyWith({
@@ -60,6 +66,9 @@ class Booking {
     String? status,
     String? userId,
     String? rejectionReason,
+    double? finalAmount,
+    String? voucherId,
+    double? discountAmount,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -74,6 +83,9 @@ class Booking {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       userId: userId ?? this.userId,
       rejectionReason: rejectionReason ?? this.rejectionReason,
+      finalAmount: finalAmount ?? this.finalAmount,
+      voucherId: voucherId ?? this.voucherId,
+      discountAmount: discountAmount ?? this.discountAmount,
     );
   }
 

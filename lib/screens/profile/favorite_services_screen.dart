@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../booking_screen.dart';
 
 class FavoriteServicesScreen extends StatefulWidget {
   const FavoriteServicesScreen({super.key});
@@ -61,16 +62,47 @@ class _FavoriteServicesScreenState extends State<FavoriteServicesScreen> {
                     elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: ListTile(
+                      onTap: () {
+                        // Navigate to booking screen with pre-selected service
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookingScreen(preSelectedService: service),
+                          ),
+                        );
+                      },
                       contentPadding: const EdgeInsets.all(12),
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
                           service.image,
                           width: 60, height: 60, fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 60,
+                              height: 60,
+                              color: Colors.grey.shade300,
+                              child: const Icon(Icons.content_cut, color: Colors.grey),
+                            );
+                          },
                         ),
                       ),
                       title: Text(service.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('${service.price.toStringAsFixed(0)}đ'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${service.price.toStringAsFixed(0)}đ'),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Nhấn để đặt lịch',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue.shade600,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
                       trailing: IconButton(
                         icon: const Icon(Icons.delete_outline, color: Colors.red),
                         onPressed: () => _removeFavorite(service.id),

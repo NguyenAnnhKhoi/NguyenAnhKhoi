@@ -34,15 +34,29 @@ class ServicesProvider with ChangeNotifier {
   Future<void> loadServices() async {
     try {
       _isLoadingServices = true;
+      _errorMessage = null;
       notifyListeners();
 
-      _services = await _firestoreService.getServices().first;
+      // Add timeout to prevent infinite loading
+      _services = await _firestoreService
+          .getServices()
+          .first
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              print('Services loading timeout - returning empty list');
+              return [];
+            },
+          );
 
+      print('Loaded ${_services.length} services');
       _isLoadingServices = false;
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      print('Error loading services: $e');
+      _errorMessage = 'Không thể tải dịch vụ: ${e.toString()}';
       _isLoadingServices = false;
+      _services = []; // Set empty list on error
       notifyListeners();
     }
   }
@@ -51,15 +65,28 @@ class ServicesProvider with ChangeNotifier {
   Future<void> loadStylists() async {
     try {
       _isLoadingStylists = true;
+      _errorMessage = null;
       notifyListeners();
 
-      _stylists = await _firestoreService.getStylists().first;
+      _stylists = await _firestoreService
+          .getStylists()
+          .first
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              print('Stylists loading timeout - returning empty list');
+              return [];
+            },
+          );
 
+      print('Loaded ${_stylists.length} stylists');
       _isLoadingStylists = false;
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      print('Error loading stylists: $e');
+      _errorMessage = 'Không thể tải stylist: ${e.toString()}';
       _isLoadingStylists = false;
+      _stylists = [];
       notifyListeners();
     }
   }
@@ -68,15 +95,28 @@ class ServicesProvider with ChangeNotifier {
   Future<void> loadBranches() async {
     try {
       _isLoadingBranches = true;
+      _errorMessage = null;
       notifyListeners();
 
-      _branches = await _firestoreService.getBranches().first;
+      _branches = await _firestoreService
+          .getBranches()
+          .first
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              print('Branches loading timeout - returning empty list');
+              return [];
+            },
+          );
 
+      print('Loaded ${_branches.length} branches');
       _isLoadingBranches = false;
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      print('Error loading branches: $e');
+      _errorMessage = 'Không thể tải chi nhánh: ${e.toString()}';
       _isLoadingBranches = false;
+      _branches = [];
       notifyListeners();
     }
   }

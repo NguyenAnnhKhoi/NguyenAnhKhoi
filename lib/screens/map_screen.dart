@@ -52,16 +52,34 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _initializeMap() async {
-    if (!mounted) return;
-    await _checkAndRequestLocationPermission();
-    await _getCurrentLocation();
-    await _addBranchMarkers();
+    try {
+      if (!mounted) return;
+      await _checkAndRequestLocationPermission();
+      if (!mounted) return;
+      
+      await _getCurrentLocation();
+      if (!mounted) return;
+      
+      await _addBranchMarkers();
+      if (!mounted) return;
 
-    // --- THÊM MỚI: Tự động vẽ đường đi nếu có chi nhánh đích ---
-    await _drawInitialRouteIfNeeded();
+      // --- THÊM MỚI: Tự động vẽ đường đi nếu có chi nhánh đích ---
+      await _drawInitialRouteIfNeeded();
 
-    if (mounted) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("❌ Error initializing map: $e");
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khởi tạo bản đồ: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -139,84 +157,171 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
         locationSettings: locationSettings,
       );
 
+      if (!mounted) return;
+
+      setState(() {
+        _userLocation = GeoPoint(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+      });
+
+      if (!mounted) return;
+      
+      await _mapController.moveTo(_userLocation!);
+      if (!mounted) return;
+      
+      await _mapController.setZoom(zoomLevel: 16.0);
+      if (!mounted) return;
+
+      await _mapController.addMarker(
+        _userLocation!,
+        markerIcon: const MarkerIcon(
+          icon: Icon(
+            Icons.person_pin_circle,
+            color: Colors.blue,
+            size: 48,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint("❌ Lỗi khi lấy vị trí: $e");
       if (mounted) {
-        setState(() {
-          _userLocation = GeoPoint(
-            latitude: position.latitude,
-            longitude: position.longitude,
-          );
-        });
-
-        await _mapController.moveTo(_userLocation!);
-        await _mapController.setZoom(zoomLevel: 16.0);
-
-        await _mapController.addMarker(
-          _userLocation!,
-          markerIcon: MarkerIcon(
-            iconWidget: _buildUserLocationMarker(),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể lấy vị trí hiện tại'),
+            backgroundColor: Colors.orange,
           ),
         );
       }
-    } catch (e) {
-      debugPrint("Lỗi khi lấy vị trí: $e");
     }
   }
 
   Future<void> _addBranchMarkers() async {
     for (var branch in widget.branches) {
+      if (!mounted) return;
+      
       GeoPoint branchPoint = GeoPoint(
         latitude: branch.latitude,
         longitude: branch.longitude,
       );
       try {
+        // Sử dụng icon mặc định của flutter_osm_plugin thay vì custom widget
         await _mapController.addMarker(
           branchPoint,
-          markerIcon: MarkerIcon(
-            iconWidget: _buildBranchMarker(),
+          markerIcon: const MarkerIcon(
+            icon: Icon(
+              Icons.location_on,
+              color: Color(0xFF0891B2),
+              size: 48,
+            ),
           ),
         );
       } catch (e) {
-        debugPrint("Lỗi khi thêm marker chi nhánh: $e");
+        debugPrint("❌ Lỗi khi thêm marker chi nhánh ${branch.name}: $e");
       }
     }
   }
 
   Future<void> _drawRoute(Branch destinationBranch) async {
-    if (_userLocation == null) {
+    try {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Không tìm thấy vị trí của bạn.'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      
+      if (_userLocation == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không tìm thấy vị trí của bạn.'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      
+      setState(() {
+        _selectedBranch = destinationBranch;
+      });
+      
+      _cardAnimationController.forward();
+      
+      // Cập nhật markers để highlight chi nhánh đã chọn
+      await _refreshBranchMarkers();
+      
+      if (!mounted) return;
+
+      await _mapController.clearAllRoads();
+      
+      if (!mounted) return;
+
+      GeoPoint destinationPoint = GeoPoint(
+        latitude: destinationBranch.latitude,
+        longitude: destinationBranch.longitude,
+      );
+
+      await _mapController.drawRoad(
+        _userLocation!,
+        destinationPoint,
+        roadType: RoadType.car,
+        roadOption: const RoadOption(
+          roadWidth: 8,
+          roadColor: Color(0xFF0891B2),
+          zoomInto: true,
         ),
       );
-      return;
+    } catch (e) {
+      debugPrint("❌ Lỗi khi vẽ đường đi: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể vẽ đường đi. Vui lòng thử lại.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
-
-    setState(() {
-      _selectedBranch = destinationBranch;
-    });
-    _cardAnimationController.forward();
-
-    await _mapController.clearAllRoads();
-
-    GeoPoint destinationPoint = GeoPoint(
-      latitude: destinationBranch.latitude,
-      longitude: destinationBranch.longitude,
-    );
-
-    await _mapController.drawRoad(
-      _userLocation!,
-      destinationPoint,
-      roadType: RoadType.car,
-      roadOption: const RoadOption(
-        roadWidth: 8,
-        roadColor: Color(0xFF0891B2),
-        zoomInto: true,
-      ),
-    );
+  }
+  
+  Future<void> _refreshBranchMarkers() async {
+    // Xóa và thêm lại tất cả markers với trạng thái mới
+    try {
+      for (var branch in widget.branches) {
+        if (!mounted) return;
+        
+        GeoPoint branchPoint = GeoPoint(
+          latitude: branch.latitude,
+          longitude: branch.longitude,
+        );
+        
+        // Xóa marker cũ
+        try {
+          await _mapController.removeMarker(branchPoint);
+        } catch (e) {
+          debugPrint("⚠️ Không thể xóa marker: $e");
+          // Continue anyway
+        }
+        
+        if (!mounted) return;
+        
+        // Thêm marker mới với màu highlight nếu được chọn
+        bool isSelected = _selectedBranch?.id == branch.id;
+        await _mapController.addMarker(
+          branchPoint,
+          markerIcon: MarkerIcon(
+            icon: Icon(
+              Icons.location_on,
+              color: isSelected ? Colors.red : const Color(0xFF0891B2),
+              size: isSelected ? 56 : 48,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("❌ Lỗi khi refresh markers: $e");
+    }
   }
 
   Future<void> _launchMaps(Branch branch) async {
@@ -232,8 +337,12 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _mapController.dispose();
-    _cardAnimationController.dispose();
+    try {
+      _cardAnimationController.dispose();
+      _mapController.dispose();
+    } catch (e) {
+      debugPrint("❌ Error disposing controllers: $e");
+    }
     super.dispose();
   }
 
@@ -242,9 +351,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          if (_userLocation != null) {
-            _mapController.moveTo(_userLocation!);
-            _mapController.setZoom(zoomLevel: 16.0);
+          if (_userLocation != null && mounted) {
+            try {
+              _mapController.moveTo(_userLocation!);
+              _mapController.setZoom(zoomLevel: 16.0);
+            } catch (e) {
+              debugPrint("❌ Lỗi khi di chuyển đến vị trí người dùng: $e");
+            }
           }
         },
         backgroundColor: const Color(0xFF0891B2),
@@ -394,55 +507,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildUserLocationMarker() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFF0891B2).withOpacity(0.3),
-          ),
-        ),
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFF0891B2),
-            border: Border.all(color: Colors.white, width: 2),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBranchMarker() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.red.shade400, Colors.red.shade600],
-        ),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.storefront_rounded,
-        color: Colors.white,
-        size: 24,
-      ),
-    );
-  }
-
   Widget _buildBranchesList() {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 300),
@@ -458,100 +522,176 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             itemBuilder: (context, index) {
               final branch = widget.branches[index];
               return GestureDetector(
-                onTap: () {
-                  _mapController.moveTo(
-                    GeoPoint(
-                      latitude: branch.latitude,
-                      longitude: branch.longitude,
-                    ),
-                  );
-                  _mapController.setZoom(zoomLevel: 16.5);
-                  _drawRoute(branch);
+                onTap: () async {
+                  if (!mounted) return;
+                  
+                  try {
+                    // Add haptic feedback
+                    await _mapController.moveTo(
+                      GeoPoint(
+                        latitude: branch.latitude,
+                        longitude: branch.longitude,
+                      ),
+                    );
+                    
+                    if (!mounted) return;
+                    await _mapController.setZoom(zoomLevel: 16.5);
+                    
+                    if (!mounted) return;
+                    await _drawRoute(branch);
+                  } catch (e) {
+                    debugPrint("❌ Lỗi khi chọn chi nhánh: $e");
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Không thể chọn chi nhánh này'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
                   width: 300,
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFF0891B2).withOpacity(0.2),
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: const Color(0xFF0891B2).withOpacity(0.1),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: Row(
+                  child: Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          bottomLeft: Radius.circular(20),
-                        ),
-                        child: Image.network(
-                          branch.image,
-                          width: 110,
-                          height: 130,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  branch.name,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.grey.shade800,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.location_on_rounded,
-                                      size: 16,
-                                      color: Color(0xFF0891B2),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        branch.address,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.star, size: 14, color: Colors.amber),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      branch.rating.toString(),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                      Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(18),
+                              bottomLeft: Radius.circular(18),
                             ),
+                            child: Image.network(
+                              branch.image,
+                              width: 110,
+                              height: 130,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 110,
+                                  height: 130,
+                                  color: Colors.grey.shade200,
+                                  child: Icon(
+                                    Icons.storefront_rounded,
+                                    color: Colors.grey.shade400,
+                                    size: 40,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      branch.name,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.grey.shade800,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on_rounded,
+                                          size: 16,
+                                          color: Color(0xFF0891B2),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            branch.address,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.star, size: 14, color: Colors.amber),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          branch.rating.toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Badge để chỉ ra có thể tap
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0891B2).withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.navigation_rounded, color: Colors.white, size: 12),
+                              SizedBox(width: 4),
+                              Text(
+                                'Chỉ đường',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -636,16 +776,31 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                     ),
                     child: IconButton(
                       icon: Icon(Icons.close_rounded, color: Colors.grey.shade700),
-                      onPressed: () {
-                        _cardAnimationController.reverse();
-                        _mapController.clearAllRoads();
-                        Future.delayed(const Duration(milliseconds: 300), () {
+                      onPressed: () async {
+                        if (!mounted) return;
+                        
+                        try {
+                          _cardAnimationController.reverse();
+                          
+                          if (!mounted) return;
+                          await _mapController.clearAllRoads();
+                          
+                          // Refresh markers để bỏ highlight
+                          await Future.delayed(const Duration(milliseconds: 100));
+                          if (mounted) {
+                            setState(() {
+                              _selectedBranch = null;
+                            });
+                            await _refreshBranchMarkers();
+                          }
+                        } catch (e) {
+                          debugPrint("❌ Lỗi khi đóng card: $e");
                           if (mounted) {
                             setState(() {
                               _selectedBranch = null;
                             });
                           }
-                        });
+                        }
                       },
                     ),
                   ),

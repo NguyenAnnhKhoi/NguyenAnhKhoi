@@ -1,5 +1,6 @@
 // lib/screens/quick_booking_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../models/service.dart';
@@ -7,8 +8,7 @@ import '../models/stylist.dart';
 import '../models/branch.dart';
 import '../services/firestore_service.dart';
 import '../models/booking.dart';
-import '../services/notification_service.dart';
-import 'payment_screen.dart'; // <-- THÊM IMPORT
+import 'booking_confirmation_screen.dart';
 
 class QuickBookingScreen extends StatefulWidget {
   final Branch? initialBranch;
@@ -21,14 +21,12 @@ class QuickBookingScreen extends StatefulWidget {
 
 class _QuickBookingScreenState extends State<QuickBookingScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  final NotificationService _notificationService = NotificationService();
 
   Stylist? selectedStylist;
   Service? selectedService;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   Branch? selectedBranch;
-  String _paymentMethod = 'Tại quầy'; // <-- THÊM MỚI
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -36,13 +34,43 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   @override
   void initState() {
     super.initState();
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      _nameController.text = user.displayName ?? '';
-      _phoneController.text = user.phoneNumber ?? '';
-    }
+    _loadUserData();
     if (widget.initialBranch != null) {
       selectedBranch = widget.initialBranch;
+    }
+  }
+  
+  // Load user data from Firestore
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Set name from Firebase Auth first
+      _nameController.text = user.displayName ?? '';
+      
+      try {
+        // Try to get phone number from Firestore
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        
+        if (doc.exists) {
+          final data = doc.data();
+          // Use Firestore phone number if available, otherwise use Firebase Auth
+          _phoneController.text = data?['phoneNumber'] ?? user.phoneNumber ?? '';
+          // Also update name from Firestore if available
+          if (data?['displayName'] != null) {
+            _nameController.text = data!['displayName'];
+          }
+        } else {
+          // Fallback to Firebase Auth phone number
+          _phoneController.text = user.phoneNumber ?? '';
+        }
+      } catch (e) {
+        print('Error loading user data: $e');
+        // Fallback to Firebase Auth phone number
+        _phoneController.text = user.phoneNumber ?? '';
+      }
     }
   }
 
@@ -60,7 +88,6 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       selectedDate = null;
       selectedTime = null;
       selectedBranch = null;
-      _paymentMethod = 'Tại quầy'; // <-- RESET
       // Không reset tên và sđt
     });
   }
@@ -79,9 +106,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       return;
     }
 
-    await EasyLoading.show(status: 'Đang xử lý...');
-
-    // 2. Tạo Booking object
+    // 2. Tạo Booking object tạm thời (chưa lưu vào DB)
     Booking newBooking = Booking(
       id: '',
       service: selectedService!,
@@ -96,38 +121,23 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       customerName: _nameController.text.trim(),
       customerPhone: _phoneController.text.trim(),
       branchName: selectedBranch!.name,
-      paymentMethod: _paymentMethod, // <-- Gán phương thức
-      status: _paymentMethod == 'Online' ? 'Đã xác nhận' : 'Chờ xác nhận', // <-- Gán trạng thái
+      paymentMethod: 'vietqr', // Luôn dùng VietQR
+      status: 'pending', // Chờ thanh toán
     );
 
-    // 3. Xử lý
-    if (_paymentMethod == 'Online') {
-      // Chuyển đến màn hình thanh toán
-      await EasyLoading.dismiss();
-      if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PaymentScreen(booking: newBooking),
-        ),
-      );
-    } else {
-      // Thanh toán tại quầy (luồng cũ)
-      try {
-        final docRef = await _firestoreService.addBooking(newBooking);
-        newBooking = newBooking.copyWith(id: docRef.id);
-        await _notificationService.scheduleBookingNotification(newBooking);
+    // 3. Chuyển đến màn hình xác nhận booking với voucher
+    if (!mounted) return;
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookingConfirmationScreen(booking: newBooking),
+      ),
+    );
 
-        if (mounted) {
-          _resetForm();
-          EasyLoading.showSuccess('Đặt lịch thành công!\nKiểm tra ở tab Lịch sử.');
-          Navigator.pop(context); // Tự động quay lại sau khi đặt thành công
-        }
-      } catch (e) {
-        if (mounted) {
-          EasyLoading.showError('Lỗi: $e');
-        }
-      }
+    // 4. Nếu thanh toán thành công, reset form
+    if (result == true && mounted) {
+      _resetForm();
+      Navigator.pop(context); // Quay lại màn hình trước
     }
   }
 
@@ -207,15 +217,6 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                     icon: Icons.access_time_rounded,
                     child: _buildSelectDateTime(context),
                   ),
-                  SizedBox(height: 16),
-                  // --- THÊM BƯỚC 5: CHỌN THANH TOÁN ---
-                  _buildStepCard(
-                    step: 5,
-                    title: 'Chọn thanh toán',
-                    icon: Icons.payment_rounded,
-                    child: _buildPaymentSelector(),
-                  ),
-                  // ------------------------------------
                   SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -249,39 +250,6 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  // ... (các hàm _build... khác giữ nguyên)
-
-  // --- HÀM WIDGET MỚI ---
-  Widget _buildPaymentSelector() {
-    return SegmentedButton<String>(
-      style: SegmentedButton.styleFrom(
-        backgroundColor: Colors.grey.shade50,
-        selectedBackgroundColor: Color(0xFF0891B2).withOpacity(0.1),
-        selectedForegroundColor: Color(0xFF0891B2),
-        side: BorderSide(color: Colors.grey.shade300),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-      segments: const [
-        ButtonSegment<String>(
-          value: 'Tại quầy',
-          label: Text('Tại quầy'),
-          icon: Icon(Icons.storefront_rounded),
-        ),
-        ButtonSegment<String>(
-          value: 'Online',
-          label: Text('Online'),
-          icon: Icon(Icons.qr_code_scanner_rounded),
-        ),
-      ],
-      selected: {_paymentMethod},
-      onSelectionChanged: (Set<String> newSelection) {
-        setState(() {
-          _paymentMethod = newSelection.first;
-        });
-      },
     );
   }
 

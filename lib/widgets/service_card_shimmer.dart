@@ -11,41 +11,40 @@ class ServiceCardShimmer extends StatelessWidget {
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: Container(
+        width: 280, // Thêm chiều rộng cố định
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
+            // Placeholder for image
+            Container(
+              height: 160,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
             ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(width: double.infinity, height: 14, color: Colors.white),
-                    const SizedBox(height: 4),
-                    Container(width: 100, height: 14, color: Colors.white),
-                    const Spacer(),
-                    Container(width: 80, height: 12, color: Colors.white),
-                    const SizedBox(height: 4),
-                    Container(width: 60, height: 14, color: Colors.white),
-                  ],
-                ),
+            // Placeholder for info
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(width: double.infinity, height: 18, color: Colors.white),
+                  const SizedBox(height: 8),
+                  Container(width: 150, height: 14, color: Colors.white),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(width: 80, height: 13, color: Colors.white),
+                      Container(width: 100, height: 18, color: Colors.white),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],

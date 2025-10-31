@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Services collection - public read, admin write
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // Stylists collection - public read, admin write
+    match /stylists/{stylistId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // Branches collection - public read, admin write
+    match /branches/{branchId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // Bookings collection - user can read/write their own bookings
+    // AND can read bookings by stylistId to check availability
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn();  // Allow reading bookings for availability check
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'admin-uid' // Replace with actual admin UID if needed
+      );
+    }
+    
+    // Vouchers collection - public read, admin write
+    match /vouchers/{voucherId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // User vouchers collection - users can read/write their own vouchers
+    match /userVouchers/{userVoucherId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'admin-uid' // Admin can read all
+      );
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.uid == 'admin-uid' // Admin can update/delete
+      );
+    }
+    
+    // Users collection - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Notifications collection - users can read their own notifications
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if isSignedIn();
+    }
+  }
+}

@@ -12,15 +12,100 @@ class TermsPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isTerms = (mode == 'terms');
-    final String title = isTerms ? '📜 Điều kiện giao dịch' : '🔒 Chính sách bảo mật';
+    final String title = isTerms ? 'Điều kiện giao dịch' : 'Chính sách bảo mật';
+    final IconData icon = isTerms ? Icons.description_rounded : Icons.privacy_tip_rounded;
+    final Color themeColor = isTerms ? const Color(0xFF0891B2) : const Color(0xFF8B5CF6);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(title),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: themeColor),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Color(0xFF0F172A),
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: isTerms ? _buildTermsContent(context) : _buildPolicyContent(context),
+        child: Column(
+          children: [
+            // Header
+            _buildHeader(icon, title, themeColor),
+            const SizedBox(height: 24),
+            // Content
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: isTerms ? _buildTermsContent(context) : _buildPolicyContent(context),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(IconData icon, String title, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color,
+            color.withOpacity(0.8),
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 48, color: color),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -71,6 +71,9 @@ class FirestoreService {
               paymentMethod: data['paymentMethod'] ?? 'Tại quầy',
               userId: data['userId'],
               rejectionReason: data['rejectionReason'],
+              finalAmount: (data['finalAmount'] as num?)?.toDouble(),
+              voucherId: data['voucherId'],
+              discountAmount: (data['discountAmount'] as num?)?.toDouble(),
             ));
           }
         } catch (e) {
@@ -150,6 +153,9 @@ class FirestoreService {
       'customerPhone': booking.customerPhone,
       'branchName': booking.branchName,
       'paymentMethod': booking.paymentMethod,
+      'finalAmount': booking.finalAmount,
+      'voucherId': booking.voucherId,
+      'discountAmount': booking.discountAmount,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -293,6 +299,9 @@ class FirestoreService {
               paymentMethod: data['paymentMethod'] ?? 'Tại quầy',
               userId: data['userId'],
               rejectionReason: data['rejectionReason'],
+              finalAmount: (data['finalAmount'] as num?)?.toDouble(),
+              voucherId: data['voucherId'],
+              discountAmount: (data['discountAmount'] as num?)?.toDouble(),
             ));
           }
         } catch (e) {
@@ -341,16 +350,21 @@ class FirestoreService {
       final startOfDay = DateTime(dateTime.year, dateTime.month, dateTime.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // Query các booking của stylist
+      // Query các booking của stylist (tất cả ngày)
       final snapshot = await _db
           .collection('bookings')
           .where('stylistId', isEqualTo: stylistId)
           .get();
 
+      debugPrint('🔍 Checking availability for stylist $stylistId at $requestedStartTime - $requestedEndTime');
+      debugPrint('📅 Date range: $startOfDay to $endOfDay');
+      debugPrint('📋 Total bookings found for stylist: ${snapshot.docs.length}');
+
       // Kiểm tra từng booking xem có conflict về thời gian không
       for (var doc in snapshot.docs) {
         // Bỏ qua booking hiện tại nếu đang reschedule
         if (excludeBookingId != null && doc.id == excludeBookingId) {
+          debugPrint('⏭️ Skipping current booking: ${doc.id}');
           continue;
         }
 
@@ -359,13 +373,18 @@ class FirestoreService {
         
         // Chỉ kiểm tra các booking đang pending hoặc confirmed
         if (status != 'pending' && status != 'confirmed') {
+          debugPrint('⏭️ Skipping booking ${doc.id} with status: $status');
           continue;
         }
         
         final bookingTime = (data['dateTime'] as Timestamp).toDate();
         
-        // Chỉ kiểm tra các booking trong ngày
+        debugPrint('📌 Checking booking ${doc.id}: time=$bookingTime, status=$status');
+        
+        // Chỉ kiểm tra các booking trong cùng ngày
+        // BUG FIX: Phải kiểm tra bookingTime có nằm TRONG khoảng startOfDay -> endOfDay
         if (bookingTime.isBefore(startOfDay) || bookingTime.isAfter(endOfDay)) {
+          debugPrint('⏭️ Skipping booking ${doc.id}: not in same day (bookingTime: $bookingTime)');
           continue;
         }
         
@@ -383,6 +402,9 @@ class FirestoreService {
         final bookingStartTime = bookingTime;
         final bookingEndTime = bookingTime.add(Duration(minutes: bookingDuration));
 
+        debugPrint('⏰ Existing booking: $bookingStartTime - $bookingEndTime (duration: $bookingDuration mins)');
+        debugPrint('⏰ Requested time: $requestedStartTime - $requestedEndTime (duration: $durationMinutes mins)');
+
         // Kiểm tra overlap giữa 2 khoảng thời gian:
         // Hai khoảng thời gian overlap nếu:
         // - Thời gian bắt đầu mới < thời gian kết thúc cũ
@@ -392,13 +414,16 @@ class FirestoreService {
 
         if (hasConflict) {
           debugPrint(
-            'Stylist $stylistId is busy from $bookingStartTime to $bookingEndTime. '
+            '❌ CONFLICT DETECTED! Stylist $stylistId is busy from $bookingStartTime to $bookingEndTime. '
             'Requested time: $requestedStartTime to $requestedEndTime'
           );
           return false; // Có conflict - stylist đang bận
+        } else {
+          debugPrint('✅ No conflict with booking ${doc.id}');
         }
       }
 
+      debugPrint('✅ Stylist $stylistId is AVAILABLE at $requestedStartTime');
       return true; // Không có conflict - stylist rảnh
     } catch (e) {
       debugPrint('Error checking stylist availability: $e');

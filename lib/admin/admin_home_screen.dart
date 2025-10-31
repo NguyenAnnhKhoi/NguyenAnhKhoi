@@ -4,6 +4,7 @@ import 'manage_services_screen.dart';
 import 'manage_branches_screen.dart';
 import 'manage_stylists_screen.dart';
 import 'manage_bookings_screen.dart';
+import 'manage_vouchers_screen.dart';
 import '../services/auth_service.dart';
 
 class AdminHomeScreen extends StatelessWidget {
@@ -75,6 +76,18 @@ class AdminHomeScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ManageStylistsScreen()),
+              );
+            },
+          ),
+          _buildAdminCard(
+            context,
+            icon: Icons.local_offer_rounded,
+            title: 'Quản lý Khuyến mãi',
+            color: Colors.pink.shade400,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ManageVouchersScreen()),
               );
             },
           ),

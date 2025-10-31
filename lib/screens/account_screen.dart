@@ -9,6 +9,7 @@ import 'profile/notifications_screen.dart';
 import 'profile/help_support_screen.dart';
 import 'profile/about_us_screen.dart';
 import 'profile/terms_policy_screen.dart';
+import 'profile/my_vouchers_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -286,6 +287,13 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                           subtitle: 'Các dịch vụ bạn đã lưu',
                           color: Colors.pink.shade400,
                           onTap: () => _navigateTo(const FavoriteServicesScreen()),
+                        ),
+                        _MenuItem(
+                          icon: Icons.card_giftcard_rounded,
+                          title: 'Voucher của tôi',
+                          subtitle: 'Xem và nhập mã voucher',
+                          color: Colors.orange.shade400,
+                          onTap: () => _navigateTo(const MyVouchersScreen()),
                         ),
                         _MenuItem(
                           icon: Icons.history,

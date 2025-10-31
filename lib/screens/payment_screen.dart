@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import '../models/booking.dart';
+import '../models/voucher.dart';
 import '../services/firestore_service.dart';
 import '../services/vietqr_generator.dart';
+import '../services/voucher_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Booking booking;
+  final UserVoucher? voucher;
+  final double? finalAmount;
 
   const PaymentScreen({
     Key? key,
     required this.booking,
+    this.voucher,
+    this.finalAmount,
   }) : super(key: key);
 
   @override
@@ -17,12 +23,12 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  // Không cần _selectedPaymentMethod vì luôn là VietQR
+  final VoucherService _voucherService = VoucherService();
 
   Widget _buildVietQRSection() {
     try {
-      // Format số tiền thành chuỗi số nguyên
-      final amount = widget.booking.service.price.toStringAsFixed(0);
+      // Sử dụng finalAmount nếu có, nếu không dùng giá service
+      final amount = (widget.finalAmount ?? widget.booking.service.price).toStringAsFixed(0);
 
       // Tạo URL hình ảnh VietQR
       final qrImageUrl = VietQRGenerator.generateImageUrl(
@@ -116,11 +122,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     VietQRGenerator.ACCOUNT_NAME, // Sử dụng hằng số mới
                     Icons.person,
                   ),
+                  // Hiển thị giá gốc nếu có voucher
+                  if (widget.voucher != null) ...[
+                    Divider(height: 16),
+                    _buildPaymentInfo(
+                      'Giá gốc:',
+                      '${widget.booking.service.price.toStringAsFixed(0)}đ',
+                      Icons.receipt,
+                      isStrikethrough: true,
+                    ),
+                    Divider(height: 16),
+                    _buildPaymentInfo(
+                      'Giảm giá:',
+                      '-${widget.booking.discountAmount?.toStringAsFixed(0) ?? '0'}đ',
+                      Icons.local_offer,
+                      isDiscount: true,
+                    ),
+                  ],
                   Divider(height: 16),
                   _buildPaymentInfo(
-                    'Số tiền:',
-                    '${widget.booking.service.price.toStringAsFixed(0)}đ',
+                    widget.voucher != null ? 'Tổng thanh toán:' : 'Số tiền:',
+                    '${(widget.finalAmount ?? widget.booking.service.price).toStringAsFixed(0)}đ',
                     Icons.monetization_on,
+                    isBold: true,
                   ),
                   Divider(height: 16),
                   _buildPaymentInfo(
@@ -177,16 +201,39 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
   }
 
-  Widget _buildPaymentInfo(String label, String value, IconData icon) {
+  Widget _buildPaymentInfo(
+    String label, 
+    String value, 
+    IconData icon, {
+    bool isStrikethrough = false,
+    bool isDiscount = false,
+    bool isBold = false,
+  }) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.grey[600]),
+        Icon(
+          icon, 
+          size: 20, 
+          color: isDiscount ? Colors.green : Colors.grey[600],
+        ),
         SizedBox(width: 8),
-        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+        Text(
+          label, 
+          style: TextStyle(
+            color: isDiscount ? Colors.green : Colors.grey[600], 
+            fontSize: 14,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
         Spacer(),
         Text(
           value,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            fontSize: isBold ? 16 : 14,
+            color: isDiscount ? Colors.green : (isBold ? Color(0xFF0891B2) : Colors.black87),
+            decoration: isStrikethrough ? TextDecoration.lineThrough : null,
+          ),
         ),
       ],
     );
@@ -196,16 +243,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Cập nhật trạng thái booking với phương thức VietQR
     final updatedBooking = widget.booking.copyWith(
       paymentMethod: 'vietqr', // Luôn là VietQR
-      status: 'Đã xác nhận', // Hoặc 'Chờ xác nhận' nếu cần admin duyệt
+      status: 'confirmed', // Đã xác nhận
     );
 
     try {
       // Nếu booking chưa có ID (chưa được tạo trên Firestore), tạo mới
+      String bookingId;
       if (widget.booking.id.isEmpty) {
-        await _firestoreService.addBooking(updatedBooking);
+        final docRef = await _firestoreService.addBooking(updatedBooking);
+        bookingId = docRef.id;
       } else {
         // Nếu đã có ID, cập nhật
         await _firestoreService.updateBooking(updatedBooking);
+        bookingId = widget.booking.id;
+      }
+
+      // Sử dụng voucher nếu có
+      if (widget.voucher != null) {
+        await _voucherService.useVoucher(widget.voucher!.id, bookingId);
       }
 
       if (mounted) {
@@ -221,11 +276,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
         // Đợi một chút để người dùng thấy thông báo
         await Future.delayed(Duration(milliseconds: 500));
 
-        // Chuyển về màn hình My Bookings (lịch sử đặt lịch)
+        // Trở về với kết quả thành công
         if (!mounted) return;
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed('/my-bookings');
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {

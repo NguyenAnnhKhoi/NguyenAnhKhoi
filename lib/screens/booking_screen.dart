@@ -1,16 +1,18 @@
 // lib/screens/booking_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/service.dart';
 import '../models/booking.dart';
 import '../models/stylist.dart';
 import '../models/branch.dart';
 import '../services/firestore_service.dart';
-import '../services/notification_service.dart';
-import 'payment_screen.dart';
+import 'booking_confirmation_screen.dart';
 
 class BookingScreen extends StatefulWidget {
-  const BookingScreen({super.key});
+  final Service? preSelectedService;
+  
+  const BookingScreen({super.key, this.preSelectedService});
 
   @override
   BookingScreenState createState() => BookingScreenState();
@@ -18,7 +20,7 @@ class BookingScreen extends StatefulWidget {
 
 class BookingScreenState extends State<BookingScreen> with TickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
-  final NotificationService _notificationService = NotificationService(); // THÊM MỚI
+  Service? selectedService;
   Stylist? selectedStylist;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
@@ -28,22 +30,52 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
   late AnimationController _controller;
   bool _isLoading = false;
 
-  // --- THÊM MỚI: Trạng thái thanh toán ---
-  String _paymentMethod = 'Tại quầy'; // 'Tại quầy' hoặc 'Online'
-  // ------------------------------------
-
   @override
   void initState() {
     super.initState();
+    
+    // Set pre-selected service if provided
+    selectedService = widget.preSelectedService;
+    
     _controller = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     )..forward();
 
+    _loadUserData();
+  }
+  
+  // Load user data from Firestore
+  Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
+      // Set name from Firebase Auth first
       _nameController.text = user.displayName ?? '';
-      _phoneController.text = user.phoneNumber ?? '';
+      
+      try {
+        // Try to get phone number from Firestore
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        
+        if (doc.exists) {
+          final data = doc.data();
+          // Use Firestore phone number if available, otherwise use Firebase Auth
+          _phoneController.text = data?['phoneNumber'] ?? user.phoneNumber ?? '';
+          // Also update name from Firestore if available
+          if (data?['displayName'] != null) {
+            _nameController.text = data!['displayName'];
+          }
+        } else {
+          // Fallback to Firebase Auth phone number
+          _phoneController.text = user.phoneNumber ?? '';
+        }
+      } catch (e) {
+        print('Error loading user data: $e');
+        // Fallback to Firebase Auth phone number
+        _phoneController.text = user.phoneNumber ?? '';
+      }
     }
   }
 
@@ -55,7 +87,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     super.dispose();
   }
   
-  // --- HÀM _confirmBooking ĐƯỢC VIẾT LẠI ---
+  // Hàm xác nhận booking - Chuyển đến màn hình xác nhận thanh toán
   Future<void> _confirmBooking(Service service) async {
     // 1. Kiểm tra thông tin
     if (selectedBranch == null || selectedStylist == null || selectedDate == null || selectedTime == null || 
@@ -94,7 +126,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         selectedTime!.hour,
         selectedTime!.minute,
       ),
-      durationMinutes: durationMinutes, // Truyền duration vào
+      durationMinutes: durationMinutes,
     );
 
     if (!isAvailable) {
@@ -112,9 +144,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       return;
     }
 
-    // 3. Tạo đối tượng Booking trong bộ nhớ - TỰ ĐỘNG XÁC NHẬN
-    final newBooking = Booking(
-      id: '', // ID sẽ được tạo bởi Firestore
+    // 3. Tạo đối tượng Booking tạm thời (chưa lưu vào DB)
+    final tempBooking = Booking(
+      id: '', // Chưa có ID
       service: service,
       stylist: selectedStylist!,
       dateTime: DateTime(
@@ -127,134 +159,43 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       customerName: _nameController.text.trim(),
       customerPhone: _phoneController.text.trim(),
       branchName: selectedBranch!.name,
-      paymentMethod: _paymentMethod,
-      status: 'confirmed', // TỰ ĐỘNG XÁC NHẬN - KHÔNG CẦN ADMIN DUYỆT
+      paymentMethod: 'Chưa thanh toán', // Sẽ được chọn ở màn hình xác nhận
+      status: 'pending', // Pending cho đến khi xác nhận thanh toán
     );
     
-    // 4. Xử lý dựa trên phương thức thanh toán
-    if (_paymentMethod == 'Online') {
-      // Chuyển đến màn hình thanh toán
-      setState(() => _isLoading = false);
-      final result = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PaymentScreen(booking: newBooking),
-        ),
-      );
-      
-      // Nếu thanh toán thành công, thoát về màn hình chính
-      if (result == true && mounted) {
-        Navigator.pop(context);
-      }
-      // Nếu result == null (user bấm back), không làm gì, ở lại màn hình booking
-    } else {
-      // Thanh toán tại quầy (luồng cũ)
-      try {
-        final docRef = await _firestoreService.addBooking(newBooking);
-        final bookingWithId = newBooking.copyWith(id: docRef.id);
-        await _notificationService.scheduleBookingNotification(bookingWithId);
-
-        if(mounted) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: Container(
-                padding: EdgeInsets.all(32),
-                // ... (Nội dung Dialog thành công giữ nguyên như cũ) ...
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF0891B2).withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.check_circle_rounded,
-                        color: Color(0xFF0891B2),
-                        size: 64,
-                      ),
-                    ),
-                    SizedBox(height: 24),
-                    Text(
-                      'Thành công!',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0891B2),
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Đặt lịch thành công!',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Chúng tôi sẽ gửi xác nhận trong thời gian sớm nhất.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Đóng dialog
-                          Navigator.of(context).pop(); // Đóng BookingScreen
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF0891B2),
-                          foregroundColor: Colors.white,
-                          elevation: 4,
-                          shadowColor: Color(0xFF0891B2).withOpacity(0.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          'Hoàn tất',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-      } catch(e) {
-        if(mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lỗi: $e'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
-        }
-      } finally {
-        if(mounted) setState(() => _isLoading = false);
-      }
+    setState(() => _isLoading = false);
+    
+    // 4. Chuyển đến màn hình xác nhận thanh toán
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookingConfirmationScreen(booking: tempBooking),
+      ),
+    );
+    
+    // Nếu thanh toán/xác nhận thành công, quay về home
+    if (result == true && mounted) {
+      Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final service = ModalRoute.of(context)!.settings.arguments as Service;
+    // Use selectedService from state instead of route arguments
+    if (selectedService == null) {
+      return Scaffold(
+        backgroundColor: Color(0xFFF8FAFC),
+        appBar: AppBar(
+          title: Text('Đặt lịch hẹn'),
+          backgroundColor: Color(0xFF0891B2),
+        ),
+        body: Center(
+          child: Text('Vui lòng chọn dịch vụ'),
+        ),
+      );
+    }
+    
+    final service = selectedService!;
 
     return Scaffold(
       backgroundColor: Color(0xFFF8FAFC),
@@ -373,13 +314,6 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                         Expanded(child: _buildTimePicker(context)),
                       ],
                     ),
-
-                    // --- THÊM PHẦN CHỌN THANH TOÁN ---
-                    SizedBox(height: 28),
-                    _buildSectionTitle('💳 Thanh toán', Icons.payment_rounded),
-                    SizedBox(height: 16),
-                    _buildPaymentSelector(),
-                    // ------------------------------------
                     
                     SizedBox(height: 40),
                     SizedBox(
@@ -860,37 +794,6 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           ],
         ),
       ),
-    );
-  }
-
-  // --- HÀM WIDGET MỚI ---
-  Widget _buildPaymentSelector() {
-    return SegmentedButton<String>(
-      style: SegmentedButton.styleFrom(
-        backgroundColor: Colors.white,
-        selectedBackgroundColor: Color(0xFF0891B2).withOpacity(0.1),
-        selectedForegroundColor: Color(0xFF0891B2),
-        side: BorderSide(color: Colors.grey.shade300),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
-      segments: const [
-        ButtonSegment<String>(
-          value: 'Tại quầy',
-          label: Text('Tại quầy', style: TextStyle(fontSize: 14)),
-          icon: Icon(Icons.storefront_rounded, size: 20),
-        ),
-        ButtonSegment<String>(
-          value: 'Online',
-          label: Text('VietQR', style: TextStyle(fontSize: 14)),
-          icon: Icon(Icons.qr_code_scanner_rounded, size: 20),
-        ),
-      ],
-      selected: {_paymentMethod},
-      onSelectionChanged: (Set<String> newSelection) {
-        setState(() {
-          _paymentMethod = newSelection.first;
-        });
-      },
     );
   }
 }

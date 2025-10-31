@@ -402,7 +402,7 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                     ),
                     Text(
                       NumberFormat.currency(locale: 'vi_VN', symbol: 'đ')
-                          .format(booking.service.price),
+                          .format(booking.finalAmount ?? booking.service.price),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -411,6 +411,46 @@ class MyBookingsScreenState extends State<MyBookingsScreen> with SingleTickerPro
                     ),
                   ],
                 ),
+                
+                // Hiển thị giảm giá nếu có
+                if (booking.discountAmount != null && booking.discountAmount! > 0) ...[
+                  SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.local_offer_rounded,
+                        size: 16,
+                        color: Colors.green,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Giá gốc: ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      Text(
+                        NumberFormat.currency(locale: 'vi_VN', symbol: 'đ')
+                            .format(booking.service.price),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        '(Giảm ${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(booking.discountAmount)})',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 
                 SizedBox(height: 12),
                 // Hiển thị trạng thái thanh toán
