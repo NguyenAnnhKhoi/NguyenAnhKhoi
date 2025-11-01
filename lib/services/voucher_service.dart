@@ -13,10 +13,12 @@ class VoucherService {
         .collection('vouchers')
         .where('isActive', isEqualTo: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Voucher.fromFirestore(doc))
-            .where((v) => v.isValid())
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Voucher.fromFirestore(doc))
+              .where((v) => v.isValid())
+              .toList(),
+        );
   }
 
   // Lấy voucher dành cho người mới
@@ -26,10 +28,12 @@ class VoucherService {
         .where('isActive', isEqualTo: true)
         .where('isForNewUser', isEqualTo: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Voucher.fromFirestore(doc))
-            .where((v) => v.isValid())
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Voucher.fromFirestore(doc))
+              .where((v) => v.isValid())
+              .toList(),
+        );
   }
 
   // Lấy voucher của user
@@ -39,25 +43,28 @@ class VoucherService {
         .where('userId', isEqualTo: userId)
         .snapshots()
         .asyncMap((snapshot) async {
-      List<UserVoucher> userVouchers = [];
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        final voucherId = data['voucherId'];
-        final voucherDoc = await _firestore.collection('vouchers').doc(voucherId).get();
-        if (voucherDoc.exists) {
-          final voucher = Voucher.fromFirestore(voucherDoc);
-          userVouchers.add(UserVoucher.fromFirestore(doc, voucher));
-        }
-      }
-      return userVouchers;
-    });
+          List<UserVoucher> userVouchers = [];
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            final voucherId = data['voucherId'];
+            final voucherDoc = await _firestore
+                .collection('vouchers')
+                .doc(voucherId)
+                .get();
+            if (voucherDoc.exists) {
+              final voucher = Voucher.fromFirestore(voucherDoc);
+              userVouchers.add(UserVoucher.fromFirestore(doc, voucher));
+            }
+          }
+          return userVouchers;
+        });
   }
 
   // Lấy voucher chưa sử dụng của user
   Stream<List<UserVoucher>> getUnusedUserVouchers(String userId) {
-    return getUserVouchers(userId).map(
-      (vouchers) => vouchers.where((v) => v.canUse()).toList(),
-    );
+    return getUserVouchers(
+      userId,
+    ).map((vouchers) => vouchers.where((v) => v.canUse()).toList());
   }
 
   // Lấy voucher theo code
@@ -99,7 +106,10 @@ class VoucherService {
       }
 
       // Lấy thông tin voucher
-      final voucherDoc = await _firestore.collection('vouchers').doc(voucherId).get();
+      final voucherDoc = await _firestore
+          .collection('vouchers')
+          .doc(voucherId)
+          .get();
       if (!voucherDoc.exists) throw Exception('Voucher không tồn tại');
 
       final voucher = Voucher.fromFirestore(voucherDoc);
@@ -162,13 +172,18 @@ class VoucherService {
 
   // Admin: Tạo voucher mới
   Future<String> createVoucher(Voucher voucher) async {
-    final docRef = await _firestore.collection('vouchers').add(voucher.toJson());
+    final docRef = await _firestore
+        .collection('vouchers')
+        .add(voucher.toJson());
     return docRef.id;
   }
 
   // Admin: Cập nhật voucher
   Future<void> updateVoucher(String voucherId, Voucher voucher) async {
-    await _firestore.collection('vouchers').doc(voucherId).update(voucher.toJson());
+    await _firestore
+        .collection('vouchers')
+        .doc(voucherId)
+        .update(voucher.toJson());
   }
 
   // Admin: Xóa voucher
@@ -181,8 +196,9 @@ class VoucherService {
     return _firestore
         .collection('vouchers')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Voucher.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Voucher.fromFirestore(doc)).toList(),
+        );
   }
 }

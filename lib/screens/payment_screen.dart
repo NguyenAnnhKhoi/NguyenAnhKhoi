@@ -28,7 +28,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildVietQRSection() {
     try {
       // Sử dụng finalAmount nếu có, nếu không dùng giá service
-      final amount = (widget.finalAmount ?? widget.booking.service.price).toStringAsFixed(0);
+      final amount = (widget.finalAmount ?? widget.booking.service.price)
+          .toStringAsFixed(0);
 
       // Tạo URL hình ảnh VietQR
       final qrImageUrl = VietQRGenerator.generateImageUrl(
@@ -61,7 +62,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade200),
               ),
-              child: Image.network( // Sử dụng Image.network để hiển thị QR từ URL
+              child: Image.network(
+                // Sử dụng Image.network để hiển thị QR từ URL
                 qrImageUrl,
                 fit: BoxFit.contain,
                 loadingBuilder: (context, child, loadingProgress) {
@@ -70,7 +72,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
+                                loadingProgress.expectedTotalBytes!
                           : null,
                     ),
                   );
@@ -165,7 +167,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue.shade700,
+                    size: 20,
+                  ),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -202,8 +208,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildPaymentInfo(
-    String label, 
-    String value, 
+    String label,
+    String value,
     IconData icon, {
     bool isStrikethrough = false,
     bool isDiscount = false,
@@ -212,15 +218,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Row(
       children: [
         Icon(
-          icon, 
-          size: 20, 
+          icon,
+          size: 20,
           color: isDiscount ? Colors.green : Colors.grey[600],
         ),
         SizedBox(width: 8),
         Text(
-          label, 
+          label,
           style: TextStyle(
-            color: isDiscount ? Colors.green : Colors.grey[600], 
+            color: isDiscount ? Colors.green : Colors.grey[600],
             fontSize: 14,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),
@@ -231,7 +237,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
           style: TextStyle(
             fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
             fontSize: isBold ? 16 : 14,
-            color: isDiscount ? Colors.green : (isBold ? Color(0xFF0891B2) : Colors.black87),
+            color: isDiscount
+                ? Colors.green
+                : (isBold ? Color(0xFF0891B2) : Colors.black87),
             decoration: isStrikethrough ? TextDecoration.lineThrough : null,
           ),
         ),
@@ -266,10 +274,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✓ Thanh toán thành công! Lịch hẹn đã được xác nhận.'),
+            content: Text(
+              '✓ Thanh toán thành công! Lịch hẹn đã được xác nhận.',
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
 
@@ -287,7 +299,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
             content: Text('Lỗi khi xác nhận thanh toán: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }

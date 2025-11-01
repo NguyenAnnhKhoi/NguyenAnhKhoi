@@ -14,11 +14,12 @@ class MyVouchersScreen extends StatefulWidget {
   State<MyVouchersScreen> createState() => _MyVouchersScreenState();
 }
 
-class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerProviderStateMixin {
+class _MyVouchersScreenState extends State<MyVouchersScreen>
+    with SingleTickerProviderStateMixin {
   final VoucherService _voucherService = VoucherService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _codeController = TextEditingController();
-  
+
   late TabController _tabController;
   bool _isClaimingCode = false;
 
@@ -68,10 +69,7 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
           children: [
             Text(
               'Nhập mã voucher của bạn để nhận ưu đãi',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -85,7 +83,10 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF0891B2), width: 2),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF0891B2),
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -94,10 +95,7 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Hủy',
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
+            child: Text('Hủy', style: TextStyle(color: Colors.grey.shade600)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -133,7 +131,7 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
 
       // Tìm voucher theo code
       final voucher = await _voucherService.getVoucherByCode(code);
-      
+
       if (voucher == null) {
         throw Exception('Mã voucher không tồn tại');
       }
@@ -144,7 +142,7 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
 
       // Claim voucher
       await _voucherService.claimVoucher(voucher.id);
-      
+
       if (mounted) {
         _showSuccessDialog();
       }
@@ -166,11 +164,7 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Column(
           children: [
-            Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 64,
-            ),
+            Icon(Icons.check_circle, color: Colors.green, size: 64),
             SizedBox(height: 12),
             Text(
               'Nhận voucher thành công!',
@@ -284,11 +278,7 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.lock_outline,
-            size: 80,
-            color: Colors.grey.shade400,
-          ),
+          Icon(Icons.lock_outline, size: 80, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             'Vui lòng đăng nhập',
@@ -323,7 +313,11 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.grey.shade400,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Lỗi: ${snapshot.error}',
@@ -336,7 +330,9 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
         }
 
         final allVouchers = snapshot.data ?? [];
-        final filteredVouchers = allVouchers.where((v) => v.isUsed == isUsed).toList();
+        final filteredVouchers = allVouchers
+            .where((v) => v.isUsed == isUsed)
+            .toList();
 
         if (filteredVouchers.isEmpty) {
           return _buildEmptyState(isUsed);
@@ -405,7 +401,10 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0891B2),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -426,10 +425,8 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => VoucherDetailScreen(
-              voucher: voucher,
-              showClaimButton: false,
-            ),
+            builder: (context) =>
+                VoucherDetailScreen(voucher: voucher, showClaimButton: false),
           ),
         );
       },
@@ -508,7 +505,10 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
                   ),
                   const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(8),
@@ -583,7 +583,10 @@ class _MyVouchersScreenState extends State<MyVouchersScreen> with SingleTickerPr
                   ),
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),

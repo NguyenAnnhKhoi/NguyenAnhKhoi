@@ -36,12 +36,12 @@ class AuthProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       final userCredential = await _authService.signInWithEmail(
         email: email,
         password: password,
       );
-      
+
       _user = userCredential.user;
       _setLoading(false);
       return true;
@@ -61,13 +61,13 @@ class AuthProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       final userCredential = await _authService.signUpWithEmail(
         email: email,
         password: password,
         username: username,
       );
-      
+
       _user = userCredential.user;
       _setLoading(false);
       return true;
@@ -83,13 +83,13 @@ class AuthProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       final userCredential = await _authService.signInWithGoogle();
       if (userCredential == null) {
         _setLoading(false);
         return false;
       }
-      
+
       _user = userCredential.user;
       _setLoading(false);
       return true;
@@ -105,9 +105,9 @@ class AuthProvider with ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       await _authService.sendPasswordResetEmail(email: email);
-      
+
       _setLoading(false);
       return true;
     } catch (e) {

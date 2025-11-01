@@ -71,4 +71,61 @@ class Branch {
       'longitude': longitude,
     };
   }
+
+  // THÊM MỚI: Parse giờ mở cửa
+  // Giả sử format: "8:00 - 22:00" hoặc "08:00 - 22:00"
+  Map<String, int>? get openingHours {
+    try {
+      // Parse chuỗi giờ: "8:00 - 22:00"
+      final parts = hours.split('-');
+      if (parts.length != 2) return null;
+
+      final openTime = parts[0].trim().split(':');
+      final closeTime = parts[1].trim().split(':');
+
+      if (openTime.length != 2 || closeTime.length != 2) return null;
+
+      return {
+        'openHour': int.parse(openTime[0]),
+        'openMinute': int.parse(openTime[1]),
+        'closeHour': int.parse(closeTime[0]),
+        'closeMinute': int.parse(closeTime[1]),
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // THÊM MỚI: Kiểm tra xem thời gian có nằm trong giờ mở cửa không
+  bool isTimeWithinOpeningHours(int hour, int minute) {
+    final hours = openingHours;
+    if (hours == null) return true; // Nếu không parse được, cho phép mọi giờ
+
+    final openHour = hours['openHour']!;
+    final openMinute = hours['openMinute']!;
+    final closeHour = hours['closeHour']!;
+    final closeMinute = hours['closeMinute']!;
+
+    // Chuyển thành phút để so sánh dễ hơn
+    final selectedTimeInMinutes = hour * 60 + minute;
+    final openTimeInMinutes = openHour * 60 + openMinute;
+    final closeTimeInMinutes = closeHour * 60 + closeMinute;
+
+    return selectedTimeInMinutes >= openTimeInMinutes &&
+        selectedTimeInMinutes <= closeTimeInMinutes;
+  }
+
+  // THÊM MỚI: Lấy giờ mở cửa dạng text cho thông báo
+  String get openingTimeText {
+    final hours = openingHours;
+    if (hours == null) return '';
+    return '${hours['openHour']}:${hours['openMinute']!.toString().padLeft(2, '0')}';
+  }
+
+  // THÊM MỚI: Lấy giờ đóng cửa dạng text cho thông báo
+  String get closingTimeText {
+    final hours = openingHours;
+    if (hours == null) return '';
+    return '${hours['closeHour']}:${hours['closeMinute']!.toString().padLeft(2, '0')}';
+  }
 }

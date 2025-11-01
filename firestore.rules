@@ -12,10 +12,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
+    function isAdmin() {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
     // Services collection - public read, admin write
     match /services/{serviceId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isSignedIn(); // Tạm thời cho phép tất cả user đã login
+      // Sau này có thể đổi thành: allow write: if isAdmin();
     }
     
     // Stylists collection - public read, admin write
@@ -69,6 +76,13 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow write: if isSignedIn();
+    }
+    
+    // Ratings collection - users can create ratings for their own bookings, everyone can read
+    match /ratings/{ratingId} {
+      allow read: if true; // Public read để hiển thị ratings
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
   }
 }

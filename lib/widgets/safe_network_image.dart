@@ -45,10 +45,7 @@ class SafeNetworkImage extends StatelessWidget {
     );
 
     if (borderRadius != null) {
-      imageWidget = ClipRRect(
-        borderRadius: borderRadius!,
-        child: imageWidget,
-      );
+      imageWidget = ClipRRect(borderRadius: borderRadius!, child: imageWidget);
     }
 
     return imageWidget;
@@ -56,13 +53,9 @@ class SafeNetworkImage extends StatelessWidget {
 
   bool _isInvalidUrl(String url) {
     if (url.isEmpty) return true;
-    
+
     // Danh sách các domain không hợp lệ hoặc bị chặn
-    final invalidDomains = [
-      'fbcdn.net',
-      'facebook.com',
-      'fb.com',
-    ];
+    final invalidDomains = ['fbcdn.net', 'facebook.com', 'fb.com'];
 
     return invalidDomains.any((domain) => url.contains(domain));
   }
@@ -75,8 +68,8 @@ class SafeNetworkImage extends StatelessWidget {
       child: Center(
         child: CircularProgressIndicator(
           value: loadingProgress.expectedTotalBytes != null
-              ? loadingProgress.cumulativeBytesLoaded / 
-                loadingProgress.expectedTotalBytes!
+              ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
               : null,
           color: const Color(0xFFFF6B9D),
           strokeWidth: 2,
@@ -129,11 +122,8 @@ class SafeCircleAvatar extends StatelessWidget {
       return CircleAvatar(
         radius: radius,
         backgroundColor: backgroundColor ?? Colors.grey[300],
-        child: child ?? Icon(
-          Icons.person,
-          size: radius,
-          color: Colors.grey[600],
-        ),
+        child:
+            child ?? Icon(Icons.person, size: radius, color: Colors.grey[600]),
       );
     }
 
@@ -144,18 +134,15 @@ class SafeCircleAvatar extends StatelessWidget {
       onBackgroundImageError: (exception, stackTrace) {
         // Không log lỗi để tránh spam console
       },
-      child: Container(), // Empty container để tránh hiển thị child khi ảnh load thành công
+      child:
+          Container(), // Empty container để tránh hiển thị child khi ảnh load thành công
     );
   }
 
   bool _isInvalidUrl(String url) {
     if (url.isEmpty) return true;
-    
-    final invalidDomains = [
-      'fbcdn.net',
-      'facebook.com',
-      'fb.com',
-    ];
+
+    final invalidDomains = ['fbcdn.net', 'facebook.com', 'fb.com'];
 
     return invalidDomains.any((domain) => url.contains(domain));
   }

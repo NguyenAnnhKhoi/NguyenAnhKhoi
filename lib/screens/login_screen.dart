@@ -10,7 +10,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -38,13 +39,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       curve: Curves.easeIn,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -65,9 +63,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     try {
       final success = await authProvider.signInWithGoogle();
       await EasyLoading.dismiss();
-      
+
       if (!success && mounted) {
-        EasyLoading.showError(authProvider.errorMessage ?? 'Đăng nhập thất bại');
+        EasyLoading.showError(
+          authProvider.errorMessage ?? 'Đăng nhập thất bại',
+        );
       }
     } catch (e) {
       await EasyLoading.dismiss();
@@ -87,9 +87,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         password: _passCtrl.text,
       );
       await EasyLoading.dismiss();
-      
+
       if (!success && mounted) {
-        EasyLoading.showError(authProvider.errorMessage ?? 'Đăng nhập thất bại');
+        EasyLoading.showError(
+          authProvider.errorMessage ?? 'Đăng nhập thất bại',
+        );
       }
     } catch (e) {
       await EasyLoading.dismiss();
@@ -194,11 +196,16 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                          ),
                         ),
                         child: Text(
                           'Chào mừng trở lại! 👋',
@@ -240,35 +247,44 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   decoration: InputDecoration(
                                     labelText: 'Email',
                                     hintText: 'your@email.com',
-                                    prefixIcon: Icon(Icons.email_outlined,
-                                        color: Color(0xFF0891B2)),
+                                    prefixIcon: Icon(
+                                      Icons.email_outlined,
+                                      color: Color(0xFF0891B2),
+                                    ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                          color: Color(0xFF0891B2), width: 2),
+                                        color: Color(0xFF0891B2),
+                                        width: 2,
+                                      ),
                                     ),
                                     filled: true,
                                     fillColor: Colors.grey.shade50,
                                     contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 18),
+                                      horizontal: 20,
+                                      vertical: 18,
+                                    ),
                                   ),
                                   validator: (v) {
                                     final value = v?.trim() ?? '';
                                     if (value.isEmpty) {
                                       return 'Vui lòng nhập email';
                                     }
-                                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$')
-                                        .hasMatch(value)) {
+                                    if (!RegExp(
+                                      r'^[^@]+@[^@]+\.[^@]+$',
+                                    ).hasMatch(value)) {
                                       return 'Email không hợp lệ';
                                     }
                                     return null;
@@ -284,8 +300,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   decoration: InputDecoration(
                                     labelText: 'Mật khẩu',
                                     hintText: '••••••••',
-                                    prefixIcon: Icon(Icons.lock_outline,
-                                        color: Color(0xFF0891B2)),
+                                    prefixIcon: Icon(
+                                      Icons.lock_outline,
+                                      color: Color(0xFF0891B2),
+                                    ),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscurePassword
@@ -294,29 +312,37 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                         color: Color(0xFF0891B2),
                                       ),
                                       onPressed: () {
-                                        setState(() =>
-                                            _obscurePassword = !_obscurePassword);
+                                        setState(
+                                          () => _obscurePassword =
+                                              !_obscurePassword,
+                                        );
                                       },
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       borderSide: BorderSide(
-                                          color: Color(0xFF0891B2), width: 2),
+                                        color: Color(0xFF0891B2),
+                                        width: 2,
+                                      ),
                                     ),
                                     filled: true,
                                     fillColor: Colors.grey.shade50,
                                     contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 20, vertical: 18),
+                                      horizontal: 20,
+                                      vertical: 18,
+                                    ),
                                   ),
                                   validator: (v) {
                                     if (v == null || v.isEmpty) {
@@ -334,8 +360,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: () => Navigator.of(context)
-                                        .pushNamed('/forgot-password'),
+                                    onPressed: () => Navigator.of(
+                                      context,
+                                    ).pushNamed('/forgot-password'),
                                     child: Text(
                                       'Quên mật khẩu?',
                                       style: TextStyle(
@@ -356,14 +383,16 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       backgroundColor: Color(0xFF0891B2),
                                       foregroundColor: Colors.white,
                                       elevation: 6,
-                                      shadowColor:
-                                          Color(0xFF0891B2).withOpacity(0.6),
+                                      shadowColor: Color(
+                                        0xFF0891B2,
+                                      ).withOpacity(0.6),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           'Đăng nhập',
@@ -374,7 +403,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           ),
                                         ),
                                         SizedBox(width: 8),
-                                        Icon(Icons.arrow_forward_rounded, size: 22),
+                                        Icon(
+                                          Icons.arrow_forward_rounded,
+                                          size: 22,
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -386,11 +418,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 Row(
                                   children: [
                                     Expanded(
-                                        child: Divider(
-                                            color: Colors.grey.shade300)),
+                                      child: Divider(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
+                                        horizontal: 16,
+                                      ),
                                       child: Text(
                                         'HOẶC',
                                         style: TextStyle(
@@ -401,8 +436,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       ),
                                     ),
                                     Expanded(
-                                        child: Divider(
-                                            color: Colors.grey.shade300)),
+                                      child: Divider(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
                                   ],
                                 ),
 
@@ -416,30 +453,36 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: Colors.grey.shade700,
                                       side: BorderSide(
-                                          color: Colors.grey.shade300,
-                                          width: 2),
+                                        color: Colors.grey.shade300,
+                                        width: 2,
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
                                     ),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Container(
                                           padding: EdgeInsets.all(8),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.05),
+                                                color: Colors.black.withOpacity(
+                                                  0.05,
+                                                ),
                                                 blurRadius: 4,
                                                 offset: Offset(0, 2),
                                               ),
                                             ],
                                           ),
                                           child: Icon(
-                                            Icons.g_mobiledata, 
+                                            Icons.g_mobiledata,
                                             size: 24,
                                             color: Color(0xFF0891B2),
                                           ),

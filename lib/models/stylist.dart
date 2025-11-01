@@ -53,7 +53,7 @@ class Stylist {
       branchName: data['branchName'],
     );
   }
-  
+
   // THÊM MỚI: Phương thức toJson
   Map<String, dynamic> toJson() {
     return {
@@ -69,9 +69,7 @@ class Stylist {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Stylist &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is Stylist && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

@@ -15,7 +15,7 @@ class BranchEditScreen extends StatefulWidget {
 class _BranchEditScreenState extends State<BranchEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firestoreService = FirestoreService();
-  
+
   final _nameCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _hoursCtrl = TextEditingController();
@@ -23,7 +23,7 @@ class _BranchEditScreenState extends State<BranchEditScreen> {
   final _imageCtrl = TextEditingController();
   final _latitudeCtrl = TextEditingController();
   final _longitudeCtrl = TextEditingController();
-  
+
   bool _isLoading = false;
 
   bool get _isEditing => widget.branch != null;
@@ -79,10 +79,16 @@ class _BranchEditScreenState extends State<BranchEditScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEditing ? 'Cập nhật chi nhánh thành công!' : 'Thêm chi nhánh mới thành công!'),
+            content: Text(
+              _isEditing
+                  ? 'Cập nhật chi nhánh thành công!'
+                  : 'Thêm chi nhánh mới thành công!',
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         Navigator.pop(context);
@@ -94,7 +100,9 @@ class _BranchEditScreenState extends State<BranchEditScreen> {
             content: Text('Lỗi: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -156,14 +164,20 @@ class _BranchEditScreenState extends State<BranchEditScreen> {
                       label: 'Vĩ độ (Latitude)',
                       icon: Icons.my_location_outlined,
                       hint: 'Ví dụ: 10.762622',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
                     ),
                     _buildTextFormField(
                       controller: _longitudeCtrl,
                       label: 'Kinh độ (Longitude)',
                       icon: Icons.place_outlined,
                       hint: 'Ví dụ: 106.660172',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
                     ),
                     _buildTextFormField(
                       controller: _imageCtrl,
@@ -209,11 +223,17 @@ class _BranchEditScreenState extends State<BranchEditScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.error_outline, color: Colors.red, size: 48),
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red,
+                                    size: 48,
+                                  ),
                                   const SizedBox(height: 8),
                                   Text(
                                     'Không thể tải ảnh',
-                                    style: TextStyle(color: Colors.grey.shade600),
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -267,9 +287,7 @@ class _BranchEditScreenState extends State<BranchEditScreen> {
           labelText: label,
           hintText: hint,
           prefixIcon: Icon(icon, color: Color(0xFF0891B2)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: Colors.grey.shade300),

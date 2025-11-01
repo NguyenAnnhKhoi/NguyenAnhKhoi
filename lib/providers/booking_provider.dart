@@ -33,7 +33,7 @@ class BookingProvider with ChangeNotifier {
   String get note => _note;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  
+
   /// Kiểm tra đã chọn đủ thông tin chưa
   bool get isBookingComplete =>
       _selectedService != null &&

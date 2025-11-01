@@ -25,7 +25,8 @@ class _BranchScreenState extends State<BranchScreen> {
         MaterialPageRoute(
           builder: (context) => MapScreen(
             branches: _branches,
-            destinationBranch: destinationBranch, // Truyền chi nhánh cần chỉ đường
+            destinationBranch:
+                destinationBranch, // Truyền chi nhánh cần chỉ đường
           ),
         ),
       );
@@ -46,9 +47,7 @@ class _BranchScreenState extends State<BranchScreen> {
     if (_branches.isNotEmpty) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => MapScreen(branches: _branches),
-        ),
+        MaterialPageRoute(builder: (context) => MapScreen(branches: _branches)),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -104,7 +103,11 @@ class _BranchScreenState extends State<BranchScreen> {
                     color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.map_outlined, color: Colors.white, size: 24), // Tăng size
+                  child: Icon(
+                    Icons.map_outlined,
+                    color: Colors.white,
+                    size: 24,
+                  ), // Tăng size
                 ),
               ),
               SizedBox(width: 10), // Tăng khoảng cách
@@ -135,7 +138,7 @@ class _BranchScreenState extends State<BranchScreen> {
                 }
 
                 _branches = snapshot.data!;
-                
+
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
@@ -235,7 +238,10 @@ class _BranchScreenState extends State<BranchScreen> {
                 SizedBox(height: 12),
                 _infoRow(Icons.location_on_outlined, branch.address),
                 SizedBox(height: 8),
-                _infoRow(Icons.access_time_outlined, 'Giờ mở cửa: ${branch.hours}'),
+                _infoRow(
+                  Icons.access_time_outlined,
+                  'Giờ mở cửa: ${branch.hours}',
+                ),
                 SizedBox(height: 16),
                 // --- THAY ĐỔI: Thay thế 1 nút bằng 2 nút mới ---
                 Row(

@@ -16,12 +16,12 @@ class StylistEditScreen extends StatefulWidget {
 class _StylistEditScreenState extends State<StylistEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firestoreService = FirestoreService();
-  
+
   final _nameCtrl = TextEditingController();
   final _imageCtrl = TextEditingController();
   final _ratingCtrl = TextEditingController();
   final _experienceCtrl = TextEditingController();
-  
+
   String? _selectedBranchId; // Lưu ID của chi nhánh được chọn
   bool _isLoading = false;
 
@@ -50,7 +50,7 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
 
   Future<void> _saveForm() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     // Kiểm tra đã chọn chi nhánh chưa
     if (_selectedBranchId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,19 +58,23 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
           content: const Text('Vui lòng chọn chi nhánh'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
     }
-    
+
     setState(() => _isLoading = true);
 
     try {
       // Lấy thông tin branch từ Firestore
       final branchDoc = await _firestoreService.getBranches().first;
-      final selectedBranch = branchDoc.firstWhere((b) => b.id == _selectedBranchId);
-      
+      final selectedBranch = branchDoc.firstWhere(
+        (b) => b.id == _selectedBranchId,
+      );
+
       final stylistData = Stylist(
         id: _isEditing ? widget.stylist!.id : '',
         name: _nameCtrl.text,
@@ -90,10 +94,16 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEditing ? 'Cập nhật stylist thành công!' : 'Thêm stylist mới thành công!'),
+            content: Text(
+              _isEditing
+                  ? 'Cập nhật stylist thành công!'
+                  : 'Thêm stylist mới thành công!',
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         Navigator.pop(context);
@@ -105,7 +115,9 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
             content: Text('Lỗi: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -138,20 +150,22 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
                 if (branchSnapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 final branches = branchSnapshot.data ?? [];
-                
+
                 // Tìm Branch object từ _selectedBranchId
                 Branch? selectedBranch;
                 if (_selectedBranchId != null) {
                   try {
-                    selectedBranch = branches.firstWhere((b) => b.id == _selectedBranchId);
+                    selectedBranch = branches.firstWhere(
+                      (b) => b.id == _selectedBranchId,
+                    );
                   } catch (e) {
                     // Branch không tồn tại, reset về null
                     _selectedBranchId = null;
                   }
                 }
-                
+
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(20.0),
                   child: Form(
@@ -177,25 +191,34 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
                           hint: 'Ví dụ: 4.8',
                           keyboardType: TextInputType.number,
                         ),
-                        
+
                         // Dropdown chọn chi nhánh
                         Padding(
                           padding: const EdgeInsets.only(bottom: 20.0),
-                          child:DropdownButtonFormField<Branch>(
-                            value: selectedBranch, // Sử dụng selectedBranch từ scope
+                          child: DropdownButtonFormField<Branch>(
+                            value:
+                                selectedBranch, // Sử dụng selectedBranch từ scope
                             decoration: InputDecoration(
                               labelText: 'Chi nhánh',
-                              prefixIcon: const Icon(Icons.store_outlined, color: Color(0xFF0891B2)),
+                              prefixIcon: const Icon(
+                                Icons.store_outlined,
+                                color: Color(0xFF0891B2),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(color: Color(0xFF0891B2), width: 2),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF0891B2),
+                                  width: 2,
+                                ),
                               ),
                               filled: true,
                               fillColor: Colors.grey.shade50,
@@ -208,7 +231,8 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
                             }).toList(),
                             onChanged: (Branch? value) {
                               setState(() {
-                                _selectedBranchId = value?.id; // Lưu ID thay vì object
+                                _selectedBranchId =
+                                    value?.id; // Lưu ID thay vì object
                               });
                             },
                             validator: (value) {
@@ -219,7 +243,7 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
                             },
                           ),
                         ),
-                        
+
                         _buildTextFormField(
                           controller: _imageCtrl,
                           label: 'Link ảnh (URL)',
@@ -235,7 +259,7 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
                               fontWeight: FontWeight.w600,
                               color: Colors.grey.shade700,
                             ),
-                              ),
+                          ),
                           const SizedBox(height: 12),
                           Container(
                             decoration: BoxDecoration(
@@ -264,11 +288,17 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.error_outline, color: Colors.red, size: 48),
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                        size: 48,
+                                      ),
                                       const SizedBox(height: 8),
                                       Text(
                                         'Không thể tải ảnh',
-                                        style: TextStyle(color: Colors.grey.shade600),
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -324,9 +354,7 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
           labelText: label,
           hintText: hint,
           prefixIcon: Icon(icon, color: Color(0xFF0891B2)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide(color: Colors.grey.shade300),

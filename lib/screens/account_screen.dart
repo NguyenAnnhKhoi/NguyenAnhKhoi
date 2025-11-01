@@ -18,7 +18,8 @@ class AccountScreen extends StatefulWidget {
   AccountScreenState createState() => AccountScreenState();
 }
 
-class AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
+class AccountScreenState extends State<AccountScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
 
@@ -31,10 +32,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
       vsync: this,
     );
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     _controller.forward();
   }
@@ -45,7 +43,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
     _controller.dispose();
     super.dispose();
   }
-  
+
   // *** HÀM ĐÃ SỬA LỖI ***
   Future<void> _logout() async {
     // ... (toàn bộ phần showDialog giữ nguyên) ...
@@ -79,10 +77,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
               Text(
                 'Bạn có chắc chắn muốn đăng xuất không?',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
               ),
               SizedBox(height: 28),
               Row(
@@ -139,7 +134,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
 
     if (confirm == true) {
       await context.read<AuthProvider>().signOut();
-      
+
       // AuthWrapper (trong main.dart) sẽ tự động xử lý việc chuyển màn hình.
       // Chúng ta không cần làm gì thêm.
     }
@@ -147,10 +142,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
 
   // ... (giữ nguyên hàm _navigateTo)
   void _navigateTo(Widget screen) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => screen),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   @override
@@ -191,7 +183,10 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
-                                colors: [Colors.white, Colors.white.withOpacity(0.7)],
+                                colors: [
+                                  Colors.white,
+                                  Colors.white.withOpacity(0.7),
+                                ],
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -206,9 +201,11 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                               backgroundColor: Colors.white,
                               child: CircleAvatar(
                                 radius: 48,
-                                backgroundColor: Color(0xFF0891B2).withOpacity(0.1),
-                                backgroundImage: user?.photoURL != null 
-                                    ? NetworkImage(user!.photoURL!) 
+                                backgroundColor: Color(
+                                  0xFF0891B2,
+                                ).withOpacity(0.1),
+                                backgroundImage: user?.photoURL != null
+                                    ? NetworkImage(user!.photoURL!)
                                     : null,
                                 child: user?.photoURL == null
                                     ? Icon(
@@ -232,7 +229,10 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                           ),
                           SizedBox(height: 6),
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
@@ -252,177 +252,183 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                   ),
                 ),
               ),
-          
-          // Content
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 8),
-                      
-                      // XÓA NÚT ADMIN KHỎI ĐÂY
-                      
-                      // Section: Tài khoản
-                      _buildSectionTitle('Tài khoản', Icons.person),
-                      SizedBox(height: 12),
-                      _buildMenuCard([
-                        _MenuItem(
-                          icon: Icons.person_outline,
-                          title: 'Thông tin cá nhân',
-                          subtitle: 'Quản lý thông tin của bạn',
-                          color: Color(0xFF0891B2),
-                          onTap: () => _navigateTo(const ProfileInfoScreen()),
-                        ),
-                        _MenuItem(
-                          icon: Icons.favorite_outline,
-                          title: 'Dịch vụ yêu thích',
-                          subtitle: 'Các dịch vụ bạn đã lưu',
-                          color: Colors.pink.shade400,
-                          onTap: () => _navigateTo(const FavoriteServicesScreen()),
-                        ),
-                        _MenuItem(
-                          icon: Icons.card_giftcard_rounded,
-                          title: 'Voucher của tôi',
-                          subtitle: 'Xem và nhập mã voucher',
-                          color: Colors.orange.shade400,
-                          onTap: () => _navigateTo(const MyVouchersScreen()),
-                        ),
-                        _MenuItem(
-                          icon: Icons.history,
-                          title: 'Lịch sử giao dịch',
-                          subtitle: 'Xem các giao dịch trước đây',
-                          color: Colors.amber.shade600,
-                          onTap: () => _navigateTo(const TransactionHistoryScreen()),
-                        ),
-                      ]),
-                      
-                      SizedBox(height: 24),
-                      
-                      // Section: Cài đặt
-                      _buildSectionTitle('Cài đặt', Icons.settings),
-                      SizedBox(height: 12),
-                      _buildMenuCard([
-                        _MenuItem(
-                          icon: Icons.notifications_none,
-                          title: 'Thông báo',
-                          subtitle: 'Quản lý thông báo của bạn',
-                          color: Colors.purple.shade400,
-                          onTap: () => _navigateTo(const NotificationsScreen()),
-                        ),
-                      ]),
-                      
-                      SizedBox(height: 24),
-                      
-                      // Section: Hỗ trợ
-                      _buildSectionTitle('Hỗ trợ', Icons.help_outline),
-                      SizedBox(height: 12),
-                      _buildMenuCard([
-                        _MenuItem(
-                          icon: Icons.support_agent,
-                          title: 'Trợ giúp & Hỗ trợ',
-                          subtitle: 'Liên hệ với chúng tôi',
-                          color: Colors.green.shade400,
-                          onTap: () => _navigateTo(const HelpSupportScreen()),
-                        ),
-                        _MenuItem(
-                          icon: Icons.info_outline,
-                          title: 'Về chúng tôi',
-                          subtitle: 'Thông tin ứng dụng',
-                          color: Colors.blue.shade400,
-                          onTap: () => _navigateTo(const AboutUsScreen()),
-                        ),
-                        _MenuItem(
-                          icon: Icons.privacy_tip_outlined,
-                          title: 'Chính sách & Điều khoản',
-                          subtitle: 'Quy định và bảo mật',
-                          color: Colors.orange.shade400,
-                          onTap: () => _navigateTo(const TermsPolicyScreen(mode: 'terms')),
-                        ),
-                      ]),
-                      
-                      SizedBox(height: 32),
-                      
-                      // Logout Button
-                      Container(
-                        // ... (giữ nguyên Logout Button)
-                        width: double.infinity,
-                        height: 58,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.red.shade400,
-                              Colors.red.shade500,
-                            ],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.red.shade200,
-                              blurRadius: 15,
-                              offset: Offset(0, 6),
+
+              // Content
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    decoration: BoxDecoration(color: Colors.grey.shade50),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 8),
+
+                          // XÓA NÚT ADMIN KHỎI ĐÂY
+
+                          // Section: Tài khoản
+                          _buildSectionTitle('Tài khoản', Icons.person),
+                          SizedBox(height: 12),
+                          _buildMenuCard([
+                            _MenuItem(
+                              icon: Icons.person_outline,
+                              title: 'Thông tin cá nhân',
+                              subtitle: 'Quản lý thông tin của bạn',
+                              color: Color(0xFF0891B2),
+                              onTap: () =>
+                                  _navigateTo(const ProfileInfoScreen()),
                             ),
-                          ],
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: _logout,
-                          icon: Icon(Icons.logout_rounded, size: 24),
-                          label: Text(
-                            'Đăng xuất',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                            _MenuItem(
+                              icon: Icons.favorite_outline,
+                              title: 'Dịch vụ yêu thích',
+                              subtitle: 'Các dịch vụ bạn đã lưu',
+                              color: Colors.pink.shade400,
+                              onTap: () =>
+                                  _navigateTo(const FavoriteServicesScreen()),
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
+                            _MenuItem(
+                              icon: Icons.card_giftcard_rounded,
+                              title: 'Voucher của tôi',
+                              subtitle: 'Xem và nhập mã voucher',
+                              color: Colors.orange.shade400,
+                              onTap: () =>
+                                  _navigateTo(const MyVouchersScreen()),
+                            ),
+                            _MenuItem(
+                              icon: Icons.history,
+                              title: 'Lịch sử giao dịch',
+                              subtitle: 'Xem các giao dịch trước đây',
+                              color: Colors.amber.shade600,
+                              onTap: () =>
+                                  _navigateTo(const TransactionHistoryScreen()),
+                            ),
+                          ]),
+
+                          SizedBox(height: 24),
+
+                          // Section: Cài đặt
+                          _buildSectionTitle('Cài đặt', Icons.settings),
+                          SizedBox(height: 12),
+                          _buildMenuCard([
+                            _MenuItem(
+                              icon: Icons.notifications_none,
+                              title: 'Thông báo',
+                              subtitle: 'Quản lý thông báo của bạn',
+                              color: Colors.purple.shade400,
+                              onTap: () =>
+                                  _navigateTo(const NotificationsScreen()),
+                            ),
+                          ]),
+
+                          SizedBox(height: 24),
+
+                          // Section: Hỗ trợ
+                          _buildSectionTitle('Hỗ trợ', Icons.help_outline),
+                          SizedBox(height: 12),
+                          _buildMenuCard([
+                            _MenuItem(
+                              icon: Icons.support_agent,
+                              title: 'Trợ giúp & Hỗ trợ',
+                              subtitle: 'Liên hệ với chúng tôi',
+                              color: Colors.green.shade400,
+                              onTap: () =>
+                                  _navigateTo(const HelpSupportScreen()),
+                            ),
+                            _MenuItem(
+                              icon: Icons.info_outline,
+                              title: 'Về chúng tôi',
+                              subtitle: 'Thông tin ứng dụng',
+                              color: Colors.blue.shade400,
+                              onTap: () => _navigateTo(const AboutUsScreen()),
+                            ),
+                            _MenuItem(
+                              icon: Icons.privacy_tip_outlined,
+                              title: 'Chính sách & Điều khoản',
+                              subtitle: 'Quy định và bảo mật',
+                              color: Colors.orange.shade400,
+                              onTap: () => _navigateTo(
+                                const TermsPolicyScreen(mode: 'terms'),
+                              ),
+                            ),
+                          ]),
+
+                          SizedBox(height: 32),
+
+                          // Logout Button
+                          Container(
+                            // ... (giữ nguyên Logout Button)
+                            width: double.infinity,
+                            height: 58,
+                            decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.red.shade400,
+                                  Colors.red.shade500,
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.red.shade200,
+                                  blurRadius: 15,
+                                  offset: Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: _logout,
+                              icon: Icon(Icons.logout_rounded, size: 24),
+                              label: Text(
+                                'Đăng xuất',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      
-                      SizedBox(height: 20),
-                      
-                      // Version Info
-                      Center(
-                        // ... (giữ nguyên Version Info)
-                        child: Text(
-                          'Gentlemen\'s Grooming v1.0.0',
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 12,
+
+                          SizedBox(height: 20),
+
+                          // Version Info
+                          Center(
+                            // ... (giữ nguyên Version Info)
+                            child: Text(
+                              'Gentlemen\'s Grooming v1.0.0',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
-                        ),
+
+                          SizedBox(height: 1),
+                        ],
                       ),
-                      
-                      SizedBox(height: 1),
-                    ],
-                  ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
       },
     );
   }
 
   // XÓA HÀM _buildAdminButton()
-  
+
   // ... (giữ nguyên hàm _buildSectionTitle)
   Widget _buildSectionTitle(String title, IconData icon) {
     return Row(
@@ -433,11 +439,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
             color: Color(0xFF0891B2).withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: Color(0xFF0891B2),
-            size: 20,
-          ),
+          child: Icon(icon, color: Color(0xFF0891B2), size: 20),
         ),
         SizedBox(width: 12),
         Text(
@@ -472,7 +474,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
           final index = entry.key;
           final item = entry.value;
           final isLast = index == items.length - 1;
-          
+
           return Column(
             children: [
               InkWell(
@@ -491,11 +493,7 @@ class AccountScreenState extends State<AccountScreen> with SingleTickerProviderS
                           color: item.color.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: Icon(
-                          item.icon,
-                          color: item.color,
-                          size: 24,
-                        ),
+                        child: Icon(item.icon, color: item.color, size: 24),
                       ),
                       SizedBox(width: 16),
                       Expanded(

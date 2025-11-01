@@ -17,9 +17,7 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
   void _navigateAndEdit(Stylist? stylist) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => StylistEditScreen(stylist: stylist),
-      ),
+      MaterialPageRoute(builder: (_) => StylistEditScreen(stylist: stylist)),
     );
   }
 
@@ -48,16 +46,18 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Đã xóa stylist'),
-                backgroundColor: Colors.green),
+              content: Text('Đã xóa stylist'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Lỗi khi xóa: $e'),
-                backgroundColor: Colors.red),
+              content: Text('Lỗi khi xóa: $e'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -101,8 +101,10 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                   leading: CircleAvatar(
                     backgroundImage: NetworkImage(stylist.image),
                   ),
-                  title: Text(stylist.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(
+                    stylist.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

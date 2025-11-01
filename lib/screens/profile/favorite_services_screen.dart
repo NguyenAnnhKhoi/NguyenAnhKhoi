@@ -60,14 +60,17 @@ class _FavoriteServicesScreenState extends State<FavoriteServicesScreen> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 16),
                     elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: ListTile(
                       onTap: () {
                         // Navigate to booking screen with pre-selected service
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => BookingScreen(preSelectedService: service),
+                            builder: (context) =>
+                                BookingScreen(preSelectedService: service),
                           ),
                         );
                       },
@@ -76,18 +79,26 @@ class _FavoriteServicesScreenState extends State<FavoriteServicesScreen> {
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
                           service.image,
-                          width: 60, height: 60, fit: BoxFit.cover,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               width: 60,
                               height: 60,
                               color: Colors.grey.shade300,
-                              child: const Icon(Icons.content_cut, color: Colors.grey),
+                              child: const Icon(
+                                Icons.content_cut,
+                                color: Colors.grey,
+                              ),
                             );
                           },
                         ),
                       ),
-                      title: Text(service.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        service.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -104,7 +115,10 @@ class _FavoriteServicesScreenState extends State<FavoriteServicesScreen> {
                         ],
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                         onPressed: () => _removeFavorite(service.id),
                       ),
                     ),

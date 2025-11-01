@@ -11,7 +11,8 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStateMixin {
+class _RegisterScreenState extends State<RegisterScreen>
+    with TickerProviderStateMixin {
   // Form & Controllers
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
@@ -41,20 +42,17 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
       curve: Curves.easeIn,
     );
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
+
     _fadeController.forward();
     _slideController.forward();
   }
@@ -83,11 +81,15 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
       );
 
       if (!mounted) return;
-      
+
       if (!success) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.read<AuthProvider>().errorMessage ?? 'Đăng ký thất bại')),
+          SnackBar(
+            content: Text(
+              context.read<AuthProvider>().errorMessage ?? 'Đăng ký thất bại',
+            ),
+          ),
         );
         return;
       }
@@ -97,7 +99,9 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
         context: context,
         barrierDismissible: false,
         builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Container(
             padding: EdgeInsets.all(32),
             decoration: BoxDecoration(
@@ -145,10 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                 Text(
                   'Vui lòng kiểm tra email để xác thực tài khoản.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 SizedBox(height: 32),
                 SizedBox(
@@ -173,7 +174,10 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                     ),
                     child: Text(
                       'Đăng nhập ngay',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -240,7 +244,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
-              
+
               // Main Content
               Center(
                 child: SingleChildScrollView(
@@ -273,7 +277,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                             ),
                           ),
                           SizedBox(height: 32),
-                          
+
                           // Title
                           Text(
                             'ĐĂNG KÝ',
@@ -313,7 +317,8 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                               child: Form(
                                 key: _formKey,
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     // Username Field
                                     TextFormField(
@@ -322,22 +327,41 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Tên người dùng',
                                         hintText: 'Nhập tên của bạn',
-                                        prefixIcon: Icon(Icons.person_outline, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(
+                                          Icons.person_outline,
+                                          color: Color(0xFF0891B2),
+                                        ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFF0891B2),
+                                            width: 2,
+                                          ),
                                         ),
                                         filled: true,
                                         fillColor: Colors.grey.shade50,
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 18,
+                                        ),
                                       ),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
@@ -359,28 +383,49 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Email',
                                         hintText: 'your@email.com',
-                                        prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(
+                                          Icons.email_outlined,
+                                          color: Color(0xFF0891B2),
+                                        ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFF0891B2),
+                                            width: 2,
+                                          ),
                                         ),
                                         filled: true,
                                         fillColor: Colors.grey.shade50,
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 18,
+                                        ),
                                       ),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Vui lòng nhập email';
                                         }
-                                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                        if (!RegExp(
+                                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                        ).hasMatch(value)) {
                                           return 'Email không hợp lệ';
                                         }
                                         return null;
@@ -396,31 +441,55 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Mật khẩu',
                                         hintText: '••••••••',
-                                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(
+                                          Icons.lock_outline,
+                                          color: Color(0xFF0891B2),
+                                        ),
                                         suffixIcon: IconButton(
                                           icon: Icon(
-                                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                            _obscurePassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
                                             color: Color(0xFF0891B2),
                                           ),
                                           onPressed: () {
-                                            setState(() => _obscurePassword = !_obscurePassword);
+                                            setState(
+                                              () => _obscurePassword =
+                                                  !_obscurePassword,
+                                            );
                                           },
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFF0891B2),
+                                            width: 2,
+                                          ),
                                         ),
                                         filled: true,
                                         fillColor: Colors.grey.shade50,
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 18,
+                                        ),
                                       ),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
@@ -442,31 +511,55 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                       decoration: InputDecoration(
                                         labelText: 'Xác nhận mật khẩu',
                                         hintText: '••••••••',
-                                        prefixIcon: Icon(Icons.lock_outline, color: Color(0xFF0891B2)),
+                                        prefixIcon: Icon(
+                                          Icons.lock_outline,
+                                          color: Color(0xFF0891B2),
+                                        ),
                                         suffixIcon: IconButton(
                                           icon: Icon(
-                                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                                            _obscureConfirmPassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
                                             color: Color(0xFF0891B2),
                                           ),
                                           onPressed: () {
-                                            setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+                                            setState(
+                                              () => _obscureConfirmPassword =
+                                                  !_obscureConfirmPassword,
+                                            );
                                           },
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFF0891B2),
+                                            width: 2,
+                                          ),
                                         ),
                                         filled: true,
                                         fillColor: Colors.grey.shade50,
-                                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 18,
+                                        ),
                                       ),
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
@@ -484,14 +577,20 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                     SizedBox(
                                       height: 56,
                                       child: ElevatedButton(
-                                        onPressed: _isLoading ? null : _register,
+                                        onPressed: _isLoading
+                                            ? null
+                                            : _register,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Color(0xFF0891B2),
                                           foregroundColor: Colors.white,
                                           elevation: 4,
-                                          shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                                          shadowColor: Color(
+                                            0xFF0891B2,
+                                          ).withOpacity(0.5),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                           ),
                                         ),
                                         child: _isLoading
@@ -500,7 +599,10 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                                                 width: 24,
                                                 child: CircularProgressIndicator(
                                                   strokeWidth: 2.5,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Colors.white),
                                                 ),
                                               )
                                             : Text(
@@ -518,7 +620,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                               ),
                             ),
                           ),
-                          
+
                           SizedBox(height: 32),
 
                           // Login Link

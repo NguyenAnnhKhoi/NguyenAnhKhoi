@@ -35,18 +35,12 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
               setState(() => _filterStatus = value);
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'all',
-                child: Text('Tất cả'),
-              ),
+              const PopupMenuItem(value: 'all', child: Text('Tất cả')),
               const PopupMenuItem(
                 value: 'active',
                 child: Text('Đang hoạt động'),
               ),
-              const PopupMenuItem(
-                value: 'expired',
-                child: Text('Đã hết hạn'),
-              ),
+              const PopupMenuItem(value: 'expired', child: Text('Đã hết hạn')),
             ],
           ),
         ],
@@ -72,7 +66,7 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
           }
 
           final allVouchers = snapshot.data ?? [];
-          
+
           // Lọc vouchers theo filter
           final filteredVouchers = allVouchers.where((v) {
             if (_filterStatus == 'active') {
@@ -105,10 +99,7 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Nhấn nút + để tạo voucher mới',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -129,9 +120,7 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const VoucherEditScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const VoucherEditScreen()),
           );
         },
         backgroundColor: const Color(0xFF0891B2),
@@ -262,7 +251,7 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Voucher Code
                 Text(
                   voucher.code,
@@ -274,7 +263,7 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Description
                 Text(
                   voucher.description,
@@ -286,7 +275,7 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Discount info
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -316,7 +305,7 @@ class _ManageVouchersScreenState extends State<ManageVouchersScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Validity period
                 Row(
                   children: [

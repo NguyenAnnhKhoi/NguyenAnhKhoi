@@ -104,7 +104,10 @@ class IconBadge extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: Icon(icon, color: iconColor ?? Colors.white, size: 24),
           ),
@@ -115,15 +118,10 @@ class IconBadge extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: AppColors.gradientPink,
-                  ),
+                  gradient: LinearGradient(colors: AppColors.gradientPink),
                   shape: BoxShape.circle,
                 ),
-                constraints: const BoxConstraints(
-                  minWidth: 20,
-                  minHeight: 20,
-                ),
+                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                 child: Center(
                   child: Text(
                     count > 99 ? '99+' : count.toString(),
@@ -188,11 +186,7 @@ class FeatureCard extends StatelessWidget {
               child: Icon(icon, color: Colors.white, size: 32),
             ),
             const SizedBox(height: 12),
-            Text(
-              title,
-              style: AppTextStyles.h4,
-              textAlign: TextAlign.center,
-            ),
+            Text(title, style: AppTextStyles.h4, textAlign: TextAlign.center),
             if (subtitle != null) ...[
               const SizedBox(height: 4),
               Text(
@@ -340,17 +334,10 @@ class EmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: AppShadows.colored(AppColors.primary, opacity: 0.1),
               ),
-              child: Text(
-                emoji,
-                style: const TextStyle(fontSize: 72),
-              ),
+              child: Text(emoji, style: const TextStyle(fontSize: 72)),
             ),
             const SizedBox(height: 24),
-            Text(
-              title,
-              style: AppTextStyles.h3,
-              textAlign: TextAlign.center,
-            ),
+            Text(title, style: AppTextStyles.h3, textAlign: TextAlign.center),
             const SizedBox(height: 12),
             Text(
               subtitle,
@@ -401,7 +388,7 @@ class _ShimmerCardState extends State<ShimmerCard>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat();
-    
+
     _animation = Tween<double>(begin: -2, end: 2).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
     );
@@ -422,7 +409,8 @@ class _ShimmerCardState extends State<ShimmerCard>
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            borderRadius: widget.borderRadius ?? BorderRadius.circular(AppRadius.lg),
+            borderRadius:
+                widget.borderRadius ?? BorderRadius.circular(AppRadius.lg),
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,

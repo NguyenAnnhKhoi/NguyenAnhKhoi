@@ -11,14 +11,22 @@ import 'booking_confirmation_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   final Service? preSelectedService;
-  
-  const BookingScreen({super.key, this.preSelectedService});
+  final Stylist? preSelectedStylist;
+  final Branch? preSelectedBranch;
+
+  const BookingScreen({
+    super.key,
+    this.preSelectedService,
+    this.preSelectedStylist,
+    this.preSelectedBranch,
+  });
 
   @override
   BookingScreenState createState() => BookingScreenState();
 }
 
-class BookingScreenState extends State<BookingScreen> with TickerProviderStateMixin {
+class BookingScreenState extends State<BookingScreen>
+    with TickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   Service? selectedService;
   Stylist? selectedStylist;
@@ -33,10 +41,12 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
   @override
   void initState() {
     super.initState();
-    
-    // Set pre-selected service if provided
+
+    // Set pre-selected values if provided
     selectedService = widget.preSelectedService;
-    
+    selectedStylist = widget.preSelectedStylist;
+    selectedBranch = widget.preSelectedBranch;
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -44,25 +54,26 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
 
     _loadUserData();
   }
-  
+
   // Load user data from Firestore
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       // Set name from Firebase Auth first
       _nameController.text = user.displayName ?? '';
-      
+
       try {
         // Try to get phone number from Firestore
         final doc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
-        
+
         if (doc.exists) {
           final data = doc.data();
           // Use Firestore phone number if available, otherwise use Firebase Auth
-          _phoneController.text = data?['phoneNumber'] ?? user.phoneNumber ?? '';
+          _phoneController.text =
+              data?['phoneNumber'] ?? user.phoneNumber ?? '';
           // Also update name from Firestore if available
           if (data?['displayName'] != null) {
             _nameController.text = data!['displayName'];
@@ -86,34 +97,42 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
     _phoneController.dispose();
     super.dispose();
   }
-  
+
   // Hàm xác nhận booking - Chuyển đến màn hình xác nhận thanh toán
   Future<void> _confirmBooking(Service service) async {
     // 1. Kiểm tra thông tin
-    if (selectedBranch == null || selectedStylist == null || selectedDate == null || selectedTime == null || 
-        _nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
+    if (selectedBranch == null ||
+        selectedStylist == null ||
+        selectedDate == null ||
+        selectedTime == null ||
+        _nameController.text.trim().isEmpty ||
+        _phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Vui lòng điền đầy đủ thông tin.'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
     }
-    
+
     setState(() => _isLoading = true);
 
     // Parse duration từ service
     final serviceDuration = service.duration;
     int durationMinutes = 60; // Mặc định 60 phút
-    
+
     if (serviceDuration.contains('giờ')) {
-      final hours = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+      final hours =
+          int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
       durationMinutes = hours * 60;
     } else {
-      durationMinutes = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 60;
+      durationMinutes =
+          int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 60;
     }
 
     // 2. Kiểm tra stylist có khả dụng không (double-check)
@@ -134,10 +153,14 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Stylist đã có lịch hẹn vào thời gian này. Vui lòng chọn thời gian khác.'),
+            content: Text(
+              'Stylist đã có lịch hẹn vào thời gian này. Vui lòng chọn thời gian khác.',
+            ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -162,9 +185,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       paymentMethod: 'Chưa thanh toán', // Sẽ được chọn ở màn hình xác nhận
       status: 'pending', // Pending cho đến khi xác nhận thanh toán
     );
-    
+
     setState(() => _isLoading = false);
-    
+
     // 4. Chuyển đến màn hình xác nhận thanh toán
     final result = await Navigator.push<bool>(
       context,
@@ -172,7 +195,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         builder: (_) => BookingConfirmationScreen(booking: tempBooking),
       ),
     );
-    
+
     // Nếu thanh toán/xác nhận thành công, quay về home
     if (result == true && mounted) {
       Navigator.pop(context);
@@ -181,8 +204,11 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
 
   @override
   Widget build(BuildContext context) {
-    // Use selectedService from state instead of route arguments
-    if (selectedService == null) {
+    // Nếu không có service nhưng có stylist/branch, vẫn hiển thị form để chọn service
+    // Chỉ hiển thị error khi không có gì cả
+    if (selectedService == null &&
+        selectedStylist == null &&
+        selectedBranch == null) {
       return Scaffold(
         backgroundColor: Color(0xFFF8FAFC),
         appBar: AppBar(
@@ -190,18 +216,38 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           backgroundColor: Color(0xFF0891B2),
         ),
         body: Center(
-          child: Text('Vui lòng chọn dịch vụ'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.event_busy, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'Vui lòng chọn dịch vụ hoặc stylist',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.arrow_back),
+                label: Text('Quay lại'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF0891B2),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
-    
-    final service = selectedService!;
+
+    // Nếu có service thì dùng, không thì build form để chọn
+    final service = selectedService;
 
     return Scaffold(
       backgroundColor: Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
-          // ... (SliverAppBar giữ nguyên)
+          // SliverAppBar với service title (có thể null)
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
@@ -267,7 +313,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
               ),
             ),
           ),
-          
+
           SliverToBoxAdapter(
             child: Container(
               color: Color(0xFFF8FAFC),
@@ -276,10 +322,15 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildServiceInfo(service),
+                    // Hiển thị service info nếu có, không thì hiển thị selector
+                    if (service != null) _buildServiceInfo(service),
+                    if (service == null) _buildServiceSelector(),
                     SizedBox(height: 28),
-                    
-                    _buildSectionTitle('👤 Thông tin khách hàng', Icons.person_outline),
+
+                    _buildSectionTitle(
+                      '👤 Thông tin khách hàng',
+                      Icons.person_outline,
+                    ),
                     SizedBox(height: 16),
                     _buildTextField(
                       controller: _nameController,
@@ -293,19 +344,50 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                     ),
-                    
+
                     SizedBox(height: 28),
-                    _buildSectionTitle('📍 Chọn chi nhánh', Icons.business_rounded),
+                    _buildSectionTitle(
+                      '📍 Chọn chi nhánh',
+                      Icons.business_rounded,
+                    ),
                     SizedBox(height: 16),
                     _buildBranchSelector(),
-                    
+
                     SizedBox(height: 28),
-                    _buildSectionTitle('✂️ Chọn stylist', Icons.person_pin_outlined),
+                    _buildSectionTitle(
+                      '✂️ Chọn stylist',
+                      Icons.person_pin_outlined,
+                    ),
                     SizedBox(height: 16),
-                    _buildStylistSelector(service), // Truyền service vào
-                    
+                    // Chỉ build stylist selector nếu có service
+                    if (service != null) _buildStylistSelector(service),
+                    if (service == null)
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.orange),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Vui lòng chọn dịch vụ trước',
+                                style: TextStyle(color: Colors.orange.shade900),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                     SizedBox(height: 28),
-                    _buildSectionTitle('⏰ Chọn thời gian', Icons.access_time_outlined),
+                    _buildSectionTitle(
+                      '⏰ Chọn thời gian',
+                      Icons.access_time_outlined,
+                    ),
                     SizedBox(height: 16),
                     Row(
                       children: [
@@ -314,7 +396,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                         Expanded(child: _buildTimePicker(context)),
                       ],
                     ),
-                    
+
                     SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
@@ -329,45 +411,49 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        onPressed: _isLoading ? null : () => _confirmBooking(service),
-                        child: _isLoading 
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        onPressed: _isLoading || service == null
+                            ? null
+                            : () => _confirmBooking(service!),
+                        child: _isLoading
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Đang xử lý...',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
+                                  SizedBox(width: 12),
+                                  Text(
+                                    'Đang xử lý...',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.check_circle_outline, size: 24),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Xác nhận đặt lịch',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
+                                ],
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_circle_outline, size: 24),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Xác nhận đặt lịch',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                       ),
                     ),
                     SizedBox(height: 20),
@@ -456,11 +542,18 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                 SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                    Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
                     SizedBox(width: 4),
                     Text(
                       service.duration,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -480,7 +573,129 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       ),
     );
   }
-  
+
+  // Widget để chọn dịch vụ khi chưa có service được chọn sẵn
+  Widget _buildServiceSelector() {
+    return StreamBuilder<List<Service>>(
+      stream: _firestoreService.getServices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(color: Color(0xFF0891B2)),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(
+                'Không có dịch vụ nào',
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+          );
+        }
+
+        final services = snapshot.data!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('💇 Chọn dịch vụ', Icons.content_cut),
+            SizedBox(height: 16),
+            ...services
+                .map(
+                  (service) => GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedService = service;
+                      });
+                    },
+                    child: Container(
+                      margin: EdgeInsets.only(bottom: 12),
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: selectedService?.id == service.id
+                              ? Color(0xFF0891B2)
+                              : Colors.grey.shade200,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              service.image,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) => Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey.shade200,
+                                child: Icon(Icons.image, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  service.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  '${service.duration} • ${service.price.toStringAsFixed(0)}đ',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF0891B2),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (selectedService?.id == service.id)
+                            Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF0891B2),
+                              size: 24,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildStylistSelector(Service service) {
     // Kiểm tra đã chọn chi nhánh chưa
     if (selectedBranch == null) {
@@ -508,7 +723,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
         ),
       );
     }
-    
+
     // Sử dụng modal picker giống Quick Booking
     return InkWell(
       onTap: () async {
@@ -531,7 +746,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selectedStylist != null ? Color(0xFF0891B2) : Colors.grey.shade300,
+            color: selectedStylist != null
+                ? Color(0xFF0891B2)
+                : Colors.grey.shade300,
             width: selectedStylist != null ? 2 : 1,
           ),
           boxShadow: [
@@ -546,7 +763,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
           children: [
             Icon(
               Icons.person_outline,
-              color: selectedStylist != null ? Color(0xFF0891B2) : Colors.grey.shade400,
+              color: selectedStylist != null
+                  ? Color(0xFF0891B2)
+                  : Colors.grey.shade400,
               size: 24,
             ),
             SizedBox(width: 16),
@@ -559,7 +778,9 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: selectedStylist != null ? Colors.grey.shade800 : Colors.grey.shade500,
+                      color: selectedStylist != null
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade500,
                     ),
                   ),
                   if (selectedStylist != null) ...[
@@ -570,15 +791,25 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
                         SizedBox(width: 4),
                         Text(
                           selectedStylist!.rating.toString(),
-                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                         if (selectedStylist!.branchName != null) ...[
                           SizedBox(width: 12),
-                          Icon(Icons.business_rounded, size: 14, color: Colors.blue.shade700),
+                          Icon(
+                            Icons.business_rounded,
+                            size: 14,
+                            color: Colors.blue.shade700,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             selectedStylist!.branchName!,
-                            style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue.shade700,
+                            ),
                           ),
                         ],
                       ],
@@ -597,7 +828,7 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
       ),
     );
   }
-  
+
   Widget _buildDatePicker(BuildContext context) {
     return InkWell(
       onTap: () async {
@@ -634,6 +865,28 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
   Widget _buildTimePicker(BuildContext context) {
     return InkWell(
       onTap: () async {
+        // Kiểm tra xem đã chọn chi nhánh chưa
+        if (selectedBranch == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(child: Text('Vui lòng chọn chi nhánh trước')),
+                ],
+              ),
+              backgroundColor: Colors.orange.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: EdgeInsets.all(16),
+            ),
+          );
+          return;
+        }
+
         TimeOfDay? picked = await showTimePicker(
           context: context,
           initialTime: TimeOfDay(hour: 9, minute: 0),
@@ -650,7 +903,65 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
             );
           },
         );
-        if (picked != null) setState(() => selectedTime = picked);
+
+        if (picked != null) {
+          // Kiểm tra xem thời gian có nằm trong giờ mở cửa không
+          if (selectedBranch != null &&
+              !selectedBranch!.isTimeWithinOpeningHours(
+                picked.hour,
+                picked.minute,
+              )) {
+            // Hiển thị thông báo lỗi
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Ngoài giờ mở cửa',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Chi nhánh ${selectedBranch!.name} chỉ mở cửa từ ${selectedBranch!.openingTimeText} đến ${selectedBranch!.closingTimeText}.',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Vui lòng chọn thời gian trong khung giờ hoạt động.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: Colors.red.shade600,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: EdgeInsets.all(16),
+                  duration: Duration(seconds: 4),
+                ),
+              );
+            }
+            return;
+          }
+
+          setState(() => selectedTime = picked);
+        }
       },
       child: _buildSelectBox(
         icon: Icons.access_time_rounded,
@@ -739,61 +1050,100 @@ class BookingScreenState extends State<BookingScreen> with TickerProviderStateMi
   }
 
   Widget _buildBranchSelector() {
-    return InkWell(
-      onTap: () async {
-        final Branch? picked = await showModalBottomSheet<Branch>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => _BranchPicker(
-            firestoreService: _firestoreService,
-          ),
-        );
-        if (picked != null) setState(() => selectedBranch = picked);
-      },
-      child: Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selectedBranch != null ? Color(0xFF0891B2) : Colors.grey.shade300,
-            width: selectedBranch != null ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.business_rounded,
-              color: selectedBranch != null ? Color(0xFF0891B2) : Colors.grey.shade400,
-              size: 24,
-            ),
-            SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                selectedBranch?.name ?? 'Chọn chi nhánh',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: selectedBranch != null ? Colors.grey.shade800 : Colors.grey.shade500,
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: () async {
+            final Branch? picked = await showModalBottomSheet<Branch>(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) =>
+                  _BranchPicker(firestoreService: _firestoreService),
+            );
+            if (picked != null) {
+              setState(() {
+                selectedBranch = picked;
+                // Reset thời gian đã chọn khi đổi chi nhánh
+                selectedTime = null;
+              });
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: selectedBranch != null
+                    ? Color(0xFF0891B2)
+                    : Colors.grey.shade300,
+                width: selectedBranch != null ? 2 : 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: Colors.grey.shade400,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.business_rounded,
+                  color: selectedBranch != null
+                      ? Color(0xFF0891B2)
+                      : Colors.grey.shade400,
+                  size: 24,
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    selectedBranch?.name ?? 'Chọn chi nhánh',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: selectedBranch != null
+                          ? Colors.grey.shade800
+                          : Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Colors.grey.shade400,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        // Hiển thị giờ mở cửa nếu đã chọn chi nhánh
+        if (selectedBranch != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 16,
+                  color: Color(0xFF0891B2),
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Giờ mở cửa: ${selectedBranch!.hours}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -915,7 +1265,7 @@ class _BranchPicker extends StatelessWidget {
 class _StylistPicker extends StatelessWidget {
   final FirestoreService firestoreService;
   final Branch selectedBranch;
-  
+
   const _StylistPicker({
     required this.firestoreService,
     required this.selectedBranch,
@@ -970,22 +1320,26 @@ class _StylistPicker extends StatelessWidget {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   }
-                  
+
                   if (!snapshot.hasData) {
                     return Center(child: Text('Không có dữ liệu'));
                   }
-                  
+
                   // Lọc stylists theo branch đã chọn
                   var stylists = snapshot.data!
                       .where((s) => s.branchId == selectedBranch.id)
                       .toList();
-                  
+
                   if (stylists.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person_off_outlined, size: 64, color: Colors.grey),
+                          Icon(
+                            Icons.person_off_outlined,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
                           SizedBox(height: 16),
                           Text(
                             'Không có stylist nào\ntại chi nhánh này',
@@ -996,7 +1350,7 @@ class _StylistPicker extends StatelessWidget {
                       ),
                     );
                   }
-                  
+
                   return ListView.separated(
                     controller: controller,
                     padding: EdgeInsets.symmetric(horizontal: 20),
@@ -1032,7 +1386,11 @@ class _StylistPicker extends StatelessWidget {
                                   style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 SizedBox(width: 12),
-                                Icon(Icons.work_outline, size: 16, color: Colors.grey.shade600),
+                                Icon(
+                                  Icons.work_outline,
+                                  size: 16,
+                                  color: Colors.grey.shade600,
+                                ),
                                 SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
@@ -1047,7 +1405,11 @@ class _StylistPicker extends StatelessWidget {
                               SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.business_rounded, size: 14, color: Colors.blue.shade700),
+                                  Icon(
+                                    Icons.business_rounded,
+                                    size: 14,
+                                    color: Colors.blue.shade700,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     st.branchName!,

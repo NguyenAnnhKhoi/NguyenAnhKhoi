@@ -33,7 +33,11 @@ class ServiceCardShimmer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(width: double.infinity, height: 18, color: Colors.white),
+                  Container(
+                    width: double.infinity,
+                    height: 18,
+                    color: Colors.white,
+                  ),
                   const SizedBox(height: 8),
                   Container(width: 150, height: 14, color: Colors.white),
                   const SizedBox(height: 12),

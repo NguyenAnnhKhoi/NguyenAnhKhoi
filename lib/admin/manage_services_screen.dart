@@ -17,9 +17,7 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
   void _navigateAndEdit(Service? service) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ServiceEditScreen(service: service),
-      ),
+      MaterialPageRoute(builder: (_) => ServiceEditScreen(service: service)),
     );
   }
 
@@ -48,16 +46,18 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Đã xóa dịch vụ'),
-                backgroundColor: Colors.green),
+              content: Text('Đã xóa dịch vụ'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Lỗi khi xóa: $e'),
-                backgroundColor: Colors.red),
+              content: Text('Lỗi khi xóa: $e'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -72,7 +72,8 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
-            onPressed: () => _navigateAndEdit(null), // Thêm mới khi service là null
+            onPressed: () =>
+                _navigateAndEdit(null), // Thêm mới khi service là null
           ),
         ],
       ),
@@ -101,8 +102,10 @@ class _ManageServicesScreenState extends State<ManageServicesScreen> {
                   leading: CircleAvatar(
                     backgroundImage: NetworkImage(service.image),
                   ),
-                  title: Text(service.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(
+                    service.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text('${service.price.toStringAsFixed(0)}đ'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,

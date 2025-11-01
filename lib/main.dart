@@ -31,9 +31,7 @@ import 'admin/admin_home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().init();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   _configureEasyLoading();
   runApp(const MyApp());
 }
@@ -67,15 +65,15 @@ class MyApp extends StatelessWidget {
       providers: [
         // Auth Provider
         ChangeNotifierProvider(create: (_) => app_provider.AuthProvider()),
-        
+
         // Services Provider (load data once)
         ChangeNotifierProvider(
           create: (_) => ServicesProvider()..loadAllData(),
         ),
-        
+
         // Booking Provider
         ChangeNotifierProvider(create: (_) => BookingProvider()),
-        
+
         // Favorites Provider
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],
@@ -136,7 +134,10 @@ class MyApp extends StatelessWidget {
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
       ),
     );
   }
@@ -178,9 +179,7 @@ class AuthWrapper extends StatelessWidget {
 
   Widget _buildLoadingScreen() {
     return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(color: Color(0xFF0891B2)),
-      ),
+      body: Center(child: CircularProgressIndicator(color: Color(0xFF0891B2))),
     );
   }
 
@@ -197,14 +196,13 @@ class AuthWrapper extends StatelessWidget {
           return _buildLoadingScreen();
         }
 
-        return adminSnapshot.data == true 
-            ? const AdminHomeScreen() 
+        return adminSnapshot.data == true
+            ? const AdminHomeScreen()
             : const MainScreen();
       },
     );
   }
 }
-
 
 // Main Screen with Bottom Navigation
 class MainScreen extends StatefulWidget {
@@ -218,7 +216,8 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   late int _selectedIndex;
-  final GlobalKey<ConvexAppBarState> _appBarKey = GlobalKey<ConvexAppBarState>();
+  final GlobalKey<ConvexAppBarState> _appBarKey =
+      GlobalKey<ConvexAppBarState>();
 
   // Screen Configuration
   static const List<Widget> _screens = [

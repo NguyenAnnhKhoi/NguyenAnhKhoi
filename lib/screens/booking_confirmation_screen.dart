@@ -12,18 +12,16 @@ import 'payment_screen.dart';
 class BookingConfirmationScreen extends StatefulWidget {
   final Booking booking;
 
-  const BookingConfirmationScreen({
-    super.key,
-    required this.booking,
-  });
+  const BookingConfirmationScreen({super.key, required this.booking});
 
   @override
-  BookingConfirmationScreenState createState() => BookingConfirmationScreenState();
+  BookingConfirmationScreenState createState() =>
+      BookingConfirmationScreenState();
 }
 
 class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   final VoucherService _voucherService = VoucherService();
-  
+
   UserVoucher? _selectedVoucher;
   bool _isLoading = false;
   List<UserVoucher> _availableVouchers = [];
@@ -70,7 +68,9 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   // Tính số tiền giảm
   double get _discountAmount {
     if (_selectedVoucher == null) return 0;
-    return _selectedVoucher!.voucher.calculateDiscount(widget.booking.service.price);
+    return _selectedVoucher!.voucher.calculateDiscount(
+      widget.booking.service.price,
+    );
   }
 
   Future<void> _confirmPayment() async {
@@ -88,7 +88,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         );
 
         setState(() => _isLoading = false);
-        
+
         // Chuyển đến màn hình thanh toán VietQR
         final result = await Navigator.push<bool>(
           context,
@@ -108,7 +108,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         // Thanh toán tại quầy - lưu booking trực tiếp
         final FirestoreService _firestoreService = FirestoreService();
         final NotificationService _notificationService = NotificationService();
-        
+
         final confirmedBooking = widget.booking.copyWith(
           paymentMethod: 'Tại quầy',
           status: 'Chờ xác nhận',
@@ -116,11 +116,11 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           voucherId: _selectedVoucher?.voucherId,
           discountAmount: _discountAmount,
         );
-        
+
         // Lưu booking vào Firestore
         final docRef = await _firestoreService.addBooking(confirmedBooking);
         final savedBooking = confirmedBooking.copyWith(id: docRef.id);
-        
+
         // Sử dụng voucher nếu có
         if (_selectedVoucher != null) {
           await _voucherService.useVoucher(
@@ -128,19 +128,21 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
             savedBooking.id,
           );
         }
-        
+
         // Đặt thông báo
         await _notificationService.scheduleBookingNotification(savedBooking);
-        
+
         if (mounted) {
           setState(() => _isLoading = false);
-          
+
           // Hiển thị dialog thành công
           showDialog(
             context: context,
             barrierDismissible: false,
             builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               title: Row(
                 children: [
                   Icon(Icons.check_circle, color: Colors.green, size: 28),
@@ -172,7 +174,9 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
             content: Text('Lỗi: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -190,10 +194,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
       appBar: AppBar(
         title: const Text(
           '💳 Xác nhận thanh toán',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
         ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF0F172A),
@@ -266,7 +267,9 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           _buildInfoRow(
             icon: Icons.calendar_today_rounded,
             label: 'Thời gian',
-            value: DateFormat('dd/MM/yyyy, HH:mm').format(widget.booking.dateTime),
+            value: DateFormat(
+              'dd/MM/yyyy, HH:mm',
+            ).format(widget.booking.dateTime),
           ),
         ],
       ),
@@ -288,10 +291,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
               ),
               const SizedBox(height: 4),
               Text(
@@ -348,10 +348,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           if (_availableVouchers.isEmpty)
             Text(
               'Không có khuyến mãi khả dụng',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             )
           else
             InkWell(
@@ -437,7 +434,9 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           SegmentedButton<String>(
             style: SegmentedButton.styleFrom(
               backgroundColor: Colors.grey.shade50,
-              selectedBackgroundColor: const Color(0xFF0891B2).withOpacity(0.15),
+              selectedBackgroundColor: const Color(
+                0xFF0891B2,
+              ).withOpacity(0.15),
               selectedForegroundColor: const Color(0xFF0891B2),
               side: BorderSide(color: Colors.grey.shade300),
               shape: RoundedRectangleBorder(
@@ -484,10 +483,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                     _paymentMethod == 'counter'
                         ? 'Bạn sẽ thanh toán trực tiếp tại cửa hàng khi đến làm dịch vụ'
                         : 'Vui lòng quét mã QR để thanh toán trước khi đến',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.blue.shade700,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.blue.shade700),
                   ),
                 ),
               ],
@@ -523,14 +519,13 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
             children: [
               const Text(
                 'Giá dịch vụ',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.white),
               ),
               Text(
-                NumberFormat.currency(locale: 'vi_VN', symbol: 'đ')
-                    .format(widget.booking.service.price),
+                NumberFormat.currency(
+                  locale: 'vi_VN',
+                  symbol: 'đ',
+                ).format(widget.booking.service.price),
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -546,10 +541,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               children: [
                 const Text(
                   'Giảm giá',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 15, color: Colors.white),
                 ),
                 Text(
                   '- ${NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(_discountAmount)}',
@@ -576,7 +568,10 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 ),
               ),
               Text(
-                NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(_finalAmount),
+                NumberFormat.currency(
+                  locale: 'vi_VN',
+                  symbol: 'đ',
+                ).format(_finalAmount),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -616,7 +611,9 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 ),
               )
             : Text(
-                _paymentMethod == 'counter' ? 'Xác nhận đặt lịch' : 'Tiếp tục thanh toán',
+                _paymentMethod == 'counter'
+                    ? 'Xác nhận đặt lịch'
+                    : 'Tiếp tục thanh toán',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -655,10 +652,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               const SizedBox(height: 20),
               const Text(
                 'Chọn mã giảm giá',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               const SizedBox(height: 20),
               Expanded(
@@ -666,7 +660,8 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                   controller: controller,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: _availableVouchers.length + 1,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       // Option để bỏ chọn voucher
@@ -693,9 +688,7 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                               SizedBox(width: 12),
                               Text(
                                 'Không sử dụng mã giảm giá',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -717,7 +710,10 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                         decoration: BoxDecoration(
                           gradient: isSelected
                               ? const LinearGradient(
-                                  colors: [Color(0xFFFF6B9D), Color(0xFFFF8FAB)],
+                                  colors: [
+                                    Color(0xFFFF6B9D),
+                                    Color(0xFFFF8FAB),
+                                  ],
                                 )
                               : null,
                           color: isSelected ? null : Colors.grey[50],
@@ -742,7 +738,9 @@ class BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                                   decoration: BoxDecoration(
                                     color: isSelected
                                         ? Colors.white.withOpacity(0.3)
-                                        : const Color(0xFFFF6B9D).withOpacity(0.2),
+                                        : const Color(
+                                            0xFFFF6B9D,
+                                          ).withOpacity(0.2),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(

@@ -12,8 +12,8 @@ class MapScreen extends StatefulWidget {
   final Branch? destinationBranch;
 
   const MapScreen({
-    super.key, 
-    required this.branches, 
+    super.key,
+    required this.branches,
     this.destinationBranch, // Constructor mới
   });
 
@@ -42,13 +42,13 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _cardAnimation = Tween<Offset>(
-      begin: const Offset(0, 1.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _cardAnimationController,
-      curve: Curves.easeOut,
-    ));
+    _cardAnimation =
+        Tween<Offset>(begin: const Offset(0, 1.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _cardAnimationController,
+            curve: Curves.easeOut,
+          ),
+        );
   }
 
   Future<void> _initializeMap() async {
@@ -56,10 +56,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       if (!mounted) return;
       await _checkAndRequestLocationPermission();
       if (!mounted) return;
-      
+
       await _getCurrentLocation();
       if (!mounted) return;
-      
+
       await _addBranchMarkers();
       if (!mounted) return;
 
@@ -110,7 +110,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           content: Text('Dịch vụ định vị đã bị tắt. Vui lòng bật để tiếp tục.'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -126,7 +128,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             content: Text('Quyền truy cập vị trí bị từ chối.'),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         return;
@@ -140,7 +144,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           content: Text('Quyền truy cập vị trí bị từ chối vĩnh viễn.'),
           backgroundColor: Colors.red.shade400,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -167,23 +173,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       });
 
       if (!mounted) return;
-      
+
       await _mapController.moveTo(_userLocation!);
       if (!mounted) return;
-      
+
       await _mapController.setZoom(zoomLevel: 16.0);
       if (!mounted) return;
 
-      await _mapController.addMarker(
-        _userLocation!,
-        markerIcon: const MarkerIcon(
-          icon: Icon(
-            Icons.person_pin_circle,
-            color: Colors.blue,
-            size: 48,
-          ),
-        ),
-      );
+      await _mapController.addMarker(_userLocation!);
     } catch (e) {
       debugPrint("❌ Lỗi khi lấy vị trí: $e");
       if (mounted) {
@@ -200,23 +197,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Future<void> _addBranchMarkers() async {
     for (var branch in widget.branches) {
       if (!mounted) return;
-      
+
       GeoPoint branchPoint = GeoPoint(
         latitude: branch.latitude,
         longitude: branch.longitude,
       );
       try {
-        // Sử dụng icon mặc định của flutter_osm_plugin thay vì custom widget
-        await _mapController.addMarker(
-          branchPoint,
-          markerIcon: const MarkerIcon(
-            icon: Icon(
-              Icons.location_on,
-              color: Color(0xFF0891B2),
-              size: 48,
-            ),
-          ),
-        );
+        // Sử dụng marker mặc định
+        await _mapController.addMarker(branchPoint);
       } catch (e) {
         debugPrint("❌ Lỗi khi thêm marker chi nhánh ${branch.name}: $e");
       }
@@ -226,7 +214,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   Future<void> _drawRoute(Branch destinationBranch) async {
     try {
       if (!mounted) return;
-      
+
       if (_userLocation == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -234,27 +222,29 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             content: Text('Không tìm thấy vị trí của bạn.'),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         return;
       }
 
       if (!mounted) return;
-      
+
       setState(() {
         _selectedBranch = destinationBranch;
       });
-      
+
       _cardAnimationController.forward();
-      
+
       // Cập nhật markers để highlight chi nhánh đã chọn
       await _refreshBranchMarkers();
-      
+
       if (!mounted) return;
 
       await _mapController.clearAllRoads();
-      
+
       if (!mounted) return;
 
       GeoPoint destinationPoint = GeoPoint(
@@ -284,18 +274,18 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
       }
     }
   }
-  
+
   Future<void> _refreshBranchMarkers() async {
     // Xóa và thêm lại tất cả markers với trạng thái mới
     try {
       for (var branch in widget.branches) {
         if (!mounted) return;
-        
+
         GeoPoint branchPoint = GeoPoint(
           latitude: branch.latitude,
           longitude: branch.longitude,
         );
-        
+
         // Xóa marker cũ
         try {
           await _mapController.removeMarker(branchPoint);
@@ -303,21 +293,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           debugPrint("⚠️ Không thể xóa marker: $e");
           // Continue anyway
         }
-        
+
         if (!mounted) return;
-        
-        // Thêm marker mới với màu highlight nếu được chọn
-        bool isSelected = _selectedBranch?.id == branch.id;
-        await _mapController.addMarker(
-          branchPoint,
-          markerIcon: MarkerIcon(
-            icon: Icon(
-              Icons.location_on,
-              color: isSelected ? Colors.red : const Color(0xFF0891B2),
-              size: isSelected ? 56 : 48,
-            ),
-          ),
-        );
+
+        // Thêm marker mới - sử dụng marker mặc định
+        await _mapController.addMarker(branchPoint);
       }
     } catch (e) {
       debugPrint("❌ Lỗi khi refresh markers: $e");
@@ -361,7 +341,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           }
         },
         backgroundColor: const Color(0xFF0891B2),
-        child: const Icon(Icons.my_location_rounded, color: Colors.white, size: 28),
+        child: const Icon(
+          Icons.my_location_rounded,
+          color: Colors.white,
+          size: 28,
+        ),
       ),
       body: Stack(
         children: [
@@ -374,9 +358,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                 maxZoomLevel: 19,
                 stepZoom: 1.0,
               ),
-              userTrackingOption: UserTrackingOption(
-                enableTracking: false,
-              ),
+              userTrackingOption: UserTrackingOption(enableTracking: false),
             ),
           ),
           Positioned(
@@ -397,7 +379,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -412,14 +397,20 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           ],
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF0891B2)),
+                          icon: const Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Color(0xFF0891B2),
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -432,7 +423,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.map_outlined, color: Color(0xFF0891B2), size: 22),
+                              const Icon(
+                                Icons.map_outlined,
+                                color: Color(0xFF0891B2),
+                                size: 22,
+                              ),
                               const SizedBox(width: 12),
                               Text(
                                 'Bản đồ chi nhánh',
@@ -487,20 +482,14 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
             bottom: 20,
             left: 0,
             right: 0,
-            child: SafeArea(
-              top: false,
-              child: _buildBranchesList(),
-            ),
+            child: SafeArea(top: false, child: _buildBranchesList()),
           ),
           if (_selectedBranch != null)
             Positioned(
               bottom: 20,
               left: 20,
               right: 20,
-              child: SafeArea(
-                top: false,
-                child: _buildSelectedBranchCard(),
-              ),
+              child: SafeArea(top: false, child: _buildSelectedBranchCard()),
             ),
         ],
       ),
@@ -524,7 +513,7 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
               return GestureDetector(
                 onTap: () async {
                   if (!mounted) return;
-                  
+
                   try {
                     // Add haptic feedback
                     await _mapController.moveTo(
@@ -533,10 +522,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         longitude: branch.longitude,
                       ),
                     );
-                    
+
                     if (!mounted) return;
                     await _mapController.setZoom(zoomLevel: 16.5);
-                    
+
                     if (!mounted) return;
                     await _drawRoute(branch);
                   } catch (e) {
@@ -641,7 +630,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                                     const SizedBox(height: 6),
                                     Row(
                                       children: [
-                                        const Icon(Icons.star, size: 14, color: Colors.amber),
+                                        const Icon(
+                                          Icons.star,
+                                          size: 14,
+                                          color: Colors.amber,
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
                                           branch.rating.toString(),
@@ -664,7 +657,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                         top: 8,
                         right: 8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
@@ -681,7 +677,11 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.navigation_rounded, color: Colors.white, size: 12),
+                              Icon(
+                                Icons.navigation_rounded,
+                                color: Colors.white,
+                                size: 12,
+                              ),
                               SizedBox(width: 4),
                               Text(
                                 'Chỉ đường',
@@ -775,18 +775,23 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
-                      icon: Icon(Icons.close_rounded, color: Colors.grey.shade700),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: Colors.grey.shade700,
+                      ),
                       onPressed: () async {
                         if (!mounted) return;
-                        
+
                         try {
                           _cardAnimationController.reverse();
-                          
+
                           if (!mounted) return;
                           await _mapController.clearAllRoads();
-                          
+
                           // Refresh markers để bỏ highlight
-                          await Future.delayed(const Duration(milliseconds: 100));
+                          await Future.delayed(
+                            const Duration(milliseconds: 100),
+                          );
                           if (mounted) {
                             setState(() {
                               _selectedBranch = null;

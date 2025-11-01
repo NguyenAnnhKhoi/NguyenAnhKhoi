@@ -91,7 +91,7 @@ class Booking {
 
   // Helper methods
   BookingStatus get bookingStatus => BookingStatus.fromString(status);
-  
+
   bool get isPending => status == BookingStatus.pending.value;
   bool get isConfirmed => status == BookingStatus.confirmed.value;
   bool get isCompleted => status == BookingStatus.completed.value;

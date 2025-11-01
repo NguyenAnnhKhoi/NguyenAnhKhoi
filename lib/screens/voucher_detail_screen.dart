@@ -49,10 +49,7 @@ class VoucherDetailScreen extends StatelessWidget {
                 height: 220,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFFF6B9D),
-                      const Color(0xFFFFA06B),
-                    ],
+                    colors: [const Color(0xFFFF6B9D), const Color(0xFFFFA06B)],
                   ),
                 ),
                 child: const Icon(
@@ -119,7 +116,9 @@ class VoucherDetailScreen extends StatelessWidget {
                         ),
                         IconButton(
                           onPressed: () {
-                            Clipboard.setData(ClipboardData(text: voucher.code));
+                            Clipboard.setData(
+                              ClipboardData(text: voucher.code),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Đã sao chép mã!'),
@@ -127,7 +126,10 @@ class VoucherDetailScreen extends StatelessWidget {
                               ),
                             );
                           },
-                          icon: const Icon(Icons.copy, color: Color(0xFF0891B2)),
+                          icon: const Icon(
+                            Icons.copy,
+                            color: Color(0xFF0891B2),
+                          ),
                         ),
                       ],
                     ),
@@ -189,7 +191,11 @@ class VoucherDetailScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.info_outline, color: Colors.amber.shade700, size: 20),
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.amber.shade700,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Điều khoản sử dụng',
@@ -221,7 +227,9 @@ class VoucherDetailScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: voucher.isValid() ? () => _claimVoucher(context) : null,
+                        onPressed: voucher.isValid()
+                            ? () => _claimVoucher(context)
+                            : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0891B2),
                           foregroundColor: Colors.white,
@@ -237,7 +245,9 @@ class VoucherDetailScreen extends StatelessWidget {
                             const Icon(Icons.card_giftcard_rounded, size: 24),
                             const SizedBox(width: 12),
                             Text(
-                              voucher.isValid() ? 'Nhận ưu đãi ngay' : 'Hết hiệu lực',
+                              voucher.isValid()
+                                  ? 'Nhận ưu đãi ngay'
+                                  : 'Hết hiệu lực',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -318,13 +328,15 @@ class VoucherDetailScreen extends StatelessWidget {
 
   String _getTermsText() {
     List<String> terms = [];
-    
+
     switch (voucher.condition) {
       case VoucherCondition.all:
         terms.add('• Áp dụng cho tất cả dịch vụ');
         break;
       case VoucherCondition.minAmount:
-        terms.add('• Áp dụng cho đơn hàng từ ${voucher.minAmount!.toStringAsFixed(0)}đ');
+        terms.add(
+          '• Áp dụng cho đơn hàng từ ${voucher.minAmount!.toStringAsFixed(0)}đ',
+        );
         break;
       case VoucherCondition.firstBooking:
         terms.add('• Chỉ áp dụng cho lần đặt lịch đầu tiên');
@@ -333,13 +345,13 @@ class VoucherDetailScreen extends StatelessWidget {
         terms.add('• Chỉ áp dụng cho một số dịch vụ nhất định');
         break;
     }
-    
+
     terms.add('• Mỗi người chỉ được nhận một lần');
     terms.add('• Không áp dụng cùng lúc với các ưu đãi khác');
     if (voucher.maxUses != -1) {
       terms.add('• Số lượng có hạn, nhanh tay nhận ngay');
     }
-    
+
     return terms.join('\n');
   }
 
@@ -365,7 +377,9 @@ class VoucherDetailScreen extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: const Row(
               children: [
                 Icon(Icons.check_circle, color: Colors.green, size: 28),
@@ -373,14 +387,19 @@ class VoucherDetailScreen extends StatelessWidget {
                 Text('Thành công!'),
               ],
             ),
-            content: const Text('Bạn đã nhận ưu đãi thành công! Kiểm tra trong phần "Ưu đãi của tôi".'),
+            content: const Text(
+              'Bạn đã nhận ưu đãi thành công! Kiểm tra trong phần "Ưu đãi của tôi".',
+            ),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
                 },
-                child: const Text('OK', style: TextStyle(color: Color(0xFF0891B2))),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: Color(0xFF0891B2)),
+                ),
               ),
             ],
           ),
@@ -395,7 +414,9 @@ class VoucherDetailScreen extends StatelessWidget {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: const Row(
               children: [
                 Icon(Icons.error_outline, color: Colors.red, size: 28),
@@ -407,7 +428,10 @@ class VoucherDetailScreen extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK', style: TextStyle(color: Color(0xFF0891B2))),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: Color(0xFF0891B2)),
+                ),
               ),
             ],
           ),

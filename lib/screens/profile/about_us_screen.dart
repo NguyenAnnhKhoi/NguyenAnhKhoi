@@ -31,27 +31,27 @@ class AboutUsScreen extends StatelessWidget {
           children: [
             // Header với logo và slogan
             _buildHeader(context),
-            
+
             const SizedBox(height: 24),
-            
+
             // Thông tin thương hiệu
             _buildBrandInfoCard(context),
-            
+
             const SizedBox(height: 20),
-            
+
             // Mục tiêu phát triển
             _buildGoalsCard(context),
-            
+
             const SizedBox(height: 20),
-            
+
             // Giá trị cốt lõi
             _buildCoreValuesCard(context),
-            
+
             const SizedBox(height: 20),
-            
+
             // Liên hệ
             _buildContactCard(context),
-            
+
             const SizedBox(height: 32),
           ],
         ),
@@ -67,10 +67,7 @@ class AboutUsScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF0891B2),
-            const Color(0xFF06B6D4),
-          ],
+          colors: [const Color(0xFF0891B2), const Color(0xFF06B6D4)],
         ),
       ),
       child: Column(
@@ -177,13 +174,15 @@ class AboutUsScreen extends StatelessWidget {
           _buildInfoRow(
             icon: Icons.flag_rounded,
             title: 'Sứ mệnh',
-            content: 'Đem đến trải nghiệm làm đẹp nhanh chóng, tiện lợi và đúng phong cách cho mọi khách hàng',
+            content:
+                'Đem đến trải nghiệm làm đẹp nhanh chóng, tiện lợi và đúng phong cách cho mọi khách hàng',
           ),
           const Divider(height: 24),
           _buildInfoRow(
             icon: Icons.workspace_premium_rounded,
             title: 'Cam kết',
-            content: 'Chất lượng dịch vụ hàng đầu với đội ngũ stylist chuyên nghiệp và tận tâm',
+            content:
+                'Chất lượng dịch vụ hàng đầu với đội ngũ stylist chuyên nghiệp và tận tâm',
           ),
         ],
       ),
@@ -237,21 +236,24 @@ class AboutUsScreen extends StatelessWidget {
           _buildGoalItem(
             icon: Icons.schedule_rounded,
             title: 'Đặt lịch dễ dàng',
-            content: 'Hệ thống đặt lịch thông minh, giúp khách hàng chọn thời gian phù hợp với tra cứu dịch vụ và giá cả minh bạch',
+            content:
+                'Hệ thống đặt lịch thông minh, giúp khách hàng chọn thời gian phù hợp với tra cứu dịch vụ và giá cả minh bạch',
             color: const Color(0xFF0891B2),
           ),
           const SizedBox(height: 16),
           _buildGoalItem(
             icon: Icons.people_rounded,
             title: 'Kết nối tối ưu',
-            content: 'Cầu nối giữa khách hàng và stylist chuyên nghiệp, mang đến trải nghiệm tư vấn cá nhân hóa và chu đáo',
+            content:
+                'Cầu nối giữa khách hàng và stylist chuyên nghiệp, mang đến trải nghiệm tư vấn cá nhân hóa và chu đáo',
             color: const Color(0xFF8B5CF6),
           ),
           const SizedBox(height: 16),
           _buildGoalItem(
             icon: Icons.diversity_3_rounded,
             title: 'Cộng đồng thân thiện',
-            content: 'Xây dựng môi trường làm đẹp chuyên nghiệp, tôn trọng và phát triển phong cách riêng của mỗi cá nhân',
+            content:
+                'Xây dựng môi trường làm đẹp chuyên nghiệp, tôn trọng và phát triển phong cách riêng của mỗi cá nhân',
             color: const Color(0xFFF59E0B),
           ),
         ],
@@ -303,10 +305,26 @@ class AboutUsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildValueItem(Icons.verified_rounded, 'Chuyên nghiệp', 'Đội ngũ stylist được đào tạo bài bản'),
-          _buildValueItem(Icons.handshake_rounded, 'Tận tâm', 'Phục vụ khách hàng với sự chân thành nhất'),
-          _buildValueItem(Icons.security_rounded, 'Uy tín', 'Cam kết chất lượng và giá cả minh bạch'),
-          _buildValueItem(Icons.lightbulb_rounded, 'Sáng tạo', 'Luôn cập nhật xu hướng mới nhất'),
+          _buildValueItem(
+            Icons.verified_rounded,
+            'Chuyên nghiệp',
+            'Đội ngũ stylist được đào tạo bài bản',
+          ),
+          _buildValueItem(
+            Icons.handshake_rounded,
+            'Tận tâm',
+            'Phục vụ khách hàng với sự chân thành nhất',
+          ),
+          _buildValueItem(
+            Icons.security_rounded,
+            'Uy tín',
+            'Cam kết chất lượng và giá cả minh bạch',
+          ),
+          _buildValueItem(
+            Icons.lightbulb_rounded,
+            'Sáng tạo',
+            'Luôn cập nhật xu hướng mới nhất',
+          ),
         ],
       ),
     );
@@ -357,10 +375,30 @@ class AboutUsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          _buildContactItem(Icons.phone_rounded, 'Hotline', '1900 xxxx', Colors.green),
-          _buildContactItem(Icons.email_rounded, 'Email', 'support@genzbarber.vn', Colors.blue),
-          _buildContactItem(Icons.location_on_rounded, 'Địa chỉ', 'TP. Hồ Chí Minh', Colors.red),
-          _buildContactItem(Icons.access_time_rounded, 'Giờ làm việc', '8:00 - 20:00 (Hằng ngày)', Colors.orange),
+          _buildContactItem(
+            Icons.phone_rounded,
+            'Hotline',
+            '1900 xxxx',
+            Colors.green,
+          ),
+          _buildContactItem(
+            Icons.email_rounded,
+            'Email',
+            'support@genzbarber.vn',
+            Colors.blue,
+          ),
+          _buildContactItem(
+            Icons.location_on_rounded,
+            'Địa chỉ',
+            'TP. Hồ Chí Minh',
+            Colors.red,
+          ),
+          _buildContactItem(
+            Icons.access_time_rounded,
+            'Giờ làm việc',
+            '8:00 - 20:00 (Hằng ngày)',
+            Colors.orange,
+          ),
         ],
       ),
     );
@@ -508,7 +546,12 @@ class AboutUsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactItem(IconData icon, String label, String value, Color color) {
+  Widget _buildContactItem(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(

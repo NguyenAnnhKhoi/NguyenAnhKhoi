@@ -119,7 +119,7 @@ class VouchersScreenState extends State<VouchersScreen>
                           ),
                         ),
                       ),
-                      
+
                       // Tab bar
                       Container(
                         decoration: BoxDecoration(
@@ -169,10 +169,7 @@ class VouchersScreenState extends State<VouchersScreen>
           color: const Color(0xFFF8FAFC),
           child: TabBarView(
             controller: _tabController,
-            children: [
-              _buildAvailableVouchers(),
-              _buildMyVouchers(),
-            ],
+            children: [_buildAvailableVouchers(), _buildMyVouchers()],
           ),
         ),
       ),
@@ -188,9 +185,7 @@ class VouchersScreenState extends State<VouchersScreen>
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Lỗi: ${snapshot.error}'),
-          );
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -234,9 +229,7 @@ class VouchersScreenState extends State<VouchersScreen>
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Lỗi: ${snapshot.error}'),
-          );
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -460,10 +453,7 @@ class VouchersScreenState extends State<VouchersScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            icon,
-            style: const TextStyle(fontSize: 72),
-          ),
+          Text(icon, style: const TextStyle(fontSize: 72)),
           const SizedBox(height: 24),
           Text(
             title,

@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'doanmobile-6c221.firebasestorage.app',
     measurementId: 'G-JRB6X5WR0N',
   );
-
 }

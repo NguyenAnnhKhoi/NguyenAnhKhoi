@@ -9,12 +9,13 @@ class ForgotPasswordScreen extends StatefulWidget {
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with SingleTickerProviderStateMixin {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _authService = AuthService();
   bool _sending = false;
-  
+
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -26,20 +27,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-    
+
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
-    
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
     _controller.forward();
   }
 
@@ -60,7 +55,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
           context: context,
           barrierDismissible: false,
           builder: (_) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             child: Container(
               padding: EdgeInsets.all(32),
               decoration: BoxDecoration(
@@ -99,10 +96,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                   Text(
                     'Hãy kiểm tra hộp thư:',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -118,17 +112,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                   Text(
                     'và làm theo hướng dẫn.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                   SizedBox(height: 28),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () => Navigator.of(context)..pop()..pop(),
+                      onPressed: () => Navigator.of(context)
+                        ..pop()
+                        ..pop(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF0891B2),
                         foregroundColor: Colors.white,
@@ -140,7 +133,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                       ),
                       child: Text(
                         'Đã hiểu',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -157,7 +153,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
             content: Text(e.toString()),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -174,11 +172,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0891B2),
-              Color(0xFF06B6D4),
-              Color(0xFF22D3EE),
-            ],
+            colors: [Color(0xFF0891B2), Color(0xFF06B6D4), Color(0xFF22D3EE)],
           ),
         ),
         child: SafeArea(
@@ -193,7 +187,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
-              
+
               // Main Content
               Center(
                 child: SingleChildScrollView(
@@ -226,7 +220,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                             ),
                           ),
                           SizedBox(height: 40),
-                          
+
                           // Title
                           Text(
                             'QUÊN MẬT KHẨU',
@@ -247,7 +241,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                             ),
                           ),
                           SizedBox(height: 48),
-                          
+
                           // Form Card
                           Container(
                             constraints: BoxConstraints(maxWidth: 420),
@@ -280,16 +274,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                                           color: Color(0xFF0891B2),
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                          borderSide: BorderSide(color: Color(0xFF0891B2), width: 2),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFF0891B2),
+                                            width: 2,
+                                          ),
                                         ),
                                         filled: true,
                                         fillColor: Colors.grey.shade50,
@@ -300,8 +307,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                                       ),
                                       validator: (v) {
                                         final value = v?.trim() ?? '';
-                                        if (value.isEmpty) return 'Vui lòng nhập email';
-                                        final ok = RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value);
+                                        if (value.isEmpty)
+                                          return 'Vui lòng nhập email';
+                                        final ok = RegExp(
+                                          r'^[^@]+@[^@]+\.[^@]+$',
+                                        ).hasMatch(value);
                                         if (!ok) return 'Email không hợp lệ';
                                         return null;
                                       },
@@ -311,21 +321,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                                       width: double.infinity,
                                       height: 56,
                                       child: ElevatedButton.icon(
-                                        onPressed: _sending ? null : _sendResetEmail,
+                                        onPressed: _sending
+                                            ? null
+                                            : _sendResetEmail,
                                         icon: _sending
                                             ? SizedBox(
                                                 width: 20,
                                                 height: 20,
                                                 child: CircularProgressIndicator(
                                                   strokeWidth: 2.5,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Colors.white),
                                                 ),
                                               )
-                                            : Icon(Icons.send_rounded, size: 22),
+                                            : Icon(
+                                                Icons.send_rounded,
+                                                size: 22,
+                                              ),
                                         label: Text(
-                                          _sending ? 'Đang gửi...' : 'Gửi email đặt lại',
+                                          _sending
+                                              ? 'Đang gửi...'
+                                              : 'Gửi email đặt lại',
                                           style: TextStyle(
                                             fontSize: 17,
                                             fontWeight: FontWeight.bold,
@@ -336,11 +354,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                                           backgroundColor: Color(0xFF0891B2),
                                           foregroundColor: Colors.white,
                                           elevation: 4,
-                                          shadowColor: Color(0xFF0891B2).withOpacity(0.5),
+                                          shadowColor: Color(
+                                            0xFF0891B2,
+                                          ).withOpacity(0.5),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                           ),
-                                          disabledBackgroundColor: Colors.grey.shade300,
+                                          disabledBackgroundColor:
+                                              Colors.grey.shade300,
                                         ),
                                       ),
                                     ),
@@ -349,9 +372,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
                               ),
                             ),
                           ),
-                          
+
                           SizedBox(height: 32),
-                          
+
                           // Info Text
                           Container(
                             padding: EdgeInsets.all(16),

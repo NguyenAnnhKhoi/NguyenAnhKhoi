@@ -7,6 +7,10 @@ class Service {
   final String duration;
   final double rating;
   final String image;
+  final String? categoryId;
+  final String? categoryName;
+  final bool isFeatured; // Dịch vụ nổi bật
+  final int featuredOrder; // Thứ tự hiển thị trong danh sách nổi bật
 
   Service({
     required this.id,
@@ -15,9 +19,12 @@ class Service {
     required this.duration,
     required this.rating,
     required this.image,
+    this.categoryId,
+    this.categoryName,
+    this.isFeatured = false,
+    this.featuredOrder = 999,
   });
 
-  // Thêm copyWith để dễ dàng cập nhật
   Service copyWith({
     String? id,
     String? name,
@@ -25,6 +32,10 @@ class Service {
     String? duration,
     double? rating,
     String? image,
+    String? categoryId,
+    String? categoryName,
+    bool? isFeatured,
+    int? featuredOrder,
   }) {
     return Service(
       id: id ?? this.id,
@@ -33,6 +44,10 @@ class Service {
       duration: duration ?? this.duration,
       rating: rating ?? this.rating,
       image: image ?? this.image,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
+      isFeatured: isFeatured ?? this.isFeatured,
+      featuredOrder: featuredOrder ?? this.featuredOrder,
     );
   }
 
@@ -45,17 +60,27 @@ class Service {
       duration: data['duration'] ?? '',
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       image: data['image'] ?? '',
+      categoryId: data['categoryId'],
+      categoryName: data['categoryName'],
+      isFeatured: data['isFeatured'] ?? false,
+      featuredOrder: data['featuredOrder'] ?? 999,
     );
   }
 
-  // THÊM MỚI: Phương thức toJson
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toFirestore() {
     return {
       'name': name,
       'price': price,
       'duration': duration,
       'rating': rating,
       'image': image,
+      'categoryId': categoryId,
+      'categoryName': categoryName,
+      'isFeatured': isFeatured,
+      'featuredOrder': featuredOrder,
     };
   }
+
+  // Alias for toFirestore() to support existing code
+  Map<String, dynamic> toJson() => toFirestore();
 }

@@ -11,13 +11,11 @@ import '../services/notification_service.dart';
 class RescheduleBookingScreen extends StatefulWidget {
   final Booking booking;
 
-  const RescheduleBookingScreen({
-    super.key,
-    required this.booking,
-  });
+  const RescheduleBookingScreen({super.key, required this.booking});
 
   @override
-  State<RescheduleBookingScreen> createState() => _RescheduleBookingScreenState();
+  State<RescheduleBookingScreen> createState() =>
+      _RescheduleBookingScreenState();
 }
 
 class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
@@ -150,7 +148,8 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
       await _notificationService.scheduleBookingReminder(
         id: widget.booking.id.hashCode,
         title: 'Nhắc nhở lịch hẹn',
-        body: 'Bạn có lịch hẹn ${widget.booking.service.name} lúc ${DateFormat('HH:mm').format(newDateTime)}',
+        body:
+            'Bạn có lịch hẹn ${widget.booking.service.name} lúc ${DateFormat('HH:mm').format(newDateTime)}',
         scheduledDate: newDateTime.subtract(const Duration(hours: 1)),
       );
 
@@ -198,10 +197,7 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
               Text(
                 'Lịch hẹn sẽ được chuyển sang:',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 16),
               Container(
@@ -209,13 +205,19 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F9FF),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF0891B2).withOpacity(0.2)),
+                  border: Border.all(
+                    color: const Color(0xFF0891B2).withOpacity(0.2),
+                  ),
                 ),
                 child: Column(
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today, size: 16, color: Color(0xFF0891B2)),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: Color(0xFF0891B2),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           DateFormat('dd/MM/yyyy, HH:mm').format(newDateTime),
@@ -229,7 +231,11 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.person, size: 16, color: Color(0xFF0891B2)),
+                        const Icon(
+                          Icons.person,
+                          size: 16,
+                          color: Color(0xFF0891B2),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           _selectedStylist!.name,
@@ -243,7 +249,11 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.business, size: 16, color: Color(0xFF0891B2)),
+                        const Icon(
+                          Icons.business,
+                          size: 16,
+                          color: Color(0xFF0891B2),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -349,10 +359,7 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                   const SizedBox(height: 4),
                   Text(
                     message,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.white,
-                    ),
+                    style: const TextStyle(fontSize: 13, color: Colors.white),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -361,7 +368,9 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
             ),
           ],
         ),
-        backgroundColor: isError ? const Color(0xFFEF4444) : const Color(0xFF10B981),
+        backgroundColor: isError
+            ? const Color(0xFFEF4444)
+            : const Color(0xFF10B981),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.only(
           bottom: 20,
@@ -369,9 +378,7 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
           right: 16,
           top: 80, // Hiển thị cao hơn
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 6,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         duration: Duration(seconds: isError ? 4 : 3),
@@ -467,7 +474,9 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Text(
@@ -509,10 +518,7 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
           const SizedBox(height: 12),
           Text(
             widget.booking.service.name,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Row(
@@ -606,10 +612,7 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                 children: [
                   const Text(
                     'Ngày',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -670,10 +673,7 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                 children: [
                   const Text(
                     'Giờ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -723,9 +723,13 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF0F9FF) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFFF0F9FF)
+                        : Colors.transparent,
                     border: stylists.last != stylist
-                        ? Border(bottom: BorderSide(color: Colors.grey.shade200))
+                        ? Border(
+                            bottom: BorderSide(color: Colors.grey.shade200),
+                          )
                         : null,
                   ),
                   child: Row(
@@ -740,7 +744,9 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                         ),
                         child: Icon(
                           Icons.person,
-                          color: isSelected ? Colors.white : const Color(0xFF0891B2),
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF0891B2),
                           size: 20,
                         ),
                       ),
@@ -753,7 +759,9 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                               stylist.name,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
                               ),
                             ),
                             Text(
@@ -811,9 +819,13 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF0F9FF) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFFF0F9FF)
+                        : Colors.transparent,
                     border: branches.last != branch
-                        ? Border(bottom: BorderSide(color: Colors.grey.shade200))
+                        ? Border(
+                            bottom: BorderSide(color: Colors.grey.shade200),
+                          )
                         : null,
                   ),
                   child: Row(
@@ -828,7 +840,9 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                         ),
                         child: Icon(
                           Icons.business,
-                          color: isSelected ? Colors.white : const Color(0xFF0891B2),
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF0891B2),
                           size: 20,
                         ),
                       ),
@@ -841,7 +855,9 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
                               branch.name,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
                               ),
                             ),
                             Text(

@@ -20,7 +20,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
   final _valueController = TextEditingController();
   final _minAmountController = TextEditingController();
   final _maxUsesController = TextEditingController();
-  
+
   VoucherType _selectedType = VoucherType.percentage;
   VoucherCondition _selectedCondition = VoucherCondition.all;
   DateTime? _startDate;
@@ -70,7 +70,9 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn thời gian bắt đầu và kết thúc')),
+        const SnackBar(
+          content: Text('Vui lòng chọn thời gian bắt đầu và kết thúc'),
+        ),
       );
       return;
     }
@@ -86,8 +88,8 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
         type: _selectedType,
         condition: _selectedCondition,
         value: double.parse(_valueController.text),
-        minAmount: _minAmountController.text.isEmpty 
-            ? null 
+        minAmount: _minAmountController.text.isEmpty
+            ? null
             : double.parse(_minAmountController.text),
         startDate: _startDate!,
         endDate: _endDate!,
@@ -103,13 +105,20 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
         await db.collection('vouchers').add(voucher.toJson());
       } else {
         // Cập nhật
-        await db.collection('vouchers').doc(widget.voucher!.id).update(voucher.toJson());
+        await db
+            .collection('vouchers')
+            .doc(widget.voucher!.id)
+            .update(voucher.toJson());
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.voucher == null ? 'Tạo voucher thành công!' : 'Cập nhật voucher thành công!'),
+            content: Text(
+              widget.voucher == null
+                  ? 'Tạo voucher thành công!'
+                  : 'Cập nhật voucher thành công!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -118,10 +127,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -155,7 +161,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
             .collection('vouchers')
             .doc(widget.voucher!.id)
             .delete();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -168,10 +174,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Lỗi: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
           );
         }
       }
@@ -183,7 +186,9 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(widget.voucher == null ? 'Tạo voucher mới' : 'Chỉnh sửa voucher'),
+        title: Text(
+          widget.voucher == null ? 'Tạo voucher mới' : 'Chỉnh sửa voucher',
+        ),
         backgroundColor: const Color(0xFF0891B2),
         foregroundColor: Colors.white,
         elevation: 0,
@@ -262,7 +267,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             _buildSection(
               title: 'Loại giảm giá',
               icon: Icons.discount_rounded,
@@ -300,13 +305,17 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
                 TextFormField(
                   controller: _valueController,
                   decoration: InputDecoration(
-                    labelText: _selectedType == VoucherType.percentage 
-                        ? 'Giá trị giảm (%) *' 
+                    labelText: _selectedType == VoucherType.percentage
+                        ? 'Giá trị giảm (%) *'
                         : 'Giá trị giảm (đ) *',
-                    hintText: _selectedType == VoucherType.percentage ? 'VD: 20' : 'VD: 50000',
-                    prefixIcon: Icon(_selectedType == VoucherType.percentage 
-                        ? Icons.percent_rounded 
-                        : Icons.attach_money_rounded),
+                    hintText: _selectedType == VoucherType.percentage
+                        ? 'VD: 20'
+                        : 'VD: 50000',
+                    prefixIcon: Icon(
+                      _selectedType == VoucherType.percentage
+                          ? Icons.percent_rounded
+                          : Icons.attach_money_rounded,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -329,7 +338,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             _buildSection(
               title: 'Điều kiện áp dụng',
               icon: Icons.rule_rounded,
@@ -388,18 +397,21 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             _buildSection(
               title: 'Thời gian & giới hạn',
               icon: Icons.access_time_rounded,
               children: [
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.event_rounded, color: Color(0xFF0891B2)),
+                  leading: const Icon(
+                    Icons.event_rounded,
+                    color: Color(0xFF0891B2),
+                  ),
                   title: const Text('Ngày bắt đầu'),
                   subtitle: Text(
-                    _startDate == null 
-                        ? 'Chưa chọn' 
+                    _startDate == null
+                        ? 'Chưa chọn'
                         : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
@@ -418,18 +430,23 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
                 const Divider(),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.event_rounded, color: Color(0xFFFF6B9D)),
+                  leading: const Icon(
+                    Icons.event_rounded,
+                    color: Color(0xFFFF6B9D),
+                  ),
                   title: const Text('Ngày kết thúc'),
                   subtitle: Text(
-                    _endDate == null 
-                        ? 'Chưa chọn' 
+                    _endDate == null
+                        ? 'Chưa chọn'
                         : '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () async {
                     final date = await showDatePicker(
                       context: context,
-                      initialDate: _endDate ?? DateTime.now().add(const Duration(days: 30)),
+                      initialDate:
+                          _endDate ??
+                          DateTime.now().add(const Duration(days: 30)),
                       firstDate: _startDate ?? DateTime.now(),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
@@ -448,7 +465,8 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    helperText: 'Số lần voucher có thể được sử dụng (-1 = không giới hạn)',
+                    helperText:
+                        'Số lần voucher có thể được sử dụng (-1 = không giới hạn)',
                   ),
                   keyboardType: TextInputType.number,
                   validator: (value) {
@@ -465,7 +483,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             _buildSection(
               title: 'Cài đặt',
               icon: Icons.settings_rounded,
@@ -473,7 +491,9 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Kích hoạt voucher'),
-                  subtitle: const Text('Cho phép người dùng sử dụng voucher này'),
+                  subtitle: const Text(
+                    'Cho phép người dùng sử dụng voucher này',
+                  ),
                   value: _isActive,
                   onChanged: (value) => setState(() => _isActive = value),
                   activeColor: const Color(0xFF0891B2),
@@ -481,7 +501,9 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Chỉ dành cho khách hàng mới'),
-                  subtitle: const Text('Voucher chỉ áp dụng cho người dùng mới'),
+                  subtitle: const Text(
+                    'Voucher chỉ áp dụng cho người dùng mới',
+                  ),
                   value: _isForNewUser,
                   onChanged: (value) => setState(() => _isForNewUser = value),
                   activeColor: const Color(0xFF0891B2),
@@ -489,7 +511,7 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            
+
             SizedBox(
               height: 56,
               child: ElevatedButton(
@@ -512,7 +534,9 @@ class _VoucherEditScreenState extends State<VoucherEditScreen> {
                         ),
                       )
                     : Text(
-                        widget.voucher == null ? 'Tạo voucher' : 'Cập nhật voucher',
+                        widget.voucher == null
+                            ? 'Tạo voucher'
+                            : 'Cập nhật voucher',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

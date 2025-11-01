@@ -23,22 +23,27 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   Future<void> _changePassword() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     final user = FirebaseAuth.instance.currentUser;
     // Kiểm tra user và email để tránh lỗi null
     if (user == null || user.email == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không tìm thấy thông tin người dùng.'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không tìm thấy thông tin người dùng.'),
+            backgroundColor: Colors.red,
+          ),
+        );
         setState(() => _isLoading = false);
       }
       return;
     }
 
     final cred = EmailAuthProvider.credential(
-      email: user.email!, 
-      password: _currentPasswordController.text
+      email: user.email!,
+      password: _currentPasswordController.text,
     );
 
     try {
@@ -46,11 +51,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       await user.reauthenticateWithCredential(cred);
       // Nếu thành công, cập nhật mật khẩu mới
       await user.updatePassword(_newPasswordController.text);
-      
+
       if (mounted) {
         // Hiển thị thông báo thành công
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.'), backgroundColor: Colors.green));
-        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
         // *** PHẦN SỬA LỖI QUAN TRỌNG NHẤT ***
         // Gọi hàm đăng xuất
         await _authService.signOut();
@@ -63,10 +73,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        final message = e.code == 'wrong-password' 
-            ? 'Mật khẩu hiện tại không đúng.' 
+        final message = e.code == 'wrong-password'
+            ? 'Mật khẩu hiện tại không đúng.'
             : 'Lỗi: ${e.message ?? 'Vui lòng thử lại.'}';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
       }
     } finally {
       // Đảm bảo loading indicator luôn được tắt
@@ -88,14 +100,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               TextFormField(
                 controller: _currentPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Mật khẩu hiện tại', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Mật khẩu hiện tại',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (v) => v!.isEmpty ? 'Không được để trống' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _newPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Mật khẩu mới', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Mật khẩu mới',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (v) {
                   if (v!.isEmpty) return 'Không được để trống';
                   if (v.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự';
@@ -106,9 +124,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               TextFormField(
                 controller: _confirmPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Xác nhận mật khẩu mới', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Xác nhận mật khẩu mới',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (v) {
-                  if (v != _newPasswordController.text) return 'Mật khẩu không khớp';
+                  if (v != _newPasswordController.text)
+                    return 'Mật khẩu không khớp';
                   return null;
                 },
               ),
@@ -116,12 +138,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _changePassword,
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50)
+                  minimumSize: const Size(double.infinity, 50),
                 ),
-                child: _isLoading 
-                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white)) 
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
                     : const Text('Xác nhận'),
-              )
+              ),
             ],
           ),
         ),

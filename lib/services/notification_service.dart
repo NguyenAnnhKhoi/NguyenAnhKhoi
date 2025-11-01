@@ -11,7 +11,8 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
     tz.initializeTimeZones();
@@ -19,12 +20,13 @@ class NotificationService {
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    final DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-      onDidReceiveLocalNotification: (id, title, body, payload) async {},
-    );
+    final DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+          onDidReceiveLocalNotification: (id, title, body, payload) async {},
+        );
 
     final InitializationSettings settings = InitializationSettings(
       android: androidSettings,
@@ -37,7 +39,7 @@ class NotificationService {
   Future<void> scheduleBookingNotification(Booking booking) async {
     // Thông báo sẽ được gửi trước 1 giờ so với lịch hẹn
     final scheduledTime = booking.dateTime.subtract(const Duration(hours: 1));
-    
+
     // Đảm bảo không đặt lịch thông báo cho một thời điểm trong quá khứ
     if (scheduledTime.isBefore(DateTime.now())) {
       debugPrint("Không đặt thông báo vì thời gian đã qua.");
@@ -62,7 +64,8 @@ class NotificationService {
           iOS: DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
       debugPrint("Đã đặt thông báo thành công cho booking ${booking.id}");
     } catch (e) {
@@ -106,7 +109,8 @@ class NotificationService {
           iOS: DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
       debugPrint("Đã đặt thông báo thành công");
     } catch (e) {

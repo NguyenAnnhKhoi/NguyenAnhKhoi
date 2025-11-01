@@ -15,7 +15,10 @@ class HelpSupportScreen extends StatelessWidget {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
           return SlideTransition(
             position: animation.drive(tween),
             child: child,
@@ -34,10 +37,7 @@ class HelpSupportScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF0891B2),
         title: const Text(
           'Thông tin & Hỗ trợ',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
       ),
@@ -83,17 +83,14 @@ class HelpSupportScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Tìm hiểu thêm về chúng tôi và các chính sách',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          
+
           // Section title
           Padding(
             padding: const EdgeInsets.only(left: 8, bottom: 12),
@@ -106,7 +103,7 @@ class HelpSupportScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Menu items
           _buildMenuCard(
             context,
@@ -125,7 +122,7 @@ class HelpSupportScreen extends StatelessWidget {
             color: const Color(0xFF06B6D4),
             screen: const AboutUsScreen(),
           ),
-          
+
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.only(left: 8, bottom: 12),
@@ -138,7 +135,7 @@ class HelpSupportScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           _buildMenuCard(
             context,
             icon: Icons.description_outlined,
@@ -241,10 +238,7 @@ class CareCommitmentScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF0891B2),
         title: const Text(
           'Cam kết của chúng tôi',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
       ),
@@ -294,7 +288,7 @@ class CareCommitmentScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Nội dung chính
             Container(
               padding: const EdgeInsets.all(20),
@@ -312,7 +306,7 @@ class CareCommitmentScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
             Text(
               'Các cam kết cụ thể',
@@ -323,7 +317,7 @@ class CareCommitmentScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             _buildCommitmentCard(
               context,
               icon: Icons.price_check_rounded,
@@ -336,7 +330,8 @@ class CareCommitmentScreen extends StatelessWidget {
               context,
               icon: Icons.health_and_safety_outlined,
               title: 'An toàn sức khỏe',
-              text: 'Sử dụng sản phẩm rõ nguồn gốc, đảm bảo sức khỏe người dùng.',
+              text:
+                  'Sử dụng sản phẩm rõ nguồn gốc, đảm bảo sức khỏe người dùng.',
               color: const Color(0xFF3B82F6),
             ),
             const SizedBox(height: 12),
@@ -344,7 +339,8 @@ class CareCommitmentScreen extends StatelessWidget {
               context,
               icon: Icons.event_available_outlined,
               title: 'Linh hoạt đặt lịch',
-              text: 'Hỗ trợ đặt lịch nhanh – hủy lịch linh hoạt – phục vụ đúng giờ.',
+              text:
+                  'Hỗ trợ đặt lịch nhanh – hủy lịch linh hoạt – phục vụ đúng giờ.',
               color: const Color(0xFF8B5CF6),
             ),
             const SizedBox(height: 12),
@@ -352,7 +348,8 @@ class CareCommitmentScreen extends StatelessWidget {
               context,
               icon: Icons.support_agent_rounded,
               title: 'Hỗ trợ tận tâm',
-              text: 'Tiếp nhận phản hồi và giải quyết khiếu nại trong vòng 24 giờ làm việc.',
+              text:
+                  'Tiếp nhận phản hồi và giải quyết khiếu nại trong vòng 24 giờ làm việc.',
               color: const Color(0xFFF59E0B),
             ),
             const SizedBox(height: 12),
@@ -363,7 +360,7 @@ class CareCommitmentScreen extends StatelessWidget {
               text: 'Cung cấp hóa đơn điện tử khi khách hàng yêu cầu.',
               color: const Color(0xFF06B6D4),
             ),
-            
+
             const SizedBox(height: 24),
             // Footer
             Container(

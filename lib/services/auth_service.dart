@@ -16,7 +16,8 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null; // Người dùng đã hủy
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -31,7 +32,10 @@ class AuthService {
   }
 
   /// Đăng nhập bằng Email & Password
-  Future<UserCredential> signInWithEmail({required String email, required String password}) async {
+  Future<UserCredential> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
     try {
       return await _auth.signInWithEmailAndPassword(
         email: email,

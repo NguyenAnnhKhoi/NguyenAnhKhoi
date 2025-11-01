@@ -13,8 +13,10 @@ class TransactionHistoryScreen extends StatefulWidget {
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   final FirestoreService _firestoreService = FirestoreService();
-  final NumberFormat currencyFormat =
-      NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+  final NumberFormat currencyFormat = NumberFormat.currency(
+    locale: 'vi_VN',
+    symbol: 'đ',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +76,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red.shade300,
+                          ),
                           SizedBox(height: 16),
                           Text(
                             'Đã xảy ra lỗi: ${snapshot.error}',
@@ -198,8 +204,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                       ),
                                       SizedBox(width: 6),
                                       Text(
-                                        DateFormat('dd/MM/yyyy, HH:mm')
-                                            .format(booking.dateTime),
+                                        DateFormat(
+                                          'dd/MM/yyyy, HH:mm',
+                                        ).format(booking.dateTime),
                                         style: TextStyle(
                                           color: Colors.grey.shade600,
                                           fontSize: 13,
@@ -212,12 +219,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                     children: [
                                       Container(
                                         padding: EdgeInsets.symmetric(
-                                          horizontal: 10,
+                                          horizontal: 8,
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.green.shade50,
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Text(
                                           'Hoàn thành',
@@ -228,45 +237,61 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                           ),
                                         ),
                                       ),
-                                      SizedBox(width: 8),
+                                      SizedBox(width: 6),
                                       // Hiển thị trạng thái thanh toán
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: booking.paymentMethod == 'vietqr'
-                                              ? Colors.blue.shade50
-                                              : Colors.orange.shade50,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              booking.paymentMethod == 'vietqr'
-                                                  ? Icons.check_circle
-                                                  : Icons.schedule,
-                                              size: 12,
-                                              color: booking.paymentMethod == 'vietqr'
-                                                  ? Colors.blue.shade700
-                                                  : Colors.orange.shade700,
+                                      Flexible(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                booking.paymentMethod ==
+                                                    'vietqr'
+                                                ? Colors.blue.shade50
+                                                : Colors.orange.shade50,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
                                             ),
-                                            SizedBox(width: 4),
-                                            Text(
-                                              booking.paymentMethod == 'vietqr'
-                                                  ? 'Đã thanh toán'
-                                                  : 'Chưa thanh toán',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: booking.paymentMethod == 'vietqr'
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                booking.paymentMethod ==
+                                                        'vietqr'
+                                                    ? Icons.check_circle
+                                                    : Icons.schedule,
+                                                size: 11,
+                                                color:
+                                                    booking.paymentMethod ==
+                                                        'vietqr'
                                                     ? Colors.blue.shade700
                                                     : Colors.orange.shade700,
-                                                fontWeight: FontWeight.w600,
                                               ),
-                                            ),
-                                          ],
+                                              SizedBox(width: 3),
+                                              Flexible(
+                                                child: Text(
+                                                  booking.paymentMethod ==
+                                                          'vietqr'
+                                                      ? 'Đã thanh toán'
+                                                      : 'Chưa thanh toán',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color:
+                                                        booking.paymentMethod ==
+                                                            'vietqr'
+                                                        ? Colors.blue.shade700
+                                                        : Colors
+                                                              .orange
+                                                              .shade700,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ],

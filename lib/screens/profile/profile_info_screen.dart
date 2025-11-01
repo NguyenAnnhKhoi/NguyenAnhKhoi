@@ -36,7 +36,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
     super.initState();
     _loadUserData();
   }
-  
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -63,26 +63,38 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
 
   Future<void> _pickImage() async {
     if (!_isEditing) return;
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50,
+    );
     if (pickedFile == null) return;
 
     final file = File(pickedFile.path);
     setState(() => _isLoading = true);
-    
+
     try {
-      final ref = _storage.ref().child('profile_pictures').child('${_user!.uid}.jpg');
+      final ref = _storage
+          .ref()
+          .child('profile_pictures')
+          .child('${_user!.uid}.jpg');
       await ref.putFile(file);
       final newPhotoUrl = await ref.getDownloadURL();
-      
-      await _firestore.collection('users').doc(_user!.uid).set({'photoURL': newPhotoUrl}, SetOptions(merge: true));
+
+      await _firestore.collection('users').doc(_user!.uid).set({
+        'photoURL': newPhotoUrl,
+      }, SetOptions(merge: true));
       await _user!.updatePhotoURL(newPhotoUrl);
 
       setState(() => _photoUrl = newPhotoUrl);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật ảnh thành công!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Cập nhật ảnh thành công!')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi tải ảnh: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -103,11 +115,15 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cập nhật thông tin thành công!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cập nhật thông tin thành công!')),
+      );
       setState(() => _isEditing = false);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi cập nhật: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi cập nhật: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -131,8 +147,16 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.grey.shade300,
-                        backgroundImage: _photoUrl != null ? NetworkImage(_photoUrl!) : null,
-                        child: _photoUrl == null ? Icon(Icons.person, size: 60, color: Colors.grey.shade400) : null,
+                        backgroundImage: _photoUrl != null
+                            ? NetworkImage(_photoUrl!)
+                            : null,
+                        child: _photoUrl == null
+                            ? Icon(
+                                Icons.person,
+                                size: 60,
+                                color: Colors.grey.shade400,
+                              )
+                            : null,
                       ),
                       if (_isEditing)
                         Positioned(
@@ -143,10 +167,14 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                             child: CircleAvatar(
                               radius: 20,
                               backgroundColor: Theme.of(context).primaryColor,
-                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                           ),
-                        )
+                        ),
                     ],
                   ),
                 ),
@@ -154,42 +182,71 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                 Center(
                   child: Text(
                     _nameController.text,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 32),
-                
-                _buildTextField(label: 'Họ và tên', controller: _nameController),
-                _buildTextField(label: 'Số điện thoại', controller: _phoneController, keyboardType: TextInputType.phone),
+
+                _buildTextField(
+                  label: 'Họ và tên',
+                  controller: _nameController,
+                ),
+                _buildTextField(
+                  label: 'Số điện thoại',
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                ),
                 TextFormField(
                   readOnly: true,
                   initialValue: _user?.email ?? 'Không có email',
-                   enabled: false,
-                  decoration: const InputDecoration(labelText: 'Email', filled: true),
+                  enabled: false,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    filled: true,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
-                  label: 'Ngày sinh', 
+                  label: 'Ngày sinh',
                   controller: _dobController,
                   readOnly: true,
                   onTap: () async {
                     if (!_isEditing) return;
-                    DateTime? picked = await showDatePicker(context: context, initialDate: DateTime(2000), firstDate: DateTime(1950), lastDate: DateTime.now());
+                    DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime(2000),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                    );
                     if (picked != null) {
-                      _dobController.text = DateFormat('dd/MM/yyyy').format(picked);
+                      _dobController.text = DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(picked);
                     }
                   },
                 ),
-                 DropdownButtonFormField<String>(
+                DropdownButtonFormField<String>(
                   value: _gender,
-                  onChanged: _isEditing ? (value) => setState(() => _gender = value) : null,
+                  onChanged: _isEditing
+                      ? (value) => setState(() => _gender = value)
+                      : null,
                   decoration: const InputDecoration(labelText: 'Giới tính'),
-                  items: ['Nam', 'Nữ', 'Khác'].map((label) => DropdownMenuItem(child: Text(label), value: label)).toList(),
+                  items: ['Nam', 'Nữ', 'Khác']
+                      .map(
+                        (label) =>
+                            DropdownMenuItem(child: Text(label), value: label),
+                      )
+                      .toList(),
                 ),
                 const SizedBox(height: 32),
 
                 ElevatedButton.icon(
-                  onPressed: _isEditing ? _saveChanges : () => setState(() => _isEditing = true),
+                  onPressed: _isEditing
+                      ? _saveChanges
+                      : () => setState(() => _isEditing = true),
                   icon: Icon(_isEditing ? Icons.save : Icons.edit),
                   label: Text(_isEditing ? 'Lưu thay đổi' : 'Chỉnh sửa'),
                 ),
@@ -199,14 +256,25 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                   title: const Text('Đổi mật khẩu'),
                   leading: const Icon(Icons.lock_outline),
                   trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen())), 
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ChangePasswordScreen(),
+                    ),
+                  ),
                 ),
               ],
             ),
     );
   }
 
-  Widget _buildTextField({required String label, required TextEditingController controller, TextInputType? keyboardType, VoidCallback? onTap, bool readOnly = false}) {
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    TextInputType? keyboardType,
+    VoidCallback? onTap,
+    bool readOnly = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
@@ -215,9 +283,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
         keyboardType: keyboardType,
         readOnly: readOnly,
         onTap: onTap,
-        decoration: InputDecoration(
-          labelText: label,
-        ),
+        decoration: InputDecoration(labelText: label),
       ),
     );
   }

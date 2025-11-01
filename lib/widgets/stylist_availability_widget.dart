@@ -38,9 +38,7 @@ class StylistAvailabilityWidget extends StatelessWidget {
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Text('Lỗi: ${snapshot.error}'),
-          );
+          return Center(child: Text('Lỗi: ${snapshot.error}'));
         }
 
         final allStylists = snapshot.data ?? [];
@@ -48,7 +46,8 @@ class StylistAvailabilityWidget extends StatelessWidget {
         return FutureBuilder<Map<String, bool>>(
           future: _checkStylistsAvailability(allStylists),
           builder: (context, availabilitySnapshot) {
-            if (availabilitySnapshot.connectionState == ConnectionState.waiting) {
+            if (availabilitySnapshot.connectionState ==
+                ConnectionState.waiting) {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(20.0),
@@ -58,16 +57,20 @@ class StylistAvailabilityWidget extends StatelessWidget {
             }
 
             final availabilityMap = availabilitySnapshot.data ?? {};
-            
+
             // Lọc stylists theo branch nếu có branchId
             var filteredStylists = allStylists;
             if (branchId != null && branchId!.isNotEmpty) {
-              filteredStylists = allStylists.where((s) => s.branchId == branchId).toList();
+              filteredStylists = allStylists
+                  .where((s) => s.branchId == branchId)
+                  .toList();
             }
-            
+
             // Lọc stylists theo availability nếu cần
             final displayStylists = showOnlyAvailable
-                ? filteredStylists.where((s) => availabilityMap[s.id] == true).toList()
+                ? filteredStylists
+                      .where((s) => availabilityMap[s.id] == true)
+                      .toList()
                 : filteredStylists;
 
             if (displayStylists.isEmpty) {
@@ -77,7 +80,11 @@ class StylistAvailabilityWidget extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.person_off_outlined, size: 48, color: Colors.grey),
+                      Icon(
+                        Icons.person_off_outlined,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'Không có stylist khả dụng\nvào thời gian này',
@@ -124,7 +131,9 @@ class StylistAvailabilityWidget extends StatelessWidget {
     );
   }
 
-  Future<Map<String, bool>> _checkStylistsAvailability(List<Stylist> stylists) async {
+  Future<Map<String, bool>> _checkStylistsAvailability(
+    List<Stylist> stylists,
+  ) async {
     final firestoreService = FirestoreService();
     final Map<String, bool> availabilityMap = {};
 
@@ -255,8 +264,9 @@ class _StylistCard extends StatelessWidget {
                               color: !isAvailable
                                   ? Colors.grey.shade600
                                   : AppColors.textPrimary,
-                              fontWeight:
-                                  isSelected ? FontWeight.w700 : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
                             ),
                           ),
                         ),
@@ -325,7 +335,8 @@ class _StylistCard extends StatelessWidget {
                       ],
                     ),
                     // Hiển thị tên chi nhánh nếu có
-                    if (stylist.branchName != null && stylist.branchName!.isNotEmpty) ...[
+                    if (stylist.branchName != null &&
+                        stylist.branchName!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Row(
                         children: [

@@ -24,18 +24,33 @@ class FirestoreService {
   // --- LẤY DỮ LIỆU (Giữ nguyên) ---
 
   Stream<List<Service>> getServices() {
-    return _db.collection('services').snapshots().map((snapshot) =>
-        snapshot.docs.map((doc) => Service.fromFirestore(doc)).toList());
+    return _db
+        .collection('services')
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Service.fromFirestore(doc)).toList(),
+        );
   }
 
   Stream<List<Stylist>> getStylists() {
-    return _db.collection('stylists').snapshots().map((snapshot) =>
-        snapshot.docs.map((doc) => Stylist.fromFirestore(doc)).toList());
+    return _db
+        .collection('stylists')
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Stylist.fromFirestore(doc)).toList(),
+        );
   }
 
   Stream<List<Branch>> getBranches() {
-    return _db.collection('branches').snapshots().map((snapshot) =>
-        snapshot.docs.map((doc) => Branch.fromFirestore(doc)).toList());
+    return _db
+        .collection('branches')
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Branch.fromFirestore(doc)).toList(),
+        );
   }
 
   Stream<List<Booking>> getUserBookings() {
@@ -48,63 +63,71 @@ class FirestoreService {
         .orderBy('dateTime', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
-      final List<Booking> bookings = [];
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        try {
-          final serviceDoc =
-              await _db.collection('services').doc(data['serviceId']).get();
-          final stylistDoc =
-              await _db.collection('stylists').doc(data['stylistId']).get();
+          final List<Booking> bookings = [];
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            try {
+              final serviceDoc = await _db
+                  .collection('services')
+                  .doc(data['serviceId'])
+                  .get();
+              final stylistDoc = await _db
+                  .collection('stylists')
+                  .doc(data['stylistId'])
+                  .get();
 
-          if (serviceDoc.exists && stylistDoc.exists) {
-            bookings.add(Booking(
-              id: doc.id,
-              service: Service.fromFirestore(serviceDoc),
-              stylist: Stylist.fromFirestore(stylistDoc),
-              dateTime: (data['dateTime'] as Timestamp).toDate(),
-              status: data['status'],
-              note: data['note'] ?? "",
-              customerName: data['customerName'] ?? 'Không rõ',
-              customerPhone: data['customerPhone'] ?? 'Không rõ',
-              branchName: data['branchName'] ?? 'Không rõ',
-              paymentMethod: data['paymentMethod'] ?? 'Tại quầy',
-              userId: data['userId'],
-              rejectionReason: data['rejectionReason'],
-              finalAmount: (data['finalAmount'] as num?)?.toDouble(),
-              voucherId: data['voucherId'],
-              discountAmount: (data['discountAmount'] as num?)?.toDouble(),
-            ));
+              if (serviceDoc.exists && stylistDoc.exists) {
+                bookings.add(
+                  Booking(
+                    id: doc.id,
+                    service: Service.fromFirestore(serviceDoc),
+                    stylist: Stylist.fromFirestore(stylistDoc),
+                    dateTime: (data['dateTime'] as Timestamp).toDate(),
+                    status: data['status'],
+                    note: data['note'] ?? "",
+                    customerName: data['customerName'] ?? 'Không rõ',
+                    customerPhone: data['customerPhone'] ?? 'Không rõ',
+                    branchName: data['branchName'] ?? 'Không rõ',
+                    paymentMethod: data['paymentMethod'] ?? 'Tại quầy',
+                    userId: data['userId'],
+                    rejectionReason: data['rejectionReason'],
+                    finalAmount: (data['finalAmount'] as num?)?.toDouble(),
+                    voucherId: data['voucherId'],
+                    discountAmount: (data['discountAmount'] as num?)
+                        ?.toDouble(),
+                  ),
+                );
+              }
+            } catch (e) {
+              debugPrint('Error fetching booking details: $e');
+            }
           }
-        } catch (e) {
-          debugPrint('Error fetching booking details: $e');
-        }
-      }
-      return bookings;
-    });
+          return bookings;
+        });
   }
 
   Stream<List<Service>> getFavoriteServices() {
     final user = _auth.currentUser;
     if (user == null) return Stream.value([]);
 
-    return _db
-        .collection('users')
-        .doc(user.uid)
-        .snapshots()
-        .asyncMap((userDoc) async {
+    return _db.collection('users').doc(user.uid).snapshots().asyncMap((
+      userDoc,
+    ) async {
       if (!userDoc.exists || userDoc.data()?['favoriteServices'] == null) {
         return [];
       }
-      List<String> favoriteIds =
-          List<String>.from(userDoc.data()!['favoriteServices']);
+      List<String> favoriteIds = List<String>.from(
+        userDoc.data()!['favoriteServices'],
+      );
       if (favoriteIds.isEmpty) return [];
 
       final servicesQuery = await _db
           .collection('services')
           .where(FieldPath.documentId, whereIn: favoriteIds)
           .get();
-      return servicesQuery.docs.map((doc) => Service.fromFirestore(doc)).toList();
+      return servicesQuery.docs
+          .map((doc) => Service.fromFirestore(doc))
+          .toList();
     });
   }
 
@@ -117,12 +140,14 @@ class FirestoreService {
     // Parse duration từ service duration string
     final serviceDuration = booking.service.duration;
     int durationMinutes = 60; // Mặc định 60 phút
-    
+
     if (serviceDuration.contains('giờ')) {
-      final hours = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+      final hours =
+          int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
       durationMinutes = hours * 60;
     } else {
-      durationMinutes = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 60;
+      durationMinutes =
+          int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 60;
     }
 
     // Kiểm tra stylist có available không trước khi tạo booking
@@ -133,7 +158,9 @@ class FirestoreService {
     );
 
     if (!isAvailable) {
-      throw Exception("Stylist đã có lịch hẹn vào thời gian này. Vui lòng chọn thời gian khác hoặc stylist khác.");
+      throw Exception(
+        "Stylist đã có lịch hẹn vào thời gian này. Vui lòng chọn thời gian khác hoặc stylist khác.",
+      );
     }
 
     // Tự động set status = 'confirmed' thay vì 'pending'
@@ -143,7 +170,8 @@ class FirestoreService {
       'serviceId': booking.service.id,
       'serviceName': booking.service.name,
       'servicePrice': booking.service.price,
-      'serviceDuration': booking.service.duration, // Lưu duration để check conflict
+      'serviceDuration':
+          booking.service.duration, // Lưu duration để check conflict
       'stylistId': booking.stylist.id,
       'stylistName': booking.stylist.name,
       'dateTime': Timestamp.fromDate(booking.dateTime),
@@ -200,7 +228,7 @@ class FirestoreService {
 
     if (!userDoc.exists) {
       await userRef.set({
-        'favoriteServices': [serviceId]
+        'favoriteServices': [serviceId],
       });
       return;
     }
@@ -211,11 +239,11 @@ class FirestoreService {
 
     if (favoriteIds.contains(serviceId)) {
       userRef.update({
-        'favoriteServices': FieldValue.arrayRemove([serviceId])
+        'favoriteServices': FieldValue.arrayRemove([serviceId]),
       });
     } else {
       userRef.update({
-        'favoriteServices': FieldValue.arrayUnion([serviceId])
+        'favoriteServices': FieldValue.arrayUnion([serviceId]),
       });
     }
   }
@@ -273,45 +301,53 @@ class FirestoreService {
       final List<Booking> bookings = [];
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        
+
         // Filter trên client side
         if (statusFilter != null && statusFilter.isNotEmpty) {
           if (data['status'] != statusFilter) {
             continue; // Skip booking không match status
           }
         }
-        
+
         try {
-          final serviceDoc = await _db.collection('services').doc(data['serviceId']).get();
-          final stylistDoc = await _db.collection('stylists').doc(data['stylistId']).get();
+          final serviceDoc = await _db
+              .collection('services')
+              .doc(data['serviceId'])
+              .get();
+          final stylistDoc = await _db
+              .collection('stylists')
+              .doc(data['stylistId'])
+              .get();
 
           if (serviceDoc.exists && stylistDoc.exists) {
-            bookings.add(Booking(
-              id: doc.id,
-              service: Service.fromFirestore(serviceDoc),
-              stylist: Stylist.fromFirestore(stylistDoc),
-              dateTime: (data['dateTime'] as Timestamp).toDate(),
-              status: data['status'] ?? 'pending',
-              note: data['note'] ?? "",
-              customerName: data['customerName'] ?? 'Không rõ',
-              customerPhone: data['customerPhone'] ?? 'Không rõ',
-              branchName: data['branchName'] ?? 'Không rõ',
-              paymentMethod: data['paymentMethod'] ?? 'Tại quầy',
-              userId: data['userId'],
-              rejectionReason: data['rejectionReason'],
-              finalAmount: (data['finalAmount'] as num?)?.toDouble(),
-              voucherId: data['voucherId'],
-              discountAmount: (data['discountAmount'] as num?)?.toDouble(),
-            ));
+            bookings.add(
+              Booking(
+                id: doc.id,
+                service: Service.fromFirestore(serviceDoc),
+                stylist: Stylist.fromFirestore(stylistDoc),
+                dateTime: (data['dateTime'] as Timestamp).toDate(),
+                status: data['status'] ?? 'pending',
+                note: data['note'] ?? "",
+                customerName: data['customerName'] ?? 'Không rõ',
+                customerPhone: data['customerPhone'] ?? 'Không rõ',
+                branchName: data['branchName'] ?? 'Không rõ',
+                paymentMethod: data['paymentMethod'] ?? 'Tại quầy',
+                userId: data['userId'],
+                rejectionReason: data['rejectionReason'],
+                finalAmount: (data['finalAmount'] as num?)?.toDouble(),
+                voucherId: data['voucherId'],
+                discountAmount: (data['discountAmount'] as num?)?.toDouble(),
+              ),
+            );
           }
         } catch (e) {
           debugPrint('Error fetching booking details: $e');
         }
       }
-      
+
       // Sort trên client side theo dateTime descending
       bookings.sort((a, b) => b.dateTime.compareTo(a.dateTime));
-      
+
       return bookings;
     });
   }
@@ -356,9 +392,13 @@ class FirestoreService {
           .where('stylistId', isEqualTo: stylistId)
           .get();
 
-      debugPrint('🔍 Checking availability for stylist $stylistId at $requestedStartTime - $requestedEndTime');
+      debugPrint(
+        '🔍 Checking availability for stylist $stylistId at $requestedStartTime - $requestedEndTime',
+      );
       debugPrint('📅 Date range: $startOfDay to $endOfDay');
-      debugPrint('📋 Total bookings found for stylist: ${snapshot.docs.length}');
+      debugPrint(
+        '📋 Total bookings found for stylist: ${snapshot.docs.length}',
+      );
 
       // Kiểm tra từng booking xem có conflict về thời gian không
       for (var doc in snapshot.docs) {
@@ -370,52 +410,67 @@ class FirestoreService {
 
         final data = doc.data();
         final status = data['status'] as String?;
-        
+
         // Chỉ kiểm tra các booking đang pending hoặc confirmed
         if (status != 'pending' && status != 'confirmed') {
           debugPrint('⏭️ Skipping booking ${doc.id} with status: $status');
           continue;
         }
-        
+
         final bookingTime = (data['dateTime'] as Timestamp).toDate();
-        
-        debugPrint('📌 Checking booking ${doc.id}: time=$bookingTime, status=$status');
-        
+
+        debugPrint(
+          '📌 Checking booking ${doc.id}: time=$bookingTime, status=$status',
+        );
+
         // Chỉ kiểm tra các booking trong cùng ngày
         // BUG FIX: Phải kiểm tra bookingTime có nằm TRONG khoảng startOfDay -> endOfDay
         if (bookingTime.isBefore(startOfDay) || bookingTime.isAfter(endOfDay)) {
-          debugPrint('⏭️ Skipping booking ${doc.id}: not in same day (bookingTime: $bookingTime)');
+          debugPrint(
+            '⏭️ Skipping booking ${doc.id}: not in same day (bookingTime: $bookingTime)',
+          );
           continue;
         }
-        
+
         // Parse duration từ string (ví dụ: "30 phút" -> 30, "1 giờ" -> 60)
         final serviceDuration = data['serviceDuration']?.toString() ?? '60';
         int bookingDuration = 60; // Mặc định 60 phút
-        
+
         if (serviceDuration.contains('giờ')) {
-          final hours = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+          final hours =
+              int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ??
+              1;
           bookingDuration = hours * 60;
         } else {
-          bookingDuration = int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 60;
+          bookingDuration =
+              int.tryParse(serviceDuration.replaceAll(RegExp(r'[^0-9]'), '')) ??
+              60;
         }
-        
-        final bookingStartTime = bookingTime;
-        final bookingEndTime = bookingTime.add(Duration(minutes: bookingDuration));
 
-        debugPrint('⏰ Existing booking: $bookingStartTime - $bookingEndTime (duration: $bookingDuration mins)');
-        debugPrint('⏰ Requested time: $requestedStartTime - $requestedEndTime (duration: $durationMinutes mins)');
+        final bookingStartTime = bookingTime;
+        final bookingEndTime = bookingTime.add(
+          Duration(minutes: bookingDuration),
+        );
+
+        debugPrint(
+          '⏰ Existing booking: $bookingStartTime - $bookingEndTime (duration: $bookingDuration mins)',
+        );
+        debugPrint(
+          '⏰ Requested time: $requestedStartTime - $requestedEndTime (duration: $durationMinutes mins)',
+        );
 
         // Kiểm tra overlap giữa 2 khoảng thời gian:
         // Hai khoảng thời gian overlap nếu:
         // - Thời gian bắt đầu mới < thời gian kết thúc cũ
         // - Thời gian kết thúc mới > thời gian bắt đầu cũ
-        final hasConflict = requestedStartTime.isBefore(bookingEndTime) &&
+        final hasConflict =
+            requestedStartTime.isBefore(bookingEndTime) &&
             requestedEndTime.isAfter(bookingStartTime);
 
         if (hasConflict) {
           debugPrint(
             '❌ CONFLICT DETECTED! Stylist $stylistId is busy from $bookingStartTime to $bookingEndTime. '
-            'Requested time: $requestedStartTime to $requestedEndTime'
+            'Requested time: $requestedStartTime to $requestedEndTime',
           );
           return false; // Có conflict - stylist đang bận
         } else {
@@ -475,18 +530,18 @@ class FirestoreService {
         .get();
 
     final List<DateTime> bookedTimes = [];
-    
+
     for (var doc in snapshot.docs) {
       final data = doc.data();
       final status = data['status'] as String?;
-      
+
       // Filter theo status
       if (status != 'pending' && status != 'confirmed') {
         continue;
       }
-      
+
       final bookingTime = (data['dateTime'] as Timestamp).toDate();
-      
+
       // Filter theo thời gian (trong ngày)
       if (bookingTime.isAfter(startOfDay) && bookingTime.isBefore(endOfDay)) {
         bookedTimes.add(bookingTime);

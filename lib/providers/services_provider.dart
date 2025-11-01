@@ -12,22 +12,22 @@ class ServicesProvider with ChangeNotifier {
   List<Service> _services = [];
   List<Stylist> _stylists = [];
   List<Branch> _branches = [];
-  
+
   bool _isLoadingServices = false;
   bool _isLoadingStylists = false;
   bool _isLoadingBranches = false;
-  
+
   String? _errorMessage;
 
   // Getters
   List<Service> get services => _services;
   List<Stylist> get stylists => _stylists;
   List<Branch> get branches => _branches;
-  
+
   bool get isLoadingServices => _isLoadingServices;
   bool get isLoadingStylists => _isLoadingStylists;
   bool get isLoadingBranches => _isLoadingBranches;
-  
+
   String? get errorMessage => _errorMessage;
 
   /// Load all services
@@ -38,16 +38,13 @@ class ServicesProvider with ChangeNotifier {
       notifyListeners();
 
       // Add timeout to prevent infinite loading
-      _services = await _firestoreService
-          .getServices()
-          .first
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              print('Services loading timeout - returning empty list');
-              return [];
-            },
-          );
+      _services = await _firestoreService.getServices().first.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Services loading timeout - returning empty list');
+          return [];
+        },
+      );
 
       print('Loaded ${_services.length} services');
       _isLoadingServices = false;
@@ -68,16 +65,13 @@ class ServicesProvider with ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      _stylists = await _firestoreService
-          .getStylists()
-          .first
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              print('Stylists loading timeout - returning empty list');
-              return [];
-            },
-          );
+      _stylists = await _firestoreService.getStylists().first.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Stylists loading timeout - returning empty list');
+          return [];
+        },
+      );
 
       print('Loaded ${_stylists.length} stylists');
       _isLoadingStylists = false;
@@ -98,16 +92,13 @@ class ServicesProvider with ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      _branches = await _firestoreService
-          .getBranches()
-          .first
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              print('Branches loading timeout - returning empty list');
-              return [];
-            },
-          );
+      _branches = await _firestoreService.getBranches().first.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Branches loading timeout - returning empty list');
+          return [];
+        },
+      );
 
       print('Loaded ${_branches.length} branches');
       _isLoadingBranches = false;
@@ -123,11 +114,7 @@ class ServicesProvider with ChangeNotifier {
 
   /// Load all data
   Future<void> loadAllData() async {
-    await Future.wait([
-      loadServices(),
-      loadStylists(),
-      loadBranches(),
-    ]);
+    await Future.wait([loadServices(), loadStylists(), loadBranches()]);
   }
 
   /// Get service by ID
@@ -160,18 +147,21 @@ class ServicesProvider with ChangeNotifier {
   /// Search services
   List<Service> searchServices(String query) {
     final lowerQuery = query.toLowerCase();
-    return _services.where((s) => 
-      s.name.toLowerCase().contains(lowerQuery)
-    ).toList();
+    return _services
+        .where((s) => s.name.toLowerCase().contains(lowerQuery))
+        .toList();
   }
 
   /// Search stylists
   List<Stylist> searchStylists(String query) {
     final lowerQuery = query.toLowerCase();
-    return _stylists.where((s) => 
-      s.name.toLowerCase().contains(lowerQuery) ||
-      s.experience.toLowerCase().contains(lowerQuery)
-    ).toList();
+    return _stylists
+        .where(
+          (s) =>
+              s.name.toLowerCase().contains(lowerQuery) ||
+              s.experience.toLowerCase().contains(lowerQuery),
+        )
+        .toList();
   }
 
   /// Get top rated services

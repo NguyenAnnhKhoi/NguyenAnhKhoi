@@ -16,14 +16,11 @@ class AdminHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Admin Panel'),
         actions: [
-          // Nút đăng xuất
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Đăng xuất',
             onPressed: () async {
               await AuthService().signOut();
-              // Sau khi đăng xuất, StreamBuilder trong AdminApp sẽ tự động
-              // chuyển người dùng về trang AdminLoginScreen.
             },
           ),
         ],
@@ -108,7 +105,10 @@ class AdminHomeScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         leading: CircleAvatar(
           radius: 24,
           backgroundColor: color.withOpacity(0.1),

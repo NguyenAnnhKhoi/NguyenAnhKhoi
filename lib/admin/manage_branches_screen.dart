@@ -17,9 +17,7 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
   void _navigateAndEdit(Branch? branch) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => BranchEditScreen(branch: branch),
-      ),
+      MaterialPageRoute(builder: (_) => BranchEditScreen(branch: branch)),
     );
   }
 
@@ -48,16 +46,18 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Đã xóa chi nhánh'),
-                backgroundColor: Colors.green),
+              content: Text('Đã xóa chi nhánh'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Lỗi khi xóa: $e'),
-                backgroundColor: Colors.red),
+              content: Text('Lỗi khi xóa: $e'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -101,9 +101,15 @@ class _ManageBranchesScreenState extends State<ManageBranchesScreen> {
                   leading: CircleAvatar(
                     backgroundImage: NetworkImage(branch.image),
                   ),
-                  title: Text(branch.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(branch.address, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text(
+                    branch.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    branch.address,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

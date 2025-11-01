@@ -39,25 +39,26 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       selectedBranch = widget.initialBranch;
     }
   }
-  
+
   // Load user data from Firestore
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       // Set name from Firebase Auth first
       _nameController.text = user.displayName ?? '';
-      
+
       try {
         // Try to get phone number from Firestore
         final doc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
-        
+
         if (doc.exists) {
           final data = doc.data();
           // Use Firestore phone number if available, otherwise use Firebase Auth
-          _phoneController.text = data?['phoneNumber'] ?? user.phoneNumber ?? '';
+          _phoneController.text =
+              data?['phoneNumber'] ?? user.phoneNumber ?? '';
           // Also update name from Firestore if available
           if (data?['displayName'] != null) {
             _nameController.text = data!['displayName'];
@@ -184,7 +185,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
               ),
             ),
           ),
-          
+
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(20),
@@ -377,7 +378,8 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
-          builder: (context) => _BranchPicker(firestoreService: _firestoreService),
+          builder: (context) =>
+              _BranchPicker(firestoreService: _firestoreService),
         );
         if (picked != null) setState(() => selectedBranch = picked);
       },
@@ -394,7 +396,8 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
           context: context,
           backgroundColor: Colors.transparent,
           isScrollControlled: true,
-          builder: (context) => _ServicePicker(firestoreService: _firestoreService),
+          builder: (context) =>
+              _ServicePicker(firestoreService: _firestoreService),
         );
         if (picked != null) setState(() => selectedService = picked);
       },
@@ -478,7 +481,7 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
               EasyLoading.showInfo('Vui lòng chọn chi nhánh trước');
               return;
             }
-            
+
             final Stylist? picked = await showModalBottomSheet<Stylist>(
               context: context,
               backgroundColor: Colors.transparent,
@@ -528,7 +531,9 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? Colors.grey.shade800 : Colors.grey.shade600,
+                  color: isSelected
+                      ? Colors.grey.shade800
+                      : Colors.grey.shade600,
                 ),
               ),
             ),
@@ -643,7 +648,7 @@ class _ServicePicker extends StatelessWidget {
 class _StylistPicker extends StatelessWidget {
   final FirestoreService firestoreService;
   final Branch selectedBranch; // Thêm tham số selectedBranch
-  
+
   const _StylistPicker({
     required this.firestoreService,
     required this.selectedBranch, // Required parameter
@@ -698,22 +703,26 @@ class _StylistPicker extends StatelessWidget {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   }
-                  
+
                   if (!snapshot.hasData) {
                     return Center(child: Text('Không có dữ liệu'));
                   }
-                  
+
                   // Lọc stylists theo branch đã chọn
                   var stylists = snapshot.data!
                       .where((s) => s.branchId == selectedBranch.id)
                       .toList();
-                  
+
                   if (stylists.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person_off_outlined, size: 64, color: Colors.grey),
+                          Icon(
+                            Icons.person_off_outlined,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
                           SizedBox(height: 16),
                           Text(
                             'Không có stylist nào\ntại chi nhánh này',
@@ -724,7 +733,7 @@ class _StylistPicker extends StatelessWidget {
                       ),
                     );
                   }
-                  
+
                   return ListView.separated(
                     controller: controller,
                     padding: EdgeInsets.symmetric(horizontal: 20),
@@ -760,7 +769,11 @@ class _StylistPicker extends StatelessWidget {
                                   style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 SizedBox(width: 12),
-                                Icon(Icons.work_outline, size: 16, color: Colors.grey.shade600),
+                                Icon(
+                                  Icons.work_outline,
+                                  size: 16,
+                                  color: Colors.grey.shade600,
+                                ),
                                 SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
@@ -775,7 +788,11 @@ class _StylistPicker extends StatelessWidget {
                               SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.business_rounded, size: 14, color: Colors.blue.shade700),
+                                  Icon(
+                                    Icons.business_rounded,
+                                    size: 14,
+                                    color: Colors.blue.shade700,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     st.branchName!,

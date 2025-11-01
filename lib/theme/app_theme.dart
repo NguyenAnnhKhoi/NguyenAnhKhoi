@@ -9,31 +9,31 @@ class AppColors {
   static const primaryLight = Color(0xFF06B6D4); // Cyan 500
   static const primaryLighter = Color(0xFF22D3EE); // Cyan 400
   static const primaryDark = Color(0xFF0E7490); // Cyan 700
-  
+
   // Gradient Colors - Cho các button và header đẹp mắt
   static const gradientPink = [Color(0xFFFF6B9D), Color(0xFFFFA06B)];
   static const gradientCyan = [Color(0xFF0891B2), Color(0xFF06B6D4)];
   static const gradientPurple = [Color(0xFF8B5CF6), Color(0xFFC084FC)];
   static const gradientOrange = [Color(0xFFFFA500), Color(0xFFFF6B35)];
   static const gradientGreen = [Color(0xFF10B981), Color(0xFF34D399)];
-  
+
   // Background Colors
   static const backgroundLight = Color(0xFFF8FAFC); // Slate 50
   static const backgroundWhite = Colors.white;
   static const backgroundGray = Color(0xFFF1F5F9); // Slate 100
-  
+
   // Text Colors
   static const textPrimary = Color(0xFF0F172A); // Slate 900
   static const textSecondary = Color(0xFF475569); // Slate 600
   static const textTertiary = Color(0xFF64748B); // Slate 500
   static const textLight = Color(0xFF94A3B8); // Slate 400
-  
+
   // Status Colors
   static const success = Color(0xFF10B981); // Green
   static const error = Color(0xFFEF4444); // Red
   static const warning = Color(0xFFF59E0B); // Amber
   static const info = Color(0xFF3B82F6); // Blue
-  
+
   // Rating & Star
   static const star = Color(0xFFFFB300);
   static const starBackground = Color(0xFFFFF3E0);
@@ -64,30 +64,30 @@ class AppRadius {
 class AppShadows {
   // Light shadows
   static List<BoxShadow> get light => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withOpacity(0.05),
+      blurRadius: 4,
+      offset: const Offset(0, 2),
+    ),
+  ];
 
   // Medium shadows
   static List<BoxShadow> get medium => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.08),
-          blurRadius: 8,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withOpacity(0.08),
+      blurRadius: 8,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   // Large shadows
   static List<BoxShadow> get large => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.12),
-          blurRadius: 16,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withOpacity(0.12),
+      blurRadius: 16,
+      offset: const Offset(0, 8),
+    ),
+  ];
 
   // Colored shadow với custom color
   static List<BoxShadow> colored(Color color, {double opacity = 0.3}) {
@@ -102,12 +102,12 @@ class AppShadows {
 
   // Elevated shadow (cho floating buttons)
   static List<BoxShadow> get elevated => [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.15),
-          blurRadius: 20,
-          offset: const Offset(0, 10),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withOpacity(0.15),
+      blurRadius: 20,
+      offset: const Offset(0, 10),
+    ),
+  ];
 }
 
 /// Text Styles sử dụng Google Fonts Poppins - Trẻ trung, hiện đại, dễ đọc
@@ -119,26 +119,26 @@ class AppTextStyles {
     color: AppColors.textPrimary,
     letterSpacing: -0.5,
   );
-  
+
   static TextStyle h2 = GoogleFonts.poppins(
     fontSize: 28,
     fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
     letterSpacing: -0.3,
   );
-  
+
   static TextStyle h3 = GoogleFonts.poppins(
     fontSize: 22,
     fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle h4 = GoogleFonts.poppins(
     fontSize: 18,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
   );
-  
+
   // ========== Body Text ==========
   static TextStyle bodyLarge = GoogleFonts.poppins(
     fontSize: 16,
@@ -146,37 +146,36 @@ class AppTextStyles {
     color: AppColors.textPrimary,
     height: 1.5,
   );
-  
+
   static TextStyle bodyMedium = GoogleFonts.poppins(
     fontSize: 15,
     fontWeight: FontWeight.w400,
     color: AppColors.textSecondary,
     height: 1.6,
   );
-  
+
   static TextStyle bodySmall = GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.textTertiary,
     height: 1.5,
   );
-  
+
   // ========== Special ==========
   static TextStyle caption = GoogleFonts.poppins(
     fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.textLight,
   );
-  
+
   static TextStyle button = GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.w700,
     letterSpacing: 0.5,
   );
 
-  
   // ========== NEW: Extended Typography System ==========
-  
+
   // Display Styles
   static TextStyle displayLarge = GoogleFonts.poppins(
     fontSize: 32,
@@ -185,7 +184,7 @@ class AppTextStyles {
     letterSpacing: -0.5,
     height: 1.2,
   );
-  
+
   static TextStyle displayMedium = GoogleFonts.poppins(
     fontSize: 28,
     fontWeight: FontWeight.w700,
@@ -193,7 +192,7 @@ class AppTextStyles {
     letterSpacing: -0.3,
     height: 1.2,
   );
-  
+
   static TextStyle displaySmall = GoogleFonts.poppins(
     fontSize: 24,
     fontWeight: FontWeight.w700,
@@ -208,14 +207,14 @@ class AppTextStyles {
     color: AppColors.textPrimary,
     height: 1.3,
   );
-  
+
   static TextStyle headlineMedium = GoogleFonts.poppins(
     fontSize: 20,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.3,
   );
-  
+
   static TextStyle headlineSmall = GoogleFonts.poppins(
     fontSize: 18,
     fontWeight: FontWeight.w600,
@@ -230,14 +229,14 @@ class AppTextStyles {
     color: AppColors.textPrimary,
     height: 1.4,
   );
-  
+
   static TextStyle titleMedium = GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.4,
   );
-  
+
   static TextStyle titleSmall = GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w600,
@@ -252,21 +251,21 @@ class AppTextStyles {
     color: AppColors.textPrimary,
     letterSpacing: 0.1,
   );
-  
+
   static TextStyle labelMedium = GoogleFonts.poppins(
     fontSize: 12,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
     letterSpacing: 0.5,
   );
-  
+
   static TextStyle labelSmall = GoogleFonts.poppins(
     fontSize: 11,
     fontWeight: FontWeight.w500,
     color: AppColors.textTertiary,
     letterSpacing: 0.5,
   );
-  
+
   static TextStyle buttonSmall = GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w600,
@@ -274,21 +273,22 @@ class AppTextStyles {
   );
 
   // ========== Helper Methods ==========
-  
+
   /// Tạo text style với màu tùy chỉnh
   static TextStyle withColor(TextStyle style, Color color) {
     return style.copyWith(color: color);
   }
-  
+
   /// Tạo text style với gradient
   static TextStyle withGradient(TextStyle style, List<Color> colors) {
     return style.copyWith(
       foreground: Paint()
-        ..shader = LinearGradient(colors: colors)
-            .createShader(const Rect.fromLTWH(0, 0, 200, 70)),
+        ..shader = LinearGradient(
+          colors: colors,
+        ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
     );
   }
-  
+
   /// Tạo text style với shadow
   static TextStyle withShadow(TextStyle style) {
     return style.copyWith(
@@ -311,7 +311,7 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.backgroundLight,
     useMaterial3: true,
     fontFamily: 'Roboto',
-    
+
     // AppBar Theme
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
@@ -325,7 +325,7 @@ class AppTheme {
       ),
       iconTheme: IconThemeData(color: AppColors.primary),
     ),
-    
+
     // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -340,7 +340,7 @@ class AppTheme {
         textStyle: AppTextStyles.button,
       ),
     ),
-    
+
     // Outlined Button Theme
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
@@ -352,7 +352,7 @@ class AppTheme {
         textStyle: AppTextStyles.button,
       ),
     ),
-    
+
     // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
@@ -371,7 +371,7 @@ class AppTheme {
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
     ),
-    
+
     // Card Theme
     cardTheme: CardThemeData(
       color: Colors.white,
@@ -520,7 +520,7 @@ class EmojiIcons {
   static const String calendar = '📅';
   static const String scissors = '✂️';
   static const String user = '👤';
-  
+
   // Status
   static const String star = '⭐';
   static const String heart = '❤️';
@@ -530,33 +530,33 @@ class EmojiIcons {
   static const String cross = '❌';
   static const String warning = '⚠️';
   static const String info = 'ℹ️';
-  
+
   // Location & Time
   static const String location = '📍';
   static const String time = '⏰';
   static const String clock = '🕐';
-  
+
   // Money & Payment
   static const String money = '💰';
   static const String card = '💳';
   static const String wallet = '👛';
-  
+
   // Communication
   static const String phone = '📱';
   static const String email = '📧';
   static const String bell = '🔔';
   static const String message = '💬';
-  
+
   // Security
   static const String lock = '🔒';
   static const String unlock = '🔓';
   static const String key = '🔑';
-  
+
   // Media
   static const String camera = '📷';
   static const String image = '🖼️';
   static const String gallery = '🎨';
-  
+
   // Other
   static const String gift = '🎁';
   static const String crown = '👑';

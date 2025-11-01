@@ -10,10 +10,7 @@ class ManageBookingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quản lý Đặt lịch'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Quản lý Đặt lịch'), elevation: 0),
       body: StreamBuilder<List<Booking>>(
         stream: FirestoreService().getAllBookings(),
         builder: (context, snapshot) {
@@ -37,7 +34,11 @@ class ManageBookingsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.calendar_today_outlined, size: 64, color: Colors.grey),
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'Chưa có booking nào',
@@ -110,9 +111,7 @@ class _BookingCard extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -134,10 +133,7 @@ class _BookingCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   DateFormat('dd/MM/yyyy HH:mm').format(booking.dateTime),
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
               ],
             ),
@@ -174,7 +170,11 @@ class _BookingCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.green.shade700, size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.green.shade700,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -207,10 +207,7 @@ class _BookingCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 2),
               Text(

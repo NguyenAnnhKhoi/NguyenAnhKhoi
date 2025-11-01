@@ -23,7 +23,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     if (widget.errorMessage != null) {
       // Hiển thị lỗi nếu bị từ chối quyền
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        EasyLoading.showError(widget.errorMessage!, duration: Duration(seconds: 3));
+        EasyLoading.showError(
+          widget.errorMessage!,
+          duration: Duration(seconds: 3),
+        );
       });
     }
   }
@@ -89,8 +92,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             labelText: 'Email',
                             prefixIcon: Icon(Icons.email_outlined),
                           ),
-                          validator: (v) =>
-                              (v == null || v.isEmpty) ? 'Vui lòng nhập email' : null,
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? 'Vui lòng nhập email'
+                              : null,
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -106,12 +110,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                                     : Icons.visibility,
                               ),
                               onPressed: () {
-                                setState(() => _obscurePassword = !_obscurePassword);
+                                setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
                               },
                             ),
                           ),
-                           validator: (v) =>
-                              (v == null || v.isEmpty) ? 'Vui lòng nhập mật khẩu' : null,
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? 'Vui lòng nhập mật khẩu'
+                              : null,
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
