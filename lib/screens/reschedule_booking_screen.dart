@@ -67,6 +67,12 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
   }
 
   Future<void> _selectTime() async {
+    // Kiểm tra đã chọn chi nhánh chưa
+    if (_selectedBranch == null) {
+      _showSnackBar('Vui lòng chọn chi nhánh trước', isError: true);
+      return;
+    }
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime ?? TimeOfDay.now(),
@@ -85,10 +91,63 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
       },
     );
 
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
+    if (picked != null) {
+      // Kiểm tra xem thời gian có nằm trong giờ mở cửa không
+      if (!_selectedBranch!.isTimeWithinOpeningHours(
+        picked.hour,
+        picked.minute,
+      )) {
+        // Hiển thị thông báo lỗi
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, color: Colors.white, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Ngoài giờ mở cửa',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Chi nhánh ${_selectedBranch!.name} chỉ mở cửa từ ${_selectedBranch!.openingTimeText} đến ${_selectedBranch!.closingTimeText}.',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Vui lòng chọn thời gian trong khung giờ hoạt động.',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w300),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: EdgeInsets.all(16),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (picked != _selectedTime) {
+        setState(() {
+          _selectedTime = picked;
+        });
+      }
     }
   }
 
@@ -106,6 +165,18 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
 
     if (_selectedBranch == null) {
       _showSnackBar('Vui lòng chọn chi nhánh', isError: true);
+      return;
+    }
+
+    // KIỂM TRA GIỜ MỞ CỬA - Validation cuối cùng trước khi đổi lịch
+    if (!_selectedBranch!.isTimeWithinOpeningHours(
+      _selectedTime!.hour,
+      _selectedTime!.minute,
+    )) {
+      _showSnackBar(
+        'Chi nhánh ${_selectedBranch!.name} chỉ mở cửa từ ${_selectedBranch!.openingTimeText} đến ${_selectedBranch!.closingTimeText}. Vui lòng chọn thời gian trong khung giờ hoạt động.',
+        isError: true,
+      );
       return;
     }
 
@@ -696,6 +767,33 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
   }
 
   Widget _buildStylistSelector() {
+    // Kiểm tra đã chọn chi nhánh chưa
+    if (_selectedBranch == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.blue.shade700),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Vui lòng chọn chi nhánh trước khi chọn stylist',
+                style: TextStyle(
+                  color: Colors.blue.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return StreamBuilder<List<Stylist>>(
       stream: _firestoreService.getStylists(),
       builder: (context, snapshot) {
@@ -703,11 +801,40 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('Không có stylist nào');
+        if (!snapshot.hasData) {
+          return const Text('Không có dữ liệu');
         }
 
-        final stylists = snapshot.data!;
+        // Lọc stylists theo branch đã chọn
+        final stylists = snapshot.data!
+            .where((s) => s.branchId == _selectedBranch!.id)
+            .toList();
+
+        if (stylists.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.person_off_outlined,
+                  size: 48,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Không có stylist nào\ntại chi nhánh này',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                ),
+              ],
+            ),
+          );
+        }
 
         return Container(
           decoration: BoxDecoration(
@@ -792,100 +919,166 @@ class _RescheduleBookingScreenState extends State<RescheduleBookingScreen> {
   }
 
   Widget _buildBranchSelector() {
-    return StreamBuilder<List<Branch>>(
-      stream: _firestoreService.getBranches(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        StreamBuilder<List<Branch>>(
+          stream: _firestoreService.getBranches(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Text('Không có chi nhánh nào');
-        }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Text('Không có chi nhánh nào');
+            }
 
-        final branches = snapshot.data!;
+            final branches = snapshot.data!;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF0891B2).withOpacity(0.3)),
-          ),
-          child: Column(
-            children: branches.map((branch) {
-              final isSelected = _selectedBranch?.id == branch.id;
-              return InkWell(
-                onTap: () => setState(() => _selectedBranch = branch),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFFF0F9FF)
-                        : Colors.transparent,
-                    border: branches.last != branch
-                        ? Border(
-                            bottom: BorderSide(color: Colors.grey.shade200),
-                          )
-                        : null,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF0891B2)
-                              : const Color(0xFF0891B2).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.business,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF0891B2),
-                          size: 20,
-                        ),
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: const Color(0xFF0891B2).withOpacity(0.3),
+                ),
+              ),
+              child: Column(
+                children: branches.map((branch) {
+                  final isSelected = _selectedBranch?.id == branch.id;
+                  return InkWell(
+                    onTap: () {
+                      setState(() {
+                        final previousBranch = _selectedBranch;
+                        _selectedBranch = branch;
+
+                        // Reset stylist nếu stylist hiện tại không thuộc chi nhánh mới
+                        if (_selectedStylist != null &&
+                            _selectedStylist!.branchId != branch.id) {
+                          _selectedStylist = null;
+                          // Thông báo nếu có stylist cũ
+                          if (previousBranch != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _showSnackBar(
+                                'Stylist đã chọn không thuộc chi nhánh mới. Vui lòng chọn lại.',
+                                isError: true,
+                              );
+                            });
+                          }
+                        }
+
+                        // Kiểm tra nếu thời gian hiện tại không hợp lệ với chi nhánh mới
+                        if (_selectedTime != null &&
+                            !branch.isTimeWithinOpeningHours(
+                              _selectedTime!.hour,
+                              _selectedTime!.minute,
+                            )) {
+                          _selectedTime = null;
+                          // Thông báo cho user
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _showSnackBar(
+                              'Thời gian đã chọn không phù hợp với giờ mở cửa của chi nhánh mới. Vui lòng chọn lại.',
+                              isError: true,
+                            );
+                          });
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFFF0F9FF)
+                            : Colors.transparent,
+                        border: branches.last != branch
+                            ? Border(
+                                bottom: BorderSide(color: Colors.grey.shade200),
+                              )
+                            : null,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              branch.name,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w600,
-                              ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFF0891B2)
+                                  : const Color(0xFF0891B2).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            Text(
-                              branch.address,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: Icon(
+                              Icons.business,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF0891B2),
+                              size: 20,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  branch.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  branch.address,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isSelected)
+                            const Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF0891B2),
+                              size: 24,
+                            ),
+                        ],
                       ),
-                      if (isSelected)
-                        const Icon(
-                          Icons.check_circle,
-                          color: Color(0xFF0891B2),
-                          size: 24,
-                        ),
-                    ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            );
+          },
+        ),
+        // Hiển thị giờ mở cửa nếu đã chọn chi nhánh
+        if (_selectedBranch != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12, left: 4),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.access_time_rounded,
+                  size: 16,
+                  color: Color(0xFF0891B2),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Giờ mở cửa: ${_selectedBranch!.hours}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              );
-            }).toList(),
+              ],
+            ),
           ),
-        );
-      },
+      ],
     );
   }
 }

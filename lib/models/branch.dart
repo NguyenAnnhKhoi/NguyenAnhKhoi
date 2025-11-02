@@ -99,7 +99,14 @@ class Branch {
   // THÊM MỚI: Kiểm tra xem thời gian có nằm trong giờ mở cửa không
   bool isTimeWithinOpeningHours(int hour, int minute) {
     final hours = openingHours;
-    if (hours == null) return true; // Nếu không parse được, cho phép mọi giờ
+    // Nếu không parse được giờ, sử dụng giờ mặc định 8:00-22:00 để an toàn
+    if (hours == null) {
+      final selectedTimeInMinutes = hour * 60 + minute;
+      final defaultOpenTime = 8 * 60; // 8:00
+      final defaultCloseTime = 22 * 60; // 22:00
+      return selectedTimeInMinutes >= defaultOpenTime &&
+          selectedTimeInMinutes <= defaultCloseTime;
+    }
 
     final openHour = hours['openHour']!;
     final openMinute = hours['openMinute']!;

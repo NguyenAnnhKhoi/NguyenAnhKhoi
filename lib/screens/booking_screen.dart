@@ -120,6 +120,51 @@ class BookingScreenState extends State<BookingScreen>
       return;
     }
 
+    // 1.5. KIỂM TRA GIỜ MỞ CỬA - Validation cuối cùng trước khi đặt
+    if (!selectedBranch!.isTimeWithinOpeningHours(
+      selectedTime!.hour,
+      selectedTime!.minute,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.schedule, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Ngoài giờ mở cửa',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Chi nhánh ${selectedBranch!.name} chỉ mở cửa từ ${selectedBranch!.openingTimeText} đến ${selectedBranch!.closingTimeText}.',
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Vui lòng chọn thời gian trong khung giờ hoạt động.',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w300),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: EdgeInsets.all(16),
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     // Parse duration từ service
@@ -1066,7 +1111,30 @@ class BookingScreenState extends State<BookingScreen>
               setState(() {
                 selectedBranch = picked;
                 // Reset thời gian đã chọn khi đổi chi nhánh
-                selectedTime = null;
+                // Kiểm tra nếu thời gian hiện tại không hợp lệ với chi nhánh mới
+                if (selectedTime != null &&
+                    !picked.isTimeWithinOpeningHours(
+                      selectedTime!.hour,
+                      selectedTime!.minute,
+                    )) {
+                  selectedTime = null;
+                  // Thông báo cho user
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Thời gian đã chọn không phù hợp với giờ mở cửa của chi nhánh mới. Vui lòng chọn lại.',
+                        ),
+                        backgroundColor: Colors.orange.shade600,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  });
+                }
               });
             }
           },

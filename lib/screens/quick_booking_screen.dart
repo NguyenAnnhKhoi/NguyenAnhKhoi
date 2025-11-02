@@ -107,6 +107,56 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
       return;
     }
 
+    // 1.5. KIỂM TRA GIỜ MỞ CỬA - Validation cuối cùng trước khi đặt
+    if (!selectedBranch!.isTimeWithinOpeningHours(
+      selectedTime!.hour,
+      selectedTime!.minute,
+    )) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.schedule, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Ngoài giờ mở cửa',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Chi nhánh ${selectedBranch!.name} chỉ mở cửa từ ${selectedBranch!.openingTimeText} đến ${selectedBranch!.closingTimeText}.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Vui lòng chọn thời gian trong khung giờ hoạt động.',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w300),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: EdgeInsets.all(16),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
     // 2. Tạo Booking object tạm thời (chưa lưu vào DB)
     Booking newBooking = Booking(
       id: '',
@@ -369,20 +419,76 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
   }
 
   Widget _buildSelectBranch(BuildContext context) {
-    return _selectButton(
-      icon: Icons.business_rounded,
-      text: selectedBranch?.name ?? 'Chọn chi nhánh',
-      isSelected: selectedBranch != null,
-      onTap: () async {
-        final Branch? picked = await showModalBottomSheet<Branch>(
-          context: context,
-          backgroundColor: Colors.transparent,
-          isScrollControlled: true,
-          builder: (context) =>
-              _BranchPicker(firestoreService: _firestoreService),
-        );
-        if (picked != null) setState(() => selectedBranch = picked);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _selectButton(
+          icon: Icons.business_rounded,
+          text: selectedBranch?.name ?? 'Chọn chi nhánh',
+          isSelected: selectedBranch != null,
+          onTap: () async {
+            final Branch? picked = await showModalBottomSheet<Branch>(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (context) =>
+                  _BranchPicker(firestoreService: _firestoreService),
+            );
+            if (picked != null) {
+              setState(() {
+                selectedBranch = picked;
+                // Kiểm tra nếu thời gian hiện tại không hợp lệ với chi nhánh mới
+                if (selectedTime != null &&
+                    !picked.isTimeWithinOpeningHours(
+                      selectedTime!.hour,
+                      selectedTime!.minute,
+                    )) {
+                  selectedTime = null;
+                  // Thông báo cho user
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Thời gian đã chọn không phù hợp với giờ mở cửa của chi nhánh mới. Vui lòng chọn lại.',
+                        ),
+                        backgroundColor: Colors.orange.shade600,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  });
+                }
+              });
+            }
+          },
+        ),
+        // Hiển thị giờ mở cửa nếu đã chọn chi nhánh
+        if (selectedBranch != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 16,
+                  color: Color(0xFF0891B2),
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Giờ mở cửa: ${selectedBranch!.hours}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -448,6 +554,12 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                     : '${selectedTime!.hour}:${selectedTime!.minute.toString().padLeft(2, '0')}',
                 isSelected: selectedTime != null,
                 onTap: () async {
+                  // Kiểm tra đã chọn chi nhánh chưa
+                  if (selectedBranch == null) {
+                    EasyLoading.showInfo('Vui lòng chọn chi nhánh trước');
+                    return;
+                  }
+
                   final TimeOfDay? picked = await showTimePicker(
                     context: context,
                     initialTime: TimeOfDay.now(),
@@ -464,7 +576,68 @@ class _QuickBookingScreenState extends State<QuickBookingScreen> {
                       );
                     },
                   );
-                  if (picked != null) setState(() => selectedTime = picked);
+
+                  if (picked != null) {
+                    // Kiểm tra xem thời gian có nằm trong giờ mở cửa không
+                    if (!selectedBranch!.isTimeWithinOpeningHours(
+                      picked.hour,
+                      picked.minute,
+                    )) {
+                      // Hiển thị thông báo lỗi
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.schedule,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Ngoài giờ mở cửa',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Chi nhánh ${selectedBranch!.name} chỉ mở cửa từ ${selectedBranch!.openingTimeText} đến ${selectedBranch!.closingTimeText}.',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Vui lòng chọn thời gian trong khung giờ hoạt động.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: Colors.red.shade600,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            margin: EdgeInsets.all(16),
+                            duration: Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+
+                    setState(() => selectedTime = picked);
+                  }
                 },
               ),
             ),
