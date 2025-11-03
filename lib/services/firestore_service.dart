@@ -13,11 +13,26 @@ class FirestoreService {
   // --- KIỂM TRA ADMIN ---
   Stream<bool> isAdmin() {
     final user = _auth.currentUser;
-    if (user == null) return Stream.value(false);
+    debugPrint('🔍 isAdmin() - User: ${user?.email}');
+    debugPrint('🔍 isAdmin() - UID: ${user?.uid}');
+
+    if (user == null) {
+      debugPrint('❌ isAdmin() - No user, returning false');
+      return Stream.value(false);
+    }
+
     return _db.collection('users').doc(user.uid).snapshots().map((snapshot) {
-      if (!snapshot.exists) return false;
+      debugPrint('📄 isAdmin() - Document exists: ${snapshot.exists}');
+      if (!snapshot.exists) {
+        debugPrint('⚠️ isAdmin() - User document not found, returning false');
+        return false;
+      }
       final data = snapshot.data();
-      return data?['role'] == 'admin';
+      final role = data?['role'];
+      debugPrint('👤 isAdmin() - User role: $role');
+      final isAdminRole = role == 'admin';
+      debugPrint('✅ isAdmin() - Result: $isAdminRole');
+      return isAdminRole;
     });
   }
 
@@ -95,6 +110,10 @@ class FirestoreService {
                     voucherId: data['voucherId'],
                     discountAmount: (data['discountAmount'] as num?)
                         ?.toDouble(),
+                    isPaid: data['isPaid'] ?? false,
+                    paidAt: data['paidAt'] != null
+                        ? (data['paidAt'] as Timestamp).toDate()
+                        : null,
                   ),
                 );
               }
@@ -184,6 +203,10 @@ class FirestoreService {
       'finalAmount': booking.finalAmount,
       'voucherId': booking.voucherId,
       'discountAmount': booking.discountAmount,
+      'isPaid': booking.isPaid,
+      'paidAt': booking.paidAt != null
+          ? Timestamp.fromDate(booking.paidAt!)
+          : null,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -196,6 +219,10 @@ class FirestoreService {
     return _db.collection('bookings').doc(booking.id).update({
       'status': booking.status,
       'paymentMethod': booking.paymentMethod,
+      'isPaid': booking.isPaid,
+      'paidAt': booking.paidAt != null
+          ? Timestamp.fromDate(booking.paidAt!)
+          : null,
       // Cập nhật bất kỳ trường nào khác nếu cần
     });
   }
@@ -337,6 +364,10 @@ class FirestoreService {
                 finalAmount: (data['finalAmount'] as num?)?.toDouble(),
                 voucherId: data['voucherId'],
                 discountAmount: (data['discountAmount'] as num?)?.toDouble(),
+                isPaid: data['isPaid'] ?? false,
+                paidAt: data['paidAt'] != null
+                    ? (data['paidAt'] as Timestamp).toDate()
+                    : null,
               ),
             );
           }

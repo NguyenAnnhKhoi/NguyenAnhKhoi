@@ -21,6 +21,15 @@ class AdminHomeScreen extends StatelessWidget {
             tooltip: 'Đăng xuất',
             onPressed: () async {
               await AuthService().signOut();
+              if (context.mounted) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (context.mounted) {
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/login', (route) => false);
+                  }
+                });
+              }
             },
           ),
         ],

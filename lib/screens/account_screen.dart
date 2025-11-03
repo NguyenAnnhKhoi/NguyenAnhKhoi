@@ -135,8 +135,16 @@ class AccountScreenState extends State<AccountScreen>
     if (confirm == true) {
       await context.read<AuthProvider>().signOut();
 
-      // AuthWrapper (trong main.dart) sẽ tự động xử lý việc chuyển màn hình.
-      // Chúng ta không cần làm gì thêm.
+      // Use addPostFrameCallback to ensure safe navigation after logout
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/login', (route) => false);
+          }
+        });
+      }
     }
   }
 

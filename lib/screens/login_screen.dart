@@ -68,6 +68,15 @@ class _LoginScreenState extends State<LoginScreen>
         EasyLoading.showError(
           authProvider.errorMessage ?? 'Đăng nhập thất bại',
         );
+      } else if (success && mounted) {
+        // Use addPostFrameCallback to ensure safe navigation
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/main', (route) => false);
+          }
+        });
       }
     } catch (e) {
       await EasyLoading.dismiss();
@@ -79,26 +88,57 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _handleEmailSignIn() async {
     if (!_formKey.currentState!.validate()) return;
+
+    debugPrint('🔐 ========== LOGIN ATTEMPT ==========');
+    debugPrint('📧 Email: ${_emailCtrl.text.trim()}');
+
     final authProvider = context.read<AuthProvider>();
     await EasyLoading.show(status: 'Đang đăng nhập...');
+
     try {
+      debugPrint('🚀 Calling signInWithEmail...');
       final success = await authProvider.signInWithEmail(
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text,
       );
+
+      debugPrint('📊 Login result: $success');
+      debugPrint('👤 User email: ${authProvider.user?.email}');
+      debugPrint('✉️ Email verified: ${authProvider.user?.emailVerified}');
+      debugPrint('🆔 User UID: ${authProvider.user?.uid}');
+      debugPrint('🔒 Is authenticated: ${authProvider.isAuthenticated}');
+
       await EasyLoading.dismiss();
 
       if (!success && mounted) {
+        debugPrint('❌ Login failed: ${authProvider.errorMessage}');
         EasyLoading.showError(
           authProvider.errorMessage ?? 'Đăng nhập thất bại',
         );
+      } else if (success && mounted) {
+        debugPrint('✅ Login successful!');
+        // Use addPostFrameCallback to ensure navigation happens after current frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            debugPrint(
+              '🚀 Force navigating to MainScreen (clearing all routes)',
+            );
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/main', (route) => false);
+          }
+        });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('💥 Exception during login: $e');
+      debugPrint('📍 Stack trace: $stackTrace');
       await EasyLoading.dismiss();
       if (mounted) {
         EasyLoading.showError(e.toString());
       }
     }
+
+    debugPrint('🔐 ========== LOGIN ATTEMPT END ==========');
   }
 
   @override

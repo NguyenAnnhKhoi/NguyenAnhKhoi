@@ -481,12 +481,17 @@ class MyBookingsScreenState extends State<MyBookingsScreen>
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: booking.paymentMethod == 'vietqr'
+                        color:
+                            (booking.isPaid ||
+                                booking.paymentMethod.toLowerCase() == 'vietqr')
                             ? Colors.green.shade50
                             : Colors.orange.shade50,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: booking.paymentMethod == 'vietqr'
+                          color:
+                              (booking.isPaid ||
+                                  booking.paymentMethod.toLowerCase() ==
+                                      'vietqr')
                               ? Colors.green.shade200
                               : Colors.orange.shade200,
                           width: 1,
@@ -496,22 +501,32 @@ class MyBookingsScreenState extends State<MyBookingsScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            booking.paymentMethod == 'vietqr'
+                            (booking.isPaid ||
+                                    booking.paymentMethod.toLowerCase() ==
+                                        'vietqr')
                                 ? Icons.check_circle
                                 : Icons.schedule,
                             size: 13,
-                            color: booking.paymentMethod == 'vietqr'
+                            color:
+                                (booking.isPaid ||
+                                    booking.paymentMethod.toLowerCase() ==
+                                        'vietqr')
                                 ? Colors.green.shade700
                                 : Colors.orange.shade700,
                           ),
                           SizedBox(width: 5),
                           Text(
-                            booking.paymentMethod == 'vietqr'
+                            (booking.isPaid ||
+                                    booking.paymentMethod.toLowerCase() ==
+                                        'vietqr')
                                 ? 'Đã thanh toán'
                                 : 'Chưa thanh toán',
                             style: TextStyle(
                               fontSize: 12,
-                              color: booking.paymentMethod == 'vietqr'
+                              color:
+                                  (booking.isPaid ||
+                                      booking.paymentMethod.toLowerCase() ==
+                                          'vietqr')
                                   ? Colors.green.shade700
                                   : Colors.orange.shade700,
                               fontWeight: FontWeight.w600,

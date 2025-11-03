@@ -223,10 +223,15 @@ class _StylistEditScreenState extends State<StylistEditScreen> {
                               filled: true,
                               fillColor: Colors.grey.shade50,
                             ),
+                            isExpanded: true,
                             items: branches.map((branch) {
                               return DropdownMenuItem<Branch>(
                                 value: branch,
-                                child: Text(branch.name),
+                                child: Text(
+                                  branch.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
                               );
                             }).toList(),
                             onChanged: (Branch? value) {

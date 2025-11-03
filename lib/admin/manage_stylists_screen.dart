@@ -104,11 +104,15 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                   title: Text(
                     stylist.name,
                     style: const TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Kinh nghiệm: ${stylist.experience}'),
+                      Text(
+                        'Kinh nghiệm: ${stylist.experience}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       if (stylist.branchName != null)
                         Text(
                           'Chi nhánh: ${stylist.branchName}',
@@ -117,6 +121,8 @@ class _ManageStylistsScreenState extends State<ManageStylistsScreen> {
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                     ],
                   ),

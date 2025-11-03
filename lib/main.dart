@@ -145,6 +145,7 @@ class MyApp extends StatelessWidget {
   Map<String, WidgetBuilder> _buildRoutes() {
     return {
       '/home': (_) => const MainScreen(),
+      '/main': (_) => const MainScreen(), // For manual navigation after login
       '/register': (_) => const RegisterScreen(),
       '/forgot-password': (_) => const ForgotPasswordScreen(),
       '/login': (_) => const LoginScreen(),
@@ -154,9 +155,14 @@ class MyApp extends StatelessWidget {
 }
 
 // Authentication Wrapper
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final firestoreService = FirestoreService();
@@ -164,14 +170,25 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnapshot) {
+        debugPrint(
+          '🔄 AuthWrapper - Connection: ${authSnapshot.connectionState}',
+        );
+        debugPrint('👤 AuthWrapper - User: ${authSnapshot.data?.email}');
+        debugPrint('👤 AuthWrapper - User UID: ${authSnapshot.data?.uid}');
+        debugPrint('📊 AuthWrapper - HasData: ${authSnapshot.hasData}');
+        debugPrint('📊 AuthWrapper - HasError: ${authSnapshot.hasError}');
+
         if (authSnapshot.connectionState == ConnectionState.waiting) {
+          debugPrint('⏳ AuthWrapper - Waiting for initial auth state...');
           return _buildLoadingScreen();
         }
 
         if (authSnapshot.hasData) {
+          debugPrint('✅ User authenticated, building authenticated screen...');
           return _buildAuthenticatedScreen(firestoreService);
         }
 
+        debugPrint('❌ No user, showing LoginScreen');
         return const LoginScreen();
       },
     );
@@ -184,21 +201,32 @@ class AuthWrapper extends StatelessWidget {
   }
 
   Widget _buildAuthenticatedScreen(FirestoreService firestoreService) {
+    debugPrint('🏗️ Building authenticated screen...');
     return StreamBuilder<bool>(
       stream: firestoreService.isAdmin(),
       builder: (context, adminSnapshot) {
+        debugPrint(
+          '👮 Admin check - Connection: ${adminSnapshot.connectionState}',
+        );
+        debugPrint('👮 Admin check - HasData: ${adminSnapshot.hasData}');
+        debugPrint('👮 Admin check - Data: ${adminSnapshot.data}');
+        debugPrint('👮 Admin check - HasError: ${adminSnapshot.hasError}');
+
         if (adminSnapshot.hasError) {
-          debugPrint('AuthWrapper Error: ${adminSnapshot.error}');
+          debugPrint('⚠️ Admin check error: ${adminSnapshot.error}');
+          debugPrint('➡️ Showing MainScreen (user)');
           return const MainScreen();
         }
 
         if (adminSnapshot.connectionState == ConnectionState.waiting) {
+          debugPrint('⏳ Waiting for admin check...');
           return _buildLoadingScreen();
         }
 
-        return adminSnapshot.data == true
-            ? const AdminHomeScreen()
-            : const MainScreen();
+        final isAdmin = adminSnapshot.data == true;
+        debugPrint('✅ Admin check complete: isAdmin=$isAdmin');
+
+        return isAdmin ? const AdminHomeScreen() : const MainScreen();
       },
     );
   }

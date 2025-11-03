@@ -38,6 +38,8 @@ class Booking {
   final double? finalAmount; // Giá cuối cùng sau khi áp dụng voucher
   final String? voucherId; // ID voucher đã dùng
   final double? discountAmount; // Số tiền đã giảm
+  final bool isPaid; // Trạng thái đã thanh toán hay chưa
+  final DateTime? paidAt; // Thời điểm thanh toán
 
   Booking({
     required this.id,
@@ -55,6 +57,8 @@ class Booking {
     this.finalAmount,
     this.voucherId,
     this.discountAmount,
+    this.isPaid = false,
+    this.paidAt,
   });
 
   Booking copyWith({
@@ -69,6 +73,8 @@ class Booking {
     double? finalAmount,
     String? voucherId,
     double? discountAmount,
+    bool? isPaid,
+    DateTime? paidAt,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -86,6 +92,8 @@ class Booking {
       finalAmount: finalAmount ?? this.finalAmount,
       voucherId: voucherId ?? this.voucherId,
       discountAmount: discountAmount ?? this.discountAmount,
+      isPaid: isPaid ?? this.isPaid,
+      paidAt: paidAt ?? this.paidAt,
     );
   }
 

@@ -160,7 +160,9 @@ class HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          user?.displayName ?? 'Khách hàng',
+                          user?.displayName ??
+                              user?.email?.split('@').first ??
+                              'Khách hàng',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,

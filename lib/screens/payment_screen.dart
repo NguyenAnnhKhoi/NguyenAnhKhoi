@@ -250,8 +250,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Future<void> _confirmPayment() async {
     // Cập nhật trạng thái booking với phương thức VietQR
     final updatedBooking = widget.booking.copyWith(
-      paymentMethod: 'vietqr', // Luôn là VietQR
+      paymentMethod: 'VietQR', // Luôn là VietQR
       status: 'confirmed', // Đã xác nhận
+      isPaid: true, // Đánh dấu đã thanh toán
+      paidAt: DateTime.now(), // Thời điểm thanh toán
     );
 
     try {

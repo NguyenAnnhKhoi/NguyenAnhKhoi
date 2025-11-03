@@ -94,9 +94,30 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 }
 
                 final allBookings = snapshot.data ?? [];
-                final transactions = allBookings
-                    .where((b) => b.dateTime.isBefore(DateTime.now()))
-                    .toList();
+                // Hiển thị các booking đã thanh toán:
+                // 1. isPaid = true HOẶC
+                // 2. paymentMethod khác 'Tại quầy' (đã thanh toán online)
+                final transactions = allBookings.where((b) {
+                  // Nếu có field isPaid và = true
+                  if (b.isPaid == true) return true;
+
+                  // Hoặc nếu payment method không phải 'Tại quầy'
+                  // (nghĩa là đã thanh toán qua VietQR hoặc online)
+                  if (b.paymentMethod != 'Tại quầy' &&
+                      b.paymentMethod != '' &&
+                      b.paymentMethod.isNotEmpty) {
+                    return true;
+                  }
+
+                  return false;
+                }).toList();
+
+                // Sắp xếp theo thời gian: paidAt nếu có, không thì dateTime
+                transactions.sort((a, b) {
+                  final timeA = a.paidAt ?? a.dateTime;
+                  final timeB = b.paidAt ?? b.dateTime;
+                  return timeB.compareTo(timeA);
+                });
 
                 if (transactions.isEmpty) {
                   return Container(
@@ -203,19 +224,43 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                         color: Colors.grey.shade600,
                                       ),
                                       SizedBox(width: 6),
-                                      Text(
-                                        DateFormat(
-                                          'dd/MM/yyyy, HH:mm',
-                                        ).format(booking.dateTime),
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 13,
+                                      Expanded(
+                                        child: Text(
+                                          'Dịch vụ: ${DateFormat('dd/MM/yyyy, HH:mm').format(booking.dateTime)}',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 13,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
                                   ),
                                   SizedBox(height: 4),
                                   Row(
+                                    children: [
+                                      Icon(
+                                        Icons.payment_rounded,
+                                        size: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          'Thanh toán: ${booking.paidAt != null ? DateFormat('dd/MM/yyyy, HH:mm').format(booking.paidAt!) : 'N/A'}',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 13,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
                                     children: [
                                       Container(
                                         padding: EdgeInsets.symmetric(
@@ -228,70 +273,56 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                             8,
                                           ),
                                         ),
-                                        child: Text(
-                                          'Hoàn thành',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.green.shade700,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.check_circle,
+                                              size: 11,
+                                              color: Colors.green.shade700,
+                                            ),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Đã thanh toán',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.green.shade700,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      SizedBox(width: 6),
-                                      // Hiển thị trạng thái thanh toán
-                                      Flexible(
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
+                                      // Hiển thị phương thức thanh toán
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade50,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                booking.paymentMethod ==
-                                                    'vietqr'
-                                                ? Colors.blue.shade50
-                                                : Colors.orange.shade50,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.qr_code,
+                                              size: 11,
+                                              color: Colors.blue.shade700,
                                             ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                booking.paymentMethod ==
-                                                        'vietqr'
-                                                    ? Icons.check_circle
-                                                    : Icons.schedule,
-                                                size: 11,
-                                                color:
-                                                    booking.paymentMethod ==
-                                                        'vietqr'
-                                                    ? Colors.blue.shade700
-                                                    : Colors.orange.shade700,
+                                            SizedBox(width: 4),
+                                            Text(
+                                              booking.paymentMethod,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.blue.shade700,
+                                                fontWeight: FontWeight.w600,
                                               ),
-                                              SizedBox(width: 3),
-                                              Flexible(
-                                                child: Text(
-                                                  booking.paymentMethod ==
-                                                          'vietqr'
-                                                      ? 'Đã thanh toán'
-                                                      : 'Chưa thanh toán',
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color:
-                                                        booking.paymentMethod ==
-                                                            'vietqr'
-                                                        ? Colors.blue.shade700
-                                                        : Colors
-                                                              .orange
-                                                              .shade700,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -302,14 +333,53 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
+                                // Hiển thị giá gốc nếu có giảm giá
+                                if (booking.discountAmount != null &&
+                                    booking.discountAmount! > 0) ...[
+                                  Text(
+                                    currencyFormat.format(
+                                      booking.service.price,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade500,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                ],
+                                // Hiển thị số tiền thực tế
                                 Text(
-                                  '-${currencyFormat.format(booking.service.price)}',
+                                  '-${currencyFormat.format(booking.finalAmount ?? booking.service.price)}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 17,
                                     color: Colors.red.shade400,
                                   ),
                                 ),
+                                // Hiển thị số tiền giảm giá
+                                if (booking.discountAmount != null &&
+                                    booking.discountAmount! > 0) ...[
+                                  SizedBox(height: 4),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Giảm ${currencyFormat.format(booking.discountAmount!)}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.orange.shade700,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ],
