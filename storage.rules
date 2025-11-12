@@ -20,5 +20,10 @@ service firebase.storage {
                    && request.resource.size < 5 * 1024 * 1024 // Max 5MB
                    && request.resource.contentType.matches('image/.*');
     }
-  }
-}
+    
+    // Allow authenticated users to upload product category images
+    match /product_categories/{imageId} {
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024 // Max 5MB
+                   && request.resource.contentType.matches('image/.*');
+    }

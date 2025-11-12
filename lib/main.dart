@@ -18,13 +18,14 @@ import 'screens/admin/admin_dashboard.dart';
 import 'screens/stylist/stylist_dashboard_screen.dart';
 import 'services/notification_service.dart';
 import 'services/admin_service.dart';
+import 'services/cart_service.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'utils/google_signin_validator.dart';
 import 'utils/firebase_config_checker.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Khởi tạo locale data cho tiếng Việt
   // Cần thiết khi sử dụng DateFormat với locale 'vi'
   try {
@@ -33,22 +34,23 @@ void main() async {
     print('Warning: Could not initialize date formatting for locale vi: $e');
     // Continue execution even if locale initialization fails
   }
-  
+
   await NotificationService().init();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // ← NEW: Khởi tạo CartService
+  await CartService.init();
+
   // Tạo tài khoản admin mặc định
   await AdminService().createDefaultAdmin();
-  
+
   // Kiểm tra cấu hình Google Sign-In (chỉ trong debug mode)
   if (kDebugMode) {
     GoogleSignInValidator.validateAndPrint();
     FirebaseConfigChecker.checkAndroidConfig();
     FirebaseConfigChecker.checkGoogleSignInConfig();
   }
-  
+
   runApp(MyApp());
   configLoading();
 }
@@ -124,7 +126,10 @@ class MyApp extends StatelessWidget {
           ),
           filled: true,
           fillColor: Colors.grey.shade50,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 18,
+          ),
         ),
       ),
       routes: {
@@ -141,9 +146,7 @@ class MyApp extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
               body: Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF0891B2),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFF0891B2)),
               ),
             );
           }
@@ -185,7 +188,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _isStylist = user?.isStylist ?? false;
           _isLoading = false;
         });
-        print('User role checked: isAdmin = $_isAdmin, isStylist = $_isStylist');
+        print(
+          'User role checked: isAdmin = $_isAdmin, isStylist = $_isStylist',
+        );
       }
     } catch (e) {
       print('Error checking user role: $e');
@@ -204,15 +209,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (_isLoading) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF0891B2),
-          ),
+          child: CircularProgressIndicator(color: Color(0xFF0891B2)),
         ),
       );
     }
 
     print('Building AuthWrapper: isAdmin = $_isAdmin, isStylist = $_isStylist');
-    
+
     if (_isAdmin) {
       return const AdminDashboard();
     } else if (_isStylist) {
@@ -232,10 +235,12 @@ class MainScreen extends StatefulWidget {
 
 class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  int _cartItemCount = 0; // ← NEW: Theo dõi số lượng item trong giỏ
 
   // === PHẦN SỬA LỖI 1: Tạo GlobalKey ===
   // Key này sẽ cho phép chúng ta truy cập và điều khiển ConvexAppBar
-  final GlobalKey<ConvexAppBarState> _appBarKey = GlobalKey<ConvexAppBarState>();
+  final GlobalKey<ConvexAppBarState> _appBarKey =
+      GlobalKey<ConvexAppBarState>();
 
   final List<Widget> _actualScreens = [
     const HomeScreen(),
@@ -246,7 +251,9 @@ class MainScreenState extends State<MainScreen> {
 
   // Method to navigate to MyBookings tab
   void navigateToMyBookings() {
-    print('navigateToMyBookings called, current _selectedIndex: $_selectedIndex');
+    print(
+      'navigateToMyBookings called, current _selectedIndex: $_selectedIndex',
+    );
     setState(() {
       _selectedIndex = 3; // Lịch sử tab index (index 3 in the bottom bar)
     });
@@ -255,13 +262,38 @@ class MainScreenState extends State<MainScreen> {
     print('animateTo(3) called');
   }
 
+  // ← NEW: Method để update số lượng item trong giỏ
+  void updateCartCount(int count) {
+    setState(() {
+      _cartItemCount = count;
+    });
+  }
+
   // Static instance để có thể gọi từ bên ngoài
   static MainScreenState? _instance;
-  
+
+  // ← NEW: Getter public để truy cập từ các screen khác
+  static MainScreenState? get instance => _instance;
+
   @override
   void initState() {
     super.initState();
     _instance = this;
+    _loadCartCountFromService();
+  }
+
+  // ← NEW: Load cart count từ CartService
+  Future<void> _loadCartCountFromService() async {
+    try {
+      final count = await CartService.getCartCount();
+      if (mounted) {
+        setState(() {
+          _cartItemCount = count;
+        });
+      }
+    } catch (e) {
+      print('Error loading cart count: $e');
+    }
   }
 
   @override
@@ -279,13 +311,13 @@ class MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     int mapIndexToScreen(int tabIndex) {
-      if (tabIndex < 2) return tabIndex;        // 0,1 → 0,1
-      if (tabIndex == 2) return 0;              // 2 (Đặt lịch) → không map
-      if (tabIndex == 3) return 2;              // 3 → 2 (Bookings)
-      if (tabIndex == 4) return 3;              // 4 → 3 (Account)
+      if (tabIndex < 2) return tabIndex; // 0,1 → 0,1
+      if (tabIndex == 2) return 0; // 2 (Đặt lịch) → không map
+      if (tabIndex == 3) return 2; // 3 → 2 (Bookings)
+      if (tabIndex == 4) return 3; // 4 → 3 (Account)
       return 0;
     }
-    
+
     return Scaffold(
       body: IndexedStack(
         index: mapIndexToScreen(_selectedIndex),
@@ -303,7 +335,23 @@ class MainScreenState extends State<MainScreen> {
         initialActiveIndex: _selectedIndex,
         items: [
           TabItem(icon: Icons.home_rounded, title: 'Trang chủ'),
-          TabItem(icon: Icons.shopping_bag_rounded, title: 'Cửa hàng'),
+          TabItem(
+            icon: Badge(
+              label: _cartItemCount > 0
+                  ? Text(
+                      _cartItemCount > 99 ? '99+' : '$_cartItemCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+              backgroundColor: const Color(0xFF0891B2),
+              child: Icon(Icons.shopping_bag_rounded),
+            ),
+            title: 'Cửa hàng',
+          ),
           TabItem(icon: Icons.add, title: 'Đặt lịch'),
           TabItem(icon: Icons.history_rounded, title: 'Lịch sử'),
           TabItem(icon: Icons.person_rounded, title: 'Tài khoản'),
@@ -313,7 +361,9 @@ class MainScreenState extends State<MainScreen> {
             // Khi nhấn "Đặt lịch", chúng ta điều hướng đến màn hình mới
             await Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const QuickBookingScreen()),
+              MaterialPageRoute(
+                builder: (context) => const QuickBookingScreen(),
+              ),
             );
             // === PHẦN SỬA LỖI 3: Đồng bộ lại AppBar sau khi quay về ===
             // Sau khi quay lại, dùng key để "ra lệnh" cho AppBar

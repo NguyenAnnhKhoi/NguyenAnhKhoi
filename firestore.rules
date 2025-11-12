@@ -57,10 +57,7 @@ service cloud.firestore {
     // Rules cho collection users
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (
-        request.auth.uid == userId || 
-        isAdmin()  // Admin có thể tạo user mới (cho nhân viên)
-      );
+      allow create: if isAuthenticated() && request.auth.uid == userId;  // User tạo tài khoản của chính mình
       allow update: if isAuthenticated() && (
         request.auth.uid == userId || 
         isAdmin()
@@ -167,6 +164,52 @@ service cloud.firestore {
     match /paymentMethods/{methodId} {
       allow read: if true;  // Cho phép đọc công khai
       allow write: if isAdmin();
+    }
+
+    // Rules cho collection productCategories
+    match /productCategories/{categoryId} {
+      allow read: if true;  // Cho phép đọc công khai
+      allow create: if isAuthenticated() && isAdmin();  // Chỉ admin app
+      allow update: if isAuthenticated() && isAdmin();  // Chỉ admin app
+      allow delete: if isAuthenticated() && isAdmin();  // Chỉ admin app
+    }
+
+    // Rules cho collection products
+    match /products/{productId} {
+      allow read: if true;  // Cho phép đọc công khai
+      allow create: if isAuthenticated() && isAdmin();  // Chỉ admin app
+      allow update: if isAuthenticated() && isAdmin();  // Chỉ admin app
+      allow delete: if isAuthenticated() && isAdmin();  // Chỉ admin app
+    }
+
+    // Rules cho collection productReviews
+    match /productReviews/{reviewId} {
+      allow read: if true;  // Cho phép đọc công khai
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;  // User chỉ có thể tạo review của chính mình
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||  // User có thể sửa review của mình
+        isAdmin()  // Admin có thể sửa tất cả
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||  // User có thể xóa review của mình
+        isAdmin()  // Admin có thể xóa tất cả
+      );
+    }
+
+    // Rules cho collection orders
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||  // User có thể đọc order của mình
+        isAdmin()  // Admin có thể đọc tất cả
+      );
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;  // User chỉ có thể tạo order của chính mình
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||  // User có thể update order của mình (trước khi thanh toán)
+        isAdmin()  // Admin có thể update tất cả
+      );
+      allow delete: if isAdmin();  // Chỉ admin mới có thể xóa order
     }
     
     // ==================== FALLBACK RULE ====================

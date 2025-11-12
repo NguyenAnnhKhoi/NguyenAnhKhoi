@@ -16,6 +16,8 @@ class Voucher {
   final bool isActive;
   final String? imageUrl;
   final List<String>? usedBy; // Danh sách userId đã sử dụng
+  final List<String>? productIds; // Danh sách productId áp dụng (null = áp dụng cho tất cả)
+  final String? voucherType; // 'service', 'product', 'all' (null = all)
 
   Voucher({
     required this.id,
@@ -32,6 +34,8 @@ class Voucher {
     this.isActive = true,
     this.imageUrl,
     this.usedBy,
+    this.productIds,
+    this.voucherType,
   });
 
   // Kiểm tra voucher còn hợp lệ không
@@ -61,6 +65,23 @@ class Voucher {
     return discountAmount;
   }
 
+  // Kiểm tra voucher có áp dụng cho sản phẩm không
+  bool canApplyToProduct(String productId) {
+    if (productIds == null || productIds!.isEmpty) {
+      return true; // Áp dụng cho tất cả sản phẩm
+    }
+    return productIds!.contains(productId);
+  }
+
+  // Kiểm tra voucher có áp dụng cho đơn hàng không (dựa trên danh sách productIds)
+  bool canApplyToOrder(List<String> orderProductIds) {
+    if (productIds == null || productIds!.isEmpty) {
+      return true; // Áp dụng cho tất cả
+    }
+    // Kiểm tra xem có ít nhất 1 sản phẩm trong đơn hàng nằm trong danh sách productIds
+    return orderProductIds.any((id) => productIds!.contains(id));
+  }
+
   factory Voucher.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     
@@ -88,6 +109,8 @@ class Voucher {
       isActive: data['isActive'] ?? false,
       imageUrl: data['imageUrl'],
       usedBy: data['usedBy'] != null ? List<String>.from(data['usedBy']) : null,
+      productIds: data['productIds'] != null ? List<String>.from(data['productIds']) : null,
+      voucherType: data['voucherType'],
     );
   }
 
@@ -106,6 +129,8 @@ class Voucher {
       'isActive': isActive,
       'imageUrl': imageUrl,
       'usedBy': usedBy,
+      'productIds': productIds,
+      'voucherType': voucherType,
     };
   }
 
@@ -124,6 +149,8 @@ class Voucher {
     bool? isActive,
     String? imageUrl,
     List<String>? usedBy,
+    List<String>? productIds,
+    String? voucherType,
   }) {
     return Voucher(
       id: id ?? this.id,
@@ -140,6 +167,8 @@ class Voucher {
       isActive: isActive ?? this.isActive,
       imageUrl: imageUrl ?? this.imageUrl,
       usedBy: usedBy ?? this.usedBy,
+      productIds: productIds ?? this.productIds,
+      voucherType: voucherType ?? this.voucherType,
     );
   }
 }

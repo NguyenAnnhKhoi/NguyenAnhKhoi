@@ -6,6 +6,11 @@ import '../models/booking.dart';
 import '../models/branch.dart';
 import '../models/category.dart';
 import '../models/voucher.dart';
+import '../models/product.dart';
+import '../models/product_category.dart';
+import '../models/product_review.dart';
+import '../models/order.dart' as order_model;
+import '../models/order_item.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -610,5 +615,290 @@ class FirestoreService {
     }
 
     await _db.collection('bookings').doc(bookingId).update(updates);
+  }
+
+  // --- QUẢN LÝ SẢN PHẨM ---
+
+  // Lấy tất cả sản phẩm
+  Stream<List<Product>> getProducts() {
+    return _db
+        .collection('products')
+        .where('isActive', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList());
+  }
+
+  // Lấy tất cả sản phẩm (bao gồm inactive - cho admin)
+  Stream<List<Product>> getAllProducts() {
+    return _db
+        .collection('products')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Product.fromFirestore(doc)).toList());
+  }
+
+  // Lấy sản phẩm theo danh mục
+  Stream<List<Product>> getProductsByCategory(String categoryId) {
+    return _db
+        .collection('products')
+        .where('categoryId', isEqualTo: categoryId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      // Filter isActive ở client side để tránh composite index
+      return snapshot.docs
+          .map((doc) => Product.fromFirestore(doc))
+          .where((product) => product.isActive)
+          .toList();
+    });
+  }
+
+  // Lấy sản phẩm theo ID
+  Future<Product?> getProductById(String productId) async {
+    try {
+      final doc = await _db.collection('products').doc(productId).get();
+      if (!doc.exists) return null;
+      return Product.fromFirestore(doc);
+    } catch (e) {
+      print('Error getting product: $e');
+      return null;
+    }
+  }
+
+  // Tìm kiếm sản phẩm
+  Stream<List<Product>> searchProducts(String query) {
+    return _db
+        .collection('products')
+        .where('isActive', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) {
+      final products = snapshot.docs
+          .map((doc) => Product.fromFirestore(doc))
+          .where((product) =>
+              product.name.toLowerCase().contains(query.toLowerCase()) ||
+              product.description.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+      return products;
+    });
+  }
+
+  // Thêm sản phẩm
+  Future<Product> addProduct(Product product) async {
+    final now = DateTime.now();
+    final productWithDates = product.copyWith(
+      createdAt: now,
+      updatedAt: now,
+    );
+    final docRef = await _db
+        .collection('products')
+        .add(productWithDates.toFirestore());
+    return productWithDates.copyWith(id: docRef.id);
+  }
+
+  // Cập nhật sản phẩm
+  Future<void> updateProduct(Product product) async {
+    await _db.collection('products').doc(product.id).update(
+        product.copyWith(updatedAt: DateTime.now()).toFirestore());
+  }
+
+  // Xóa sản phẩm
+  Future<void> deleteProduct(String productId) async {
+    await _db.collection('products').doc(productId).delete();
+  }
+
+  // --- QUẢN LÝ DANH MỤC SẢN PHẨM ---
+
+  // Lấy tất cả danh mục sản phẩm
+  Stream<List<ProductCategory>> getProductCategories() {
+    return _db
+        .collection('productCategories')
+        .where('isActive', isEqualTo: true)
+        .orderBy('name')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ProductCategory.fromFirestore(doc))
+            .toList());
+  }
+
+  // Lấy tất cả danh mục (cho admin)
+  Stream<List<ProductCategory>> getAllProductCategories() {
+    return _db
+        .collection('productCategories')
+        .orderBy('name')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ProductCategory.fromFirestore(doc))
+            .toList());
+  }
+
+  // Thêm danh mục sản phẩm
+  Future<ProductCategory> addProductCategory(ProductCategory category) async {
+    final now = DateTime.now();
+    final categoryWithDate = category.copyWith(createdAt: now);
+    final docRef = await _db
+        .collection('productCategories')
+        .add(categoryWithDate.toFirestore());
+    return categoryWithDate.copyWith(id: docRef.id);
+  }
+
+  // Cập nhật danh mục sản phẩm
+  Future<void> updateProductCategory(ProductCategory category) async {
+    await _db
+        .collection('productCategories')
+        .doc(category.id)
+        .update(category.toFirestore());
+  }
+
+  // Xóa danh mục sản phẩm
+  Future<void> deleteProductCategory(String categoryId) async {
+    await _db.collection('productCategories').doc(categoryId).delete();
+  }
+
+  // --- QUẢN LÝ ĐÁNH GIÁ SẢN PHẨM ---
+
+  // Lấy đánh giá của sản phẩm
+  Stream<List<ProductReview>> getProductReviews(String productId) {
+    return _db
+        .collection('productReviews')
+        .where('productId', isEqualTo: productId)
+        .snapshots()
+        .map((snapshot) {
+      // Sort ở client side để tránh composite index
+      final reviews = snapshot.docs
+          .map((doc) => ProductReview.fromFirestore(doc))
+          .toList();
+      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return reviews;
+    });
+  }
+
+  // Thêm đánh giá sản phẩm
+  Future<ProductReview> addProductReview(ProductReview review) async {
+    final docRef = await _db
+        .collection('productReviews')
+        .add(review.toFirestore());
+    
+    // Cập nhật rating trung bình của sản phẩm
+    await _updateProductRating(review.productId);
+    
+    return review.copyWith(id: docRef.id);
+  }
+
+  // Cập nhật rating trung bình của sản phẩm
+  Future<void> _updateProductRating(String productId) async {
+    final reviewsSnapshot = await _db
+        .collection('productReviews')
+        .where('productId', isEqualTo: productId)
+        .get();
+    
+    if (reviewsSnapshot.docs.isEmpty) {
+      await _db.collection('products').doc(productId).update({
+        'rating': null,
+        'reviewCount': 0,
+      });
+      return;
+    }
+    
+    final reviews = reviewsSnapshot.docs
+        .map((doc) => ProductReview.fromFirestore(doc))
+        .toList();
+    
+    final totalRating = reviews.fold<double>(
+        0, (total, review) => total + review.rating);
+    final averageRating = totalRating / reviews.length;
+    
+    await _db.collection('products').doc(productId).update({
+      'rating': averageRating,
+      'reviewCount': reviews.length,
+    });
+  }
+
+  // Xóa đánh giá
+  Future<void> deleteProductReview(String reviewId, String productId) async {
+    await _db.collection('productReviews').doc(reviewId).delete();
+    // Cập nhật lại rating
+    await _updateProductRating(productId);
+  }
+
+  // --- QUẢN LÝ ĐƠN HÀNG ---
+
+  // Lấy đơn hàng của user
+  Stream<List<order_model.Order>> getUserOrders() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value([]);
+
+    return _db
+        .collection('orders')
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => order_model.Order.fromFirestore(doc)).toList());
+  }
+
+  // Lấy tất cả đơn hàng (cho admin)
+  Stream<List<order_model.Order>> getAllOrders() {
+    return _db
+        .collection('orders')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => order_model.Order.fromFirestore(doc)).toList());
+  }
+
+  // Lấy đơn hàng theo ID
+  Future<order_model.Order?> getOrderById(String orderId) async {
+    try {
+      final doc = await _db.collection('orders').doc(orderId).get();
+      if (!doc.exists) return null;
+      return order_model.Order.fromFirestore(doc);
+    } catch (e) {
+      print('Error getting order: $e');
+      return null;
+    }
+  }
+
+  // Tạo đơn hàng mới
+  Future<order_model.Order> addOrder(order_model.Order order) async {
+    final now = DateTime.now();
+    final orderWithDate = order.copyWith(
+      createdAt: now,
+      updatedAt: now,
+    );
+    final docRef = await _db
+        .collection('orders')
+        .add(orderWithDate.toFirestore());
+    
+    // Giảm số lượng tồn kho
+    for (var item in order.items) {
+      await _db.collection('products').doc(item.productId).update({
+        'stock': FieldValue.increment(-item.quantity),
+      });
+    }
+    
+    return orderWithDate.copyWith(id: docRef.id);
+  }
+
+  // Cập nhật đơn hàng
+  Future<void> updateOrder(order_model.Order order) async {
+    await _db.collection('orders').doc(order.id).update(
+        order.copyWith(updatedAt: DateTime.now()).toFirestore());
+  }
+
+  // Xóa đơn hàng
+  Future<void> deleteOrder(String orderId) async {
+    // Lấy thông tin đơn hàng trước khi xóa để hoàn lại số lượng tồn kho
+    final order = await getOrderById(orderId);
+    if (order != null) {
+      for (var item in order.items) {
+        await _db.collection('products').doc(item.productId).update({
+          'stock': FieldValue.increment(item.quantity),
+        });
+      }
+    }
+    await _db.collection('orders').doc(orderId).delete();
   }
 }

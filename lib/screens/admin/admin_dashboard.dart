@@ -11,6 +11,8 @@ import 'manage_bookings_screen.dart';
 import 'manage_categories_screen.dart';
 import 'manage_vouchers_screen.dart';
 import 'manage_employees_screen.dart';
+import 'manage_products_screen.dart';
+import 'manage_product_categories_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -341,6 +343,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const ManageVouchersScreen(),
+                        ),
+                      ),
+                    ),
+                    _buildManagementCard(
+                      icon: Icons.category_outlined,
+                      title: 'Danh mục SP',
+                      subtitle: 'Quản lý danh mục sản phẩm',
+                      color: const Color(0xFF8B5CF6),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ManageProductCategoriesScreen(),
+                        ),
+                      ),
+                    ),
+                    _buildManagementCard(
+                      icon: Icons.shopping_bag_outlined,
+                      title: 'Sản phẩm',
+                      subtitle: 'Quản lý sản phẩm',
+                      color: const Color(0xFFF59E0B),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ManageProductsScreen(),
                         ),
                       ),
                     ),

@@ -126,5 +126,3 @@ Container(
 
 ---
 
-**Tác giả**: GitHub Copilot  
-**Ngày**: 11/11/2025
